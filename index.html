@@ -54,10 +54,6 @@
             </div>
             
             <div class="flex items-center space-x-2 sm:space-x-3">
-                <div id="userStatusArea" class="flex items-center space-x-3 mr-2">
-                    <span class="text-xs text-white/80">กำลังโหลด...</span>
-                </div>
-
                 <!-- ปุ่มดูรายชื่อสมาชิก (ซ่อนเป็นค่าเริ่มต้น จะแสดงเฉพาะ Admin) -->
                 <button id="viewMembersBtn" onclick="openMembersModal()" class="hidden bg-indigo-500/80 hover:bg-indigo-600/90 text-white text-[11px] sm:text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition items-center shadow border border-indigo-400/50">
                     <i class="fa-solid fa-users mr-1.5"></i> สมาชิก
@@ -72,6 +68,11 @@
                 <button onclick="showCreatePost()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center border border-emerald-400">
                     <i class="fa-solid fa-pen-to-square mr-1.5"></i> สร้างโพสต์
                 </button>
+                
+                <!-- ย้ายสถานะผู้ใช้งาน (ปุ่มเข้าสู่ระบบ / โปรไฟล์) มาไว้ขวาสุด -->
+                <div id="userStatusArea" class="flex items-center space-x-3">
+                    <span class="text-xs text-white/80">กำลังโหลด...</span>
+                </div>
             </div>
         </div>
 
@@ -1139,7 +1140,7 @@
                 </div>
                 <div class="flex justify-end space-x-2 mt-2">
                     <button onclick="cancelEditComment('${containerId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-slate-200 hover:bg-slate-300 rounded font-medium text-slate-700">ยกเลิก</button>
-                    <button onclick="saveEditComment('${commentId}', ${isReply}, '${parentId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-amber-500 hover:bg-amber-600 rounded font-bold text-white">บันทึก</button>
+                    <button onclick="saveEditComment('${commentId}', ${isReply}, '${parentId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-amber-500 hover:bg-amber-600 rounded font-bold text-white">บันึก</button>
                 </div>
             `;
             document.getElementById(`edit-input-${commentId}`).focus();
