@@ -53,15 +53,22 @@
                 </div>
             </div>
             
-            <div class="flex items-center space-x-3">
+            <div class="flex items-center space-x-2 sm:space-x-3">
                 <div id="userStatusArea" class="flex items-center space-x-3 mr-2">
                     <span class="text-xs text-white/80">กำลังโหลด...</span>
                 </div>
 
-                <label class="cursor-pointer bg-slate-800/60 hover:bg-slate-700/80 text-white text-[11px] sm:text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition flex items-center shadow border border-white/20">
+                <!-- ปุ่มดูรายชื่อสมาชิก (ซ่อนเป็นค่าเริ่มต้น จะแสดงเฉพาะ Admin) -->
+                <button id="viewMembersBtn" onclick="openMembersModal()" class="hidden bg-indigo-500/80 hover:bg-indigo-600/90 text-white text-[11px] sm:text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition items-center shadow border border-indigo-400/50">
+                    <i class="fa-solid fa-users mr-1.5"></i> สมาชิก
+                </button>
+
+                <!-- ปุ่มเปลี่ยนหน้าปก (ซ่อนเป็นค่าเริ่มต้น จะแสดงเฉพาะ Admin) -->
+                <label id="changeCoverBtn" class="hidden cursor-pointer bg-slate-800/60 hover:bg-slate-700/80 text-white text-[11px] sm:text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition items-center shadow border border-white/20">
                     <i class="fa-solid fa-image mr-1.5"></i> เปลี่ยนปก
                     <input type="file" id="coverUpload" accept="image/*" class="hidden" onchange="changeCover(this)">
                 </label>
+
                 <button onclick="showCreatePost()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center border border-emerald-400">
                     <i class="fa-solid fa-pen-to-square mr-1.5"></i> สร้างโพสต์
                 </button>
@@ -162,12 +169,15 @@
                                         <div id="emojiPicker-main" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-2 z-50">
                                             <div class="flex flex-wrap gap-1 max-h-52 overflow-y-auto custom-scrollbar"></div>
                                         </div>
+
                                         <button type="button" onclick="addCommentLink('commentInput')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-solid fa-link"></i></button>
+                                        
                                         <label class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer transition">
                                             <i class="fa-regular fa-image"></i>
                                             <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'commentInput')">
                                         </label>
                                     </div>
+                                    
                                     <div id="commentInput" class="comment-input-area p-3 text-sm text-slate-800 custom-scrollbar overflow-y-auto min-h-[80px] outline-none" contenteditable="true" placeholder="แสดงความคิดเห็นของคุณ... (วางรูปภาพ หรือลิงก์ได้เลย)"></div>
                                     
                                     <div class="px-3 py-2 bg-white rounded-b-xl flex justify-between items-center border-t border-slate-100">
@@ -248,6 +258,24 @@
                     <button id="confirmCancelBtn" onclick="closeConfirmModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold py-2.5 rounded-xl transition">ยกเลิก</button>
                     <button id="confirmSubmitBtn" class="flex-1 text-white text-sm font-bold py-2.5 rounded-xl transition shadow-md"></button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 👥 Members Modal (Admin Only) 👥 -->
+    <div id="membersModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[80vh]" id="membersModalBox">
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-users text-indigo-500 mr-2"></i>รายชื่อสมาชิก (<span id="totalMembersCount">0</span>)</h3>
+                <button onclick="closeMembersModal()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="p-0 overflow-y-auto custom-scrollbar flex-1 bg-white">
+                <div id="membersListContainer" class="divide-y divide-slate-100">
+                    <!-- Member items will be injected here -->
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end">
+                <button onclick="closeMembersModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold px-5 py-2.5 rounded-xl transition">ปิดหน้าต่าง</button>
             </div>
         </div>
     </div>
@@ -333,16 +361,19 @@
         let confirmCallback = null;
         let currentAuthMode = 'login'; 
 
-        const ADMIN_NAMES = ['Admin', 'admin', 'ผู้ดูแลระบบ'];
+        // กำหนดให้มีแอดมินคนเดียวเท่านั้น
+        const ADMIN_USERNAME = 'admin'; 
+        
         const emojiList = ["😀","😂","😅","🥰","😎","😭","😡","👍","🙏","❤️","🔥","✨","🎉","👏","👀","🤔","🙌","🤝","✅","❌","💡","💯","🚀","🌟","🍕","☕","🥳","😱","🥺","🥶","😷","😴","🤫","🧐","🤓","👻","👽","🤖","💩","🙊","💖","💔","💬","🔔","🎵","🎮","🏆","💸","📸"];
 
+        // ฟังก์ชันตรวจสอบสิทธิ์ Admin
         function checkIsAdmin() {
-            return currentUser && ADMIN_NAMES.includes(currentUser);
+            return currentUser && currentUser.toLowerCase() === ADMIN_USERNAME.toLowerCase();
         }
 
         // --- 🚀 Initialization 🚀 ---
         function init() {
-            // Watch Auth State (Auto-Login check)
+            // Watch Auth State
             auth.onAuthStateChanged(user => {
                 if(user) {
                     currentUser = user.displayName || user.email.split('@')[0];
@@ -353,18 +384,18 @@
                 if(currentPostId) selectPost(currentPostId);
             });
 
-            // Sync Settings (Cover Image) from Firestore
+            // Sync Cover Image
             db.collection("settings").doc("general").onSnapshot(doc => {
                 if(doc.exists && doc.data().blog_cover) {
                     document.getElementById('headerCover').style.backgroundImage = `url(${doc.data().blog_cover})`;
                 }
             });
 
-            // Sync Posts from Firestore Real-time
+            // Sync Posts
             db.collection("posts").orderBy("timestamp", "desc").onSnapshot(snap => {
                 posts = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
                 renderPostList();
-                if(currentPostId) selectPost(currentPostId); // Refresh active view
+                if(currentPostId) selectPost(currentPostId); 
             });
             
             populateEmojiPicker('emojiPicker-main', 'commentInput');
@@ -377,6 +408,64 @@
                     }
                 });
             });
+        }
+
+        // --- 👥 Admin Members Viewer 👥 ---
+        function openMembersModal() {
+            if(!checkIsAdmin()) return;
+            
+            const modal = document.getElementById('membersModal');
+            const box = document.getElementById('membersModalBox');
+            const listContainer = document.getElementById('membersListContainer');
+            const countLabel = document.getElementById('totalMembersCount');
+            
+            listContainer.innerHTML = '<div class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3 text-indigo-400"></i><br><span class="text-sm">กำลังโหลดรายชื่อสมาชิก...</span></div>';
+            countLabel.innerText = "...";
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+            }, 10);
+
+            db.collection("users").orderBy("username_lower").get().then(snap => {
+                countLabel.innerText = snap.size;
+                if(snap.empty) {
+                    listContainer.innerHTML = '<div class="p-8 text-center text-slate-400 text-sm">ยังไม่มีสมาชิกในระบบ</div>';
+                    return;
+                }
+                
+                let html = '';
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    const initial = data.username ? data.username.charAt(0).toUpperCase() : '?';
+                    html += `
+                        <div class="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition">
+                            <div class="flex items-center space-x-4">
+                                <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm shadow-sm border border-indigo-200">
+                                    ${initial}
+                                </div>
+                                <div>
+                                    <h4 class="text-sm font-bold text-slate-800">${data.username || 'No Name'}</h4>
+                                    <p class="text-xs text-slate-500 font-medium">${data.email || 'No Email'}</p>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                listContainer.innerHTML = html;
+            }).catch(err => {
+                listContainer.innerHTML = '<div class="p-8 text-center text-rose-500 text-sm font-medium">เกิดข้อผิดพลาดในการดึงข้อมูลจากฐานข้อมูล</div>';
+                console.error(err);
+            });
+        }
+
+        function closeMembersModal() {
+            const modal = document.getElementById('membersModal');
+            const box = document.getElementById('membersModalBox');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
         }
 
         // --- 🔑 Authentication System 🔑 ---
@@ -478,7 +567,6 @@
             }
         }
 
-        // Transform Firebase Error to Thai
         function getFirebaseErrorMsg(code) {
             switch(code) {
                 case 'auth/invalid-email': return 'รูปแบบอีเมลไม่ถูกต้อง';
@@ -512,7 +600,6 @@
 
                 if(password !== confirmPass) { showAuthError('รหัสผ่านไม่ตรงกัน'); resetBtn(); return; }
 
-                // Check username uniqueness in DB
                 db.collection("users").where("username_lower", "==", username.toLowerCase()).get().then(snap => {
                     if(!snap.empty) { showAuthError('ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาตั้งใหม่'); resetBtn(); return; }
                     
@@ -531,14 +618,11 @@
                 const loginId = document.getElementById('authLoginId').value.trim();
                 const password = document.getElementById('authPassword').value;
 
-                // Login with Email
                 if(loginId.includes('@')) {
                     auth.signInWithEmailAndPassword(loginId, password)
                     .then(() => { closeAuthModal(); resetBtn(); })
                     .catch(e => { showAuthError(getFirebaseErrorMsg(e.code)); resetBtn(); });
-                } 
-                // Login with Username
-                else {
+                } else {
                     db.collection("users").where("username_lower", "==", loginId.toLowerCase()).get().then(snap => {
                         if(snap.empty) { showAuthError('ไม่พบบัญชีชื่อผู้ใช้งานนี้'); resetBtn(); return; }
                         const email = snap.docs[0].data().email;
@@ -581,11 +665,22 @@
             const commentFormArea = document.getElementById('commentFormArea');
             const loginToCommentMsg = document.getElementById('loginToCommentMsg');
             const commentAvatar = document.getElementById('commentUserAvatar');
+            const changeCoverBtn = document.getElementById('changeCoverBtn');
+            const viewMembersBtn = document.getElementById('viewMembersBtn');
 
             if (currentUser) {
                 const initial = currentUser.charAt(0).toUpperCase();
                 const isAdmin = checkIsAdmin();
                 const badge = isAdmin ? `<span class="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded shadow-sm ml-1.5 font-bold">ADMIN</span>` : '';
+
+                // แสดง/ซ่อน ปุ่มของ Admin
+                if (isAdmin) {
+                    changeCoverBtn.classList.remove('hidden'); changeCoverBtn.classList.add('flex');
+                    viewMembersBtn.classList.remove('hidden'); viewMembersBtn.classList.add('flex');
+                } else {
+                    changeCoverBtn.classList.add('hidden'); changeCoverBtn.classList.remove('flex');
+                    viewMembersBtn.classList.add('hidden'); viewMembersBtn.classList.remove('flex');
+                }
 
                 area.innerHTML = `
                     <div class="flex items-center space-x-2 bg-slate-900/60 backdrop-blur px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-white/10 shadow-sm text-white">
@@ -603,6 +698,9 @@
                     commentAvatar.innerHTML = initial;
                 }
             } else {
+                changeCoverBtn.classList.add('hidden'); changeCoverBtn.classList.remove('flex');
+                viewMembersBtn.classList.add('hidden'); viewMembersBtn.classList.remove('flex');
+
                 area.innerHTML = `
                     <button onclick="openAuthModal('login')" class="bg-slate-800/60 hover:bg-slate-700/80 text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-xl border border-white/20 text-xs sm:text-sm font-semibold transition flex items-center backdrop-blur shadow">
                         <i class="fa-solid fa-user mr-2"></i> เข้าสู่ระบบ
@@ -630,7 +728,7 @@
             
             const cancelBtn = document.getElementById('confirmCancelBtn');
             if(btnColor.includes('rose') || btnColor.includes('amber')) { cancelBtn.classList.remove('hidden'); } 
-            else { cancelBtn.classList.add('hidden'); } // Hide for success alerts
+            else { cancelBtn.classList.add('hidden'); }
 
             confirmCallback = callback;
             
@@ -648,7 +746,10 @@
             const box = document.getElementById('confirmModalBox');
             modal.classList.add('opacity-0');
             box.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); confirmCallback = null; }, 300);
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                confirmCallback = null;
+            }, 300);
         }
 
         document.getElementById('confirmSubmitBtn').addEventListener('click', () => {
@@ -772,7 +873,8 @@
             document.getElementById('readBody').innerHTML = post.content;
 
             const actions = document.getElementById('postActions');
-            if (currentUser && (currentUser === post.author || checkIsAdmin())) {
+            const isAdmin = checkIsAdmin();
+            if (currentUser && (currentUser === post.author || isAdmin)) {
                 actions.classList.remove('hidden');
             } else {
                 actions.classList.add('hidden');
@@ -1045,7 +1147,8 @@
 
         function cancelEditComment(containerId) {
             document.getElementById(containerId).innerHTML = originalCommentHtml;
-            editingCommentId = null; originalCommentHtml = "";
+            editingCommentId = null;
+            originalCommentHtml = "";
         }
 
         function saveEditComment(commentId, isReply, parentId) {
@@ -1062,7 +1165,8 @@
                 comment.text = newHtml;
             }
 
-            editingCommentId = null; originalCommentHtml = "";
+            editingCommentId = null;
+            originalCommentHtml = "";
             updateFirestoreComments(null);
         }
 
