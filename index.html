@@ -1,0 +1,1291 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>คลังข่าวสารและคอมมูนิตี้ออนไลน์</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts: Prompt -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
+        
+        /* Custom Scrollbar */
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Editor Styles */
+        .editor-content { min-height: 200px; outline: none; line-height: 1.6; }
+        .editor-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; }
+        .editor-content a { color: #0ea5e9; text-decoration: underline; cursor: pointer; }
+        
+        /* Comment Input Styles */
+        .comment-input-area img { max-width: 200px; border-radius: 8px; margin-top: 8px; }
+        .comment-input-area:empty:before { content: attr(placeholder); color: #94a3b8; pointer-events: none; display: block; }
+        
+        /* Header Cover settings - No dark overlay */
+        #headerCover {
+            background-size: cover;
+            background-position: center;
+            min-height: 150px;
+            box-shadow: inset 0px 50px 100px -20px rgba(0,0,0,0.5), inset 0px -50px 100px -20px rgba(0,0,0,0.5);
+        }
+        
+        /* Text shadow for readability on transparent backgrounds */
+        .txt-shadow { text-shadow: 0px 2px 4px rgba(0,0,0,0.7); }
+    </style>
+</head>
+<body class="h-screen flex flex-col overflow-hidden">
+
+    <!-- Header & Tabs (Transparent / Floating Text) -->
+    <header id="headerCover" class="relative z-20 flex-shrink-0 transition-all duration-500 flex flex-col justify-between">
+        
+        <!-- Top Bar -->
+        <div class="max-w-full mx-auto px-6 py-4 flex items-center justify-between w-full">
+            <div class="flex items-center space-x-3 text-white txt-shadow">
+                <div class="p-2 bg-sky-500/80 rounded-lg shadow-md">
+                    <i class="fa-solid fa-globe text-xl text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight leading-none mb-1">คลังข่าวสาร พูดคุยแลกเปลี่ยนความคิดเห็น</h1>
+                    <p class="text-[10px] sm:text-[11px] uppercase tracking-widest text-sky-100">Community & Knowledge Base</p>
+                </div>
+            </div>
+            
+            <div class="flex items-center space-x-3">
+                <div id="userStatusArea" class="flex items-center space-x-3 mr-2"></div>
+
+                <label class="cursor-pointer bg-slate-800/60 hover:bg-slate-700/80 text-white text-[11px] sm:text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition flex items-center shadow border border-white/20">
+                    <i class="fa-solid fa-image mr-1.5"></i> เปลี่ยนปก
+                    <input type="file" id="coverUpload" accept="image/*" class="hidden" onchange="changeCover(this)">
+                </label>
+                <button onclick="showCreatePost()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center border border-emerald-400">
+                    <i class="fa-solid fa-pen-to-square mr-1.5"></i> สร้างโพสต์
+                </button>
+            </div>
+        </div>
+
+        <!-- Bottom Bar: Categories Tabs -->
+        <div class="px-6 w-full flex items-end mt-auto">
+            <div class="flex space-x-4 overflow-x-auto custom-scrollbar px-2 w-full max-w-4xl pb-1">
+                <button onclick="setCategory('ทั้งหมด')" id="tab-ทั้งหมด" class="tab-btn pb-2 text-sm font-bold text-white txt-shadow border-b-2 border-sky-400 whitespace-nowrap flex items-center cursor-pointer transition-all">
+                    <i class="fa-solid fa-house w-4 mr-1.5"></i> หน้าแรก
+                </button>
+                <button onclick="setCategory('งาน')" id="tab-งาน" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all">
+                    <i class="fa-solid fa-briefcase w-4 mr-1.5"></i> งาน
+                </button>
+                <button onclick="setCategory('การเรียนรู้')" id="tab-การเรียนรู้" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all">
+                    <i class="fa-solid fa-graduation-cap w-4 mr-1.5"></i> การเรียนรู้
+                </button>
+                <button onclick="setCategory('ข่าวสาร')" id="tab-ข่าวสาร" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all">
+                    <i class="fa-solid fa-user w-4 mr-1.5"></i> ข่าวสาร
+                </button>
+                <button onclick="setCategory('ไอเดีย')" id="tab-ไอเดีย" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all">
+                    <i class="fa-solid fa-lightbulb w-4 mr-1.5"></i> ไอเดีย
+                </button>
+                <button onclick="setCategory('อื่นๆ')" id="tab-อื่นๆ" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all">
+                    <i class="fa-solid fa-folder-open w-4 mr-1.5"></i> อื่นๆ
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content Area -->
+    <div class="flex flex-1 overflow-hidden">
+        
+        <!-- Left Sidebar (Post List) -->
+        <aside class="w-[260px] bg-white border-r border-slate-200 flex flex-col z-10 flex-shrink-0 shadow-sm">
+            <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                <h2 class="text-[13px] font-bold text-slate-700">ฟีดบทความล่าสุด</h2>
+                <span id="postCount" class="bg-sky-100 text-sky-700 text-[10px] font-bold px-2 py-0.5 rounded-full">0</span>
+            </div>
+            <div id="postList" class="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/30"></div>
+        </aside>
+
+        <!-- Right Content Area -->
+        <main class="flex-1 bg-white relative flex flex-col h-full">
+            <div id="mainContent" class="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8">
+                
+                <!-- Welcome Screen -->
+                <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-slate-400">
+                    <div class="w-24 h-24 sm:w-28 sm:h-28 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100 shadow-inner">
+                        <i class="fa-regular fa-newspaper text-4xl sm:text-5xl text-slate-300"></i>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-slate-600 mb-2">ยินดีต้อนรับสู่คอมมูนิตี้</h2>
+                    <p class="text-xs sm:text-sm text-center px-4">เลือกบทความด้านซ้ายเพื่ออ่านข่าวสาร หรือกด "สร้างโพสต์" เพื่อแบ่งปันเรื่องราวของคุณ</p>
+                </div>
+
+                <!-- Read Post Screen -->
+                <div id="readScreen" class="hidden max-w-4xl mx-auto h-full flex flex-col">
+                    <div class="flex-shrink-0">
+                        <div class="flex justify-between items-start mb-4">
+                            <h2 id="readTitle" class="text-2xl sm:text-3xl font-bold text-slate-800 leading-tight"></h2>
+                            <div id="postActions" class="flex space-x-2 hidden">
+                                <button onclick="editPost()" class="bg-amber-100 text-amber-700 hover:bg-amber-200 px-3 py-1.5 rounded text-xs sm:text-sm font-semibold transition">
+                                    <i class="fa-solid fa-pen mr-1"></i> แก้ไข
+                                </button>
+                                <button onclick="promptDeletePost()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 px-3 py-1.5 rounded text-xs sm:text-sm font-semibold transition">
+                                    <i class="fa-solid fa-trash mr-1"></i> ลบ
+                                </button>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-4 text-xs text-slate-500 mb-6 pb-4 border-b border-slate-100">
+                            <span class="flex items-center"><i class="fa-solid fa-user-circle mr-1.5 text-slate-400"></i> <span id="readAuthor" class="font-medium text-slate-700"></span></span>
+                            <span class="flex items-center"><i class="fa-regular fa-clock mr-1.5 text-slate-400"></i> <span id="readDate"></span></span>
+                            <span id="readCategory" class="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-md font-medium border border-slate-200"></span>
+                        </div>
+                    </div>
+                    
+                    <!-- Post Content -->
+                    <div id="readBody" class="editor-content text-slate-700 mb-10 flex-shrink-0 text-sm sm:text-base"></div>
+
+                    <!-- Comments Section -->
+                    <div class="mt-8 pt-6 border-t border-slate-200 flex-1 flex flex-col">
+                        <h3 class="text-base sm:text-lg font-bold text-slate-800 mb-5"><i class="fa-regular fa-comments mr-2 text-sky-500"></i>ความคิดเห็น (<span id="commentCount">0</span>)</h3>
+                        
+                        <!-- Comment List -->
+                        <div id="commentList" class="space-y-6 mb-6 flex-1 overflow-y-auto custom-scrollbar pr-2"></div>
+
+                        <!-- Add Main Comment Form -->
+                        <div id="commentFormArea" class="mt-auto bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 flex-shrink-0 shadow-sm">
+                            <div class="flex items-start space-x-3">
+                                <div id="commentUserAvatar" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0 shadow-sm"></div>
+                                <div class="flex-1 relative bg-white border border-slate-300 rounded-xl overflow-visible flex flex-col focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
+                                    
+                                    <div class="bg-slate-50 border-b border-slate-200 px-3 py-2 flex items-center space-x-2 rounded-t-xl relative">
+                                        <button type="button" onclick="toggleEmojiPicker('emojiPicker-main')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition">
+                                            <i class="fa-regular fa-face-smile text-base sm:text-lg"></i>
+                                        </button>
+                                        <div id="emojiPicker-main" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-2 z-50">
+                                            <div class="flex flex-wrap gap-1 max-h-52 overflow-y-auto custom-scrollbar"></div>
+                                        </div>
+
+                                        <button type="button" onclick="addCommentLink('commentInput')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-solid fa-link"></i></button>
+                                        
+                                        <label class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer transition">
+                                            <i class="fa-regular fa-image"></i>
+                                            <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'commentInput')">
+                                        </label>
+                                    </div>
+                                    
+                                    <div id="commentInput" class="comment-input-area p-3 text-sm text-slate-800 custom-scrollbar overflow-y-auto min-h-[80px] outline-none" contenteditable="true" placeholder="แสดงความคิดเห็นของคุณ... (วางรูปภาพ หรือลิงก์ได้เลย)"></div>
+                                    
+                                    <div class="px-3 py-2 bg-white rounded-b-xl flex justify-between items-center border-t border-slate-100">
+                                        <span class="text-[10px] sm:text-xs text-slate-400">กรุณาสุภาพในการแสดงความคิดเห็น</span>
+                                        <button onclick="addComment()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 sm:px-5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition shadow-sm">
+                                            ส่งข้อความ
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="loginToCommentMsg" class="hidden mt-auto bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center shadow-sm">
+                            <p class="text-sm font-medium text-slate-600 mb-3">กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น</p>
+                            <button onclick="openAuthModal('login')" class="bg-sky-100 hover:bg-sky-200 text-sky-700 px-6 py-2 rounded-lg text-sm font-bold transition border border-sky-200">เข้าสู่ระบบ / สมัครสมาชิก</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Editor Screen -->
+                <div id="editorScreen" class="hidden max-w-4xl mx-auto">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 id="editorScreenTitle" class="text-xl sm:text-2xl font-bold text-slate-800">สร้างข่าวสาร/โพสต์ใหม่</h2>
+                        <button onclick="closeEditor()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-times text-xl"></i></button>
+                    </div>
+                    
+                    <div class="space-y-4">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="md:col-span-2">
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">หัวข้อโพสต์</label>
+                                <input type="text" id="postTitle" placeholder="ระบุหัวข้อที่น่าสนใจ..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-800 focus:ring-2 focus:ring-sky-500 focus:bg-white transition">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-slate-700 mb-1">หมวดหมู่</label>
+                                <select id="postCategory" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg font-medium text-slate-800 focus:ring-2 focus:ring-sky-500 focus:bg-white transition">
+                                    <option value="งาน">งาน</option>
+                                    <option value="การเรียนรู้">การเรียนรู้</option>
+                                    <option value="ข่าวสาร">ข่าวสาร</option>
+                                    <option value="ไอเดีย">ไอเดีย</option>
+                                    <option value="อื่นๆ" selected>อื่นๆ</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="border border-slate-300 rounded-xl overflow-hidden flex flex-col bg-white">
+                            <div class="bg-slate-100 border-b border-slate-200 px-3 py-2 flex items-center space-x-1 overflow-x-auto">
+                                <button type="button" onclick="formatDoc('bold')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center font-bold" title="ตัวหนา"><i class="fa-solid fa-bold"></i></button>
+                                <button type="button" onclick="formatDoc('italic')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center italic" title="ตัวเอียง"><i class="fa-solid fa-italic"></i></button>
+                                <button type="button" onclick="formatDoc('underline')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center underline" title="ขีดเส้นใต้"><i class="fa-solid fa-underline"></i></button>
+                                <div class="w-px h-5 bg-slate-300 mx-1"></div>
+                                <button type="button" onclick="addLink()" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center"><i class="fa-solid fa-link"></i></button>
+                                <label class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center cursor-pointer">
+                                    <i class="fa-regular fa-image"></i>
+                                    <input type="file" accept="image/*" class="hidden" onchange="insertPostImage(this)">
+                                </label>
+                            </div>
+                            <div id="postContent" class="editor-content p-5 text-sm sm:text-base text-slate-800 custom-scrollbar overflow-y-auto h-80" contenteditable="true" placeholder="เขียนเนื้อหาบทความของคุณที่นี่... สามารถวางภาพ ลิงก์ หรือจัดรูปแบบได้ตามต้องการ"></div>
+                        </div>
+
+                        <div class="flex justify-end pt-4 space-x-3">
+                            <button onclick="closeEditor()" class="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">ยกเลิก</button>
+                            <button onclick="savePost()" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-bold shadow-md transition flex items-center">
+                                <i class="fa-solid fa-paper-plane mr-2"></i> โพสต์บทความ
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Generic Confirm Modal (Keep for deletions / alerts) -->
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300" id="confirmModalBox">
+            <div class="p-6 text-center">
+                <div id="confirmIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"></div>
+                <h3 id="confirmTitle" class="text-xl font-bold text-slate-800 mb-2"></h3>
+                <p id="confirmMsg" class="text-sm text-slate-500 mb-6 font-medium"></p>
+                <div class="flex space-x-3">
+                    <button id="confirmCancelBtn" onclick="closeConfirmModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold py-2.5 rounded-xl transition">ยกเลิก</button>
+                    <button id="confirmSubmitBtn" class="flex-1 text-white text-sm font-bold py-2.5 rounded-xl transition shadow-md"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔑 Authentication Modal (Login / Register / Forgot Password) 🔑 -->
+    <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col" id="authModalBox">
+            
+            <!-- Auth Tabs -->
+            <div class="flex border-b border-slate-200 bg-slate-50" id="authTabsContainer">
+                <button id="tabAuthLogin" onclick="switchAuthMode('login')" class="flex-1 py-4 text-sm font-bold text-sky-600 border-b-2 border-sky-500 transition-colors bg-white">เข้าสู่ระบบ</button>
+                <button id="tabAuthRegister" onclick="switchAuthMode('register')" class="flex-1 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition-colors bg-slate-50 cursor-pointer">สมัครสมาชิกใหม่</button>
+            </div>
+            
+            <!-- Auth Body -->
+            <div class="p-6 sm:p-8">
+                <div class="mb-6 text-center">
+                    <div id="authIconContainer" class="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+                        <i class="fa-solid fa-right-to-bracket text-3xl text-sky-600" id="authIcon"></i>
+                    </div>
+                    <h3 id="authTitleText" class="text-xl font-bold text-slate-800">เข้าสู่ระบบ</h3>
+                </div>
+                
+                <form id="authForm" onsubmit="event.preventDefault(); submitAuth();" class="space-y-4">
+                    
+                    <!-- Identifier (Login only) -->
+                    <div id="authLoginIdGroup">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">อีเมล หรือ ชื่อผู้ใช้งาน <span class="text-rose-500">*</span></label>
+                        <input type="text" id="authLoginId" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="your@email.com หรือ username">
+                    </div>
+
+                    <!-- Email (Register / Forgot Password only) -->
+                    <div id="authEmailGroup" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">อีเมล <span class="text-rose-500">*</span></label>
+                        <input type="email" id="authEmail" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="your@email.com">
+                    </div>
+                    
+                    <!-- Username (Register only) -->
+                    <div id="authUsernameGroup" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อผู้ใช้งาน (แสดงในเว็บ) <span class="text-rose-500">*</span></label>
+                        <input type="text" id="authUsername" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="ตั้งชื่อโปรไฟล์ของคุณ">
+                    </div>
+
+                    <!-- Password -->
+                    <div id="authPasswordGroup">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-semibold text-slate-600">รหัสผ่าน <span class="text-rose-500">*</span></label>
+                            <a href="#" id="forgotPasswordLink" onclick="switchAuthMode('forgot')" class="text-[11px] font-semibold text-sky-600 hover:text-sky-800 transition">ลืมรหัสผ่าน?</a>
+                        </div>
+                        <input type="password" id="authPassword" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="••••••••">
+                    </div>
+
+                    <!-- Confirm Password (Register only) -->
+                    <div id="authConfirmPasswordGroup" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ยืนยันรหัสผ่าน <span class="text-rose-500">*</span></label>
+                        <input type="password" id="authConfirmPassword" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="••••••••">
+                    </div>
+
+                    <!-- Error Message Display -->
+                    <div id="authErrorMsg" class="text-rose-500 text-xs font-semibold text-center hidden bg-rose-50 p-2 rounded border border-rose-200"></div>
+
+                    <div class="flex space-x-3 mt-6 pt-2">
+                        <button type="button" id="authCancelBtn" onclick="closeAuthModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold py-3 rounded-xl transition">ยกเลิก</button>
+                        <button type="submit" id="authSubmitBtn" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold py-3 rounded-xl transition shadow-md shadow-sky-200">เข้าสู่ระบบ</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Structure
+        let posts = [];
+        let currentPostId = null;
+        let currentCategory = 'ทั้งหมด';
+        let currentUser = null; // Store Display Name (Username)
+        let confirmCallback = null;
+        
+        let accounts = []; // Simulate Database for Users [{email, password, username}]
+        let currentAuthMode = 'login'; // 'login' | 'register' | 'forgot'
+
+        const ADMIN_NAMES = ['Admin', 'admin', 'ผู้ดูแลระบบ'];
+        const emojiList = ["😀","😂","😅","🥰","😎","😭","😡","👍","🙏","❤️","🔥","✨","🎉","👏","👀","🤔","🙌","🤝","✅","❌","💡","💯","🚀","🌟","🍕","☕","🥳","😱","🥺","🥶","😷","😴","🤫","🧐","🤓","👻","👽","🤖","💩","🙊","💖","💔","💬","🔔","🎵","🎮","🏆","💸","📸"];
+
+        // --- Core Helpers ---
+        function checkIsAdmin() {
+            return currentUser && ADMIN_NAMES.includes(currentUser);
+        }
+
+        // Initialization
+        function init() {
+            const savedCover = localStorage.getItem('blog_cover');
+            if (savedCover) {
+                document.getElementById('headerCover').style.backgroundImage = `url(${savedCover})`;
+            }
+
+            const savedAccounts = localStorage.getItem('community_accounts');
+            if (savedAccounts) {
+                try { accounts = JSON.parse(savedAccounts); } catch(e) { accounts = []; }
+            }
+
+            const savedUser = localStorage.getItem('community_user');
+            if (savedUser) {
+                currentUser = savedUser;
+            }
+            renderUserStatus();
+
+            const savedPosts = localStorage.getItem('community_posts');
+            if (savedPosts) {
+                try { posts = JSON.parse(savedPosts); } catch(e) { posts = []; }
+            }
+            
+            populateEmojiPicker('emojiPicker-main', 'commentInput');
+            renderPostList();
+
+            document.addEventListener('click', function(e) {
+                document.querySelectorAll('.emoji-picker').forEach(picker => {
+                    const toggleBtn = picker.previousElementSibling;
+                    if (!picker.classList.contains('hidden') && !picker.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
+                        picker.classList.add('hidden');
+                    }
+                });
+            });
+        }
+
+        // --- 🔑 Authentication System (Login/Register/Forgot) 🔑 ---
+        function openAuthModal(mode = 'login') {
+            switchAuthMode(mode);
+            document.getElementById('authLoginId').value = '';
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPassword').value = '';
+            document.getElementById('authUsername').value = '';
+            document.getElementById('authConfirmPassword').value = '';
+            document.getElementById('authErrorMsg').classList.add('hidden');
+
+            const modal = document.getElementById('authModal');
+            const box = document.getElementById('authModalBox');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                if (mode === 'login') document.getElementById('authLoginId').focus();
+                else document.getElementById('authEmail').focus();
+            }, 10);
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('authModal');
+            const box = document.getElementById('authModalBox');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+            }, 300);
+        }
+
+        function switchAuthMode(mode) {
+            currentAuthMode = mode;
+            const tabLogin = document.getElementById('tabAuthLogin');
+            const tabReg = document.getElementById('tabAuthRegister');
+            
+            const loginIdGroup = document.getElementById('authLoginIdGroup');
+            const emailGroup = document.getElementById('authEmailGroup');
+            const userGroup = document.getElementById('authUsernameGroup');
+            const passGroup = document.getElementById('authPasswordGroup');
+            const confirmGroup = document.getElementById('authConfirmPasswordGroup');
+            
+            const iconContainer = document.getElementById('authIconContainer');
+            const title = document.getElementById('authTitleText');
+            const icon = document.getElementById('authIcon');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const cancelBtn = document.getElementById('authCancelBtn');
+            const forgotLink = document.getElementById('forgotPasswordLink');
+            const errorMsg = document.getElementById('authErrorMsg');
+            
+            errorMsg.classList.add('hidden'); 
+
+            // Reset Required Attributes
+            ['authLoginId', 'authEmail', 'authUsername', 'authPassword', 'authConfirmPassword'].forEach(id => {
+                document.getElementById(id).removeAttribute('required');
+            });
+
+            if (mode === 'login') {
+                tabLogin.className = 'flex-1 py-4 text-sm font-bold text-sky-600 border-b-2 border-sky-500 transition-colors bg-white';
+                tabReg.className = 'flex-1 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition-colors bg-slate-50 cursor-pointer';
+                
+                loginIdGroup.classList.remove('hidden');
+                document.getElementById('authLoginId').setAttribute('required', 'true');
+                
+                emailGroup.classList.add('hidden');
+                userGroup.classList.add('hidden');
+                
+                passGroup.classList.remove('hidden');
+                document.getElementById('authPassword').setAttribute('required', 'true');
+                
+                confirmGroup.classList.add('hidden');
+                forgotLink.classList.remove('hidden');
+
+                iconContainer.className = 'w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner';
+                title.innerText = 'เข้าสู่ระบบ';
+                icon.className = 'fa-solid fa-right-to-bracket text-3xl text-sky-600';
+                
+                submitBtn.innerText = 'เข้าสู่ระบบ';
+                submitBtn.className = 'flex-1 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold py-3 rounded-xl transition shadow-md shadow-sky-200';
+                cancelBtn.innerText = 'ยกเลิก';
+                cancelBtn.onclick = closeAuthModal;
+
+            } else if (mode === 'register') {
+                tabReg.className = 'flex-1 py-4 text-sm font-bold text-emerald-600 border-b-2 border-emerald-500 transition-colors bg-white';
+                tabLogin.className = 'flex-1 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition-colors bg-slate-50 cursor-pointer';
+                
+                loginIdGroup.classList.add('hidden');
+                
+                emailGroup.classList.remove('hidden');
+                document.getElementById('authEmail').setAttribute('required', 'true');
+                
+                userGroup.classList.remove('hidden');
+                document.getElementById('authUsername').setAttribute('required', 'true');
+                
+                passGroup.classList.remove('hidden');
+                document.getElementById('authPassword').setAttribute('required', 'true');
+                
+                confirmGroup.classList.remove('hidden');
+                document.getElementById('authConfirmPassword').setAttribute('required', 'true');
+                
+                forgotLink.classList.add('hidden');
+
+                iconContainer.className = 'w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner';
+                title.innerText = 'สมัครสมาชิกใหม่';
+                icon.className = 'fa-solid fa-user-plus text-3xl text-emerald-600';
+                
+                submitBtn.innerText = 'ลงทะเบียน';
+                submitBtn.className = 'flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-3 rounded-xl transition shadow-md shadow-emerald-200';
+                cancelBtn.innerText = 'ยกเลิก';
+                cancelBtn.onclick = closeAuthModal;
+
+            } else if (mode === 'forgot') {
+                // Highlight neither tab strictly
+                tabLogin.className = 'flex-1 py-4 text-sm font-medium text-slate-400 border-b-2 border-transparent bg-slate-50 cursor-pointer hover:text-slate-600';
+                tabReg.className = 'flex-1 py-4 text-sm font-medium text-slate-400 border-b-2 border-transparent bg-slate-50 cursor-pointer hover:text-slate-600';
+                
+                loginIdGroup.classList.add('hidden');
+                userGroup.classList.add('hidden');
+                passGroup.classList.add('hidden');
+                confirmGroup.classList.add('hidden');
+                
+                emailGroup.classList.remove('hidden');
+                document.getElementById('authEmail').setAttribute('required', 'true');
+
+                iconContainer.className = 'w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner';
+                title.innerText = 'รีเซ็ตรหัสผ่าน';
+                icon.className = 'fa-solid fa-key text-3xl text-amber-500';
+                
+                submitBtn.innerText = 'ส่งลิงก์รีเซ็ต';
+                submitBtn.className = 'flex-1 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold py-3 rounded-xl transition shadow-md shadow-amber-200';
+                cancelBtn.innerText = 'ย้อนกลับ';
+                cancelBtn.onclick = () => switchAuthMode('login');
+            }
+        }
+
+        function submitAuth() {
+            const errorMsg = document.getElementById('authErrorMsg');
+            errorMsg.classList.add('hidden');
+
+            if(currentAuthMode === 'register') {
+                const email = document.getElementById('authEmail').value.trim();
+                const username = document.getElementById('authUsername').value.trim();
+                const password = document.getElementById('authPassword').value;
+                const confirmPass = document.getElementById('authConfirmPassword').value;
+
+                if(password !== confirmPass) {
+                    showAuthError('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
+                    return;
+                }
+                
+                if(password.length < 6) {
+                    showAuthError('รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร');
+                    return;
+                }
+
+                if(accounts.find(a => a.email.toLowerCase() === email.toLowerCase())) {
+                    showAuthError('อีเมลนี้ถูกใช้งานไปแล้ว');
+                    return;
+                }
+
+                if(accounts.find(a => a.username.toLowerCase() === username.toLowerCase())) {
+                    showAuthError('ชื่อผู้ใช้งานนี้ถูกใช้ไปแล้ว กรุณาตั้งชื่ออื่น');
+                    return;
+                }
+
+                accounts.push({ email, password, username });
+                localStorage.setItem('community_accounts', JSON.stringify(accounts));
+                
+                loginSuccess(username);
+
+            } else if (currentAuthMode === 'login') {
+                const loginId = document.getElementById('authLoginId').value.trim().toLowerCase();
+                const password = document.getElementById('authPassword').value;
+
+                const account = accounts.find(a => 
+                    a.email.toLowerCase() === loginId || 
+                    a.username.toLowerCase() === loginId
+                );
+                
+                if(!account) {
+                    showAuthError('ไม่พบบัญชีผู้ใช้งานนี้');
+                    return;
+                }
+
+                if(account.password !== password) {
+                    showAuthError('รหัสผ่านไม่ถูกต้อง');
+                    return;
+                }
+
+                loginSuccess(account.username);
+                
+            } else if (currentAuthMode === 'forgot') {
+                const email = document.getElementById('authEmail').value.trim().toLowerCase();
+                const account = accounts.find(a => a.email.toLowerCase() === email);
+                
+                if(!account) {
+                    showAuthError('ไม่พบบัญชีผู้ใช้งานที่ใช้อีเมลนี้');
+                    return;
+                }
+
+                closeAuthModal();
+                showModal(
+                    "ส่งลิงก์สำเร็จ!", 
+                    `ระบบได้ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมล ${account.email} เรียบร้อยแล้ว (ระบบจำลอง)`, 
+                    '<i class="fa-solid fa-envelope-circle-check text-4xl text-emerald-600"></i>', 
+                    'bg-emerald-100', 
+                    "ตกลง", 
+                    "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200", 
+                    () => {}
+                );
+            }
+        }
+
+        function showAuthError(msg) {
+            const errorEl = document.getElementById('authErrorMsg');
+            errorEl.innerText = msg;
+            errorEl.classList.remove('hidden');
+        }
+
+        function loginSuccess(username) {
+            currentUser = username;
+            localStorage.setItem('community_user', currentUser);
+            renderUserStatus();
+            if(currentPostId) selectPost(currentPostId);
+            closeAuthModal();
+        }
+
+        function handleLogout() {
+            showModal(
+                "ออกจากระบบ", 
+                "คุณต้องการออกจากระบบใช่หรือไม่?", 
+                '<i class="fa-solid fa-arrow-right-from-bracket text-3xl text-amber-600"></i>', 
+                'bg-amber-100', 
+                "ออกจากระบบ", 
+                "bg-amber-600 hover:bg-amber-700 shadow-amber-200", 
+                () => {
+                    currentUser = null;
+                    localStorage.removeItem('community_user');
+                    renderUserStatus();
+                    const actions = document.getElementById('postActions');
+                    if (actions) actions.classList.add('hidden');
+                    if(currentPostId) selectPost(currentPostId); 
+                    closeConfirmModal();
+                }
+            );
+        }
+
+        function renderUserStatus() {
+            const area = document.getElementById('userStatusArea');
+            const commentFormArea = document.getElementById('commentFormArea');
+            const loginToCommentMsg = document.getElementById('loginToCommentMsg');
+            const commentAvatar = document.getElementById('commentUserAvatar');
+
+            if (currentUser) {
+                const initial = currentUser.charAt(0).toUpperCase();
+                const isAdmin = checkIsAdmin();
+                const badge = isAdmin ? `<span class="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded shadow-sm ml-1.5 font-bold">ADMIN</span>` : '';
+
+                area.innerHTML = `
+                    <div class="flex items-center space-x-2 bg-slate-900/60 backdrop-blur px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-white/10 shadow-sm text-white">
+                        <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-sky-500 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold shadow-sm">${initial}</div>
+                        <span class="text-xs sm:text-sm font-medium flex items-center drop-shadow-md">
+                            <span class="truncate max-w-[80px] sm:max-w-[120px]">${currentUser}</span>
+                            ${badge}
+                        </span>
+                        <button onclick="handleLogout()" class="text-slate-300 hover:text-rose-400 ml-2 sm:ml-3 transition" title="ออกจากระบบ"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                    </div>
+                `;
+                if(commentFormArea) {
+                    commentFormArea.classList.remove('hidden');
+                    loginToCommentMsg.classList.add('hidden');
+                    commentAvatar.innerHTML = initial;
+                }
+            } else {
+                area.innerHTML = `
+                    <button onclick="openAuthModal('login')" class="bg-slate-800/60 hover:bg-slate-700/80 text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-xl border border-white/20 text-xs sm:text-sm font-semibold transition flex items-center backdrop-blur shadow">
+                        <i class="fa-solid fa-user mr-2"></i> เข้าสู่ระบบ
+                    </button>
+                `;
+                if(commentFormArea) {
+                    commentFormArea.classList.add('hidden');
+                    loginToCommentMsg.classList.remove('hidden');
+                }
+            }
+        }
+
+        // --- Generic Modals for Alerts/Deletions ---
+        function showModal(title, msg, iconHtml, iconBg, btnText, btnColor, callback) {
+            document.getElementById('confirmTitle').innerText = title;
+            document.getElementById('confirmMsg').innerText = msg;
+            
+            const iconDiv = document.getElementById('confirmIcon');
+            iconDiv.className = `w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner ${iconBg}`;
+            iconDiv.innerHTML = iconHtml;
+
+            const submitBtn = document.getElementById('confirmSubmitBtn');
+            submitBtn.innerText = btnText;
+            submitBtn.className = `flex-1 text-white text-sm font-bold py-2.5 rounded-xl transition shadow-md ${btnColor}`;
+            
+            // Handle Cancel button visibility for alerts
+            const cancelBtn = document.getElementById('confirmCancelBtn');
+            if(btnBgColorIsAlert(btnColor)) {
+                cancelBtn.classList.remove('hidden');
+            } else {
+                // If it's just an info alert (like reset pass success), hide cancel
+                if(btnText === 'ตกลง') cancelBtn.classList.add('hidden');
+                else cancelBtn.classList.remove('hidden');
+            }
+
+            confirmCallback = callback;
+            
+            const modal = document.getElementById('confirmModal');
+            const box = document.getElementById('confirmModalBox');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+            }, 10);
+        }
+        
+        function btnBgColorIsAlert(colorClass) {
+            return colorClass.includes('rose') || colorClass.includes('amber');
+        }
+
+        function closeConfirmModal() {
+            const modal = document.getElementById('confirmModal');
+            const box = document.getElementById('confirmModalBox');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                confirmCallback = null;
+            }, 300);
+        }
+
+        document.getElementById('confirmSubmitBtn').addEventListener('click', () => {
+            if (confirmCallback) confirmCallback();
+            else closeConfirmModal();
+        });
+
+        // --- Categories & Listing ---
+        function setCategory(cat) {
+            currentCategory = cat;
+            
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all';
+            });
+            const activeTab = document.getElementById(`tab-${cat}`);
+            if(activeTab) {
+                activeTab.className = 'tab-btn pb-2 text-sm font-bold text-white txt-shadow border-b-2 border-sky-400 whitespace-nowrap flex items-center cursor-pointer transition-all';
+            }
+            
+            if(cat === 'ทั้งหมด') {
+                currentPostId = null;
+                document.getElementById('readScreen').classList.add('hidden');
+                document.getElementById('editorScreen').classList.add('hidden');
+                document.getElementById('welcomeScreen').classList.remove('hidden');
+            }
+            
+            renderPostList();
+        }
+
+        function getCategoryIcon(cat) {
+            switch(cat) {
+                case 'งาน': return '<i class="fa-solid fa-briefcase text-indigo-500"></i>';
+                case 'การเรียนรู้': return '<i class="fa-solid fa-graduation-cap text-emerald-500"></i>';
+                case 'ข่าวสาร': return '<i class="fa-solid fa-user text-amber-500"></i>';
+                case 'ไอเดีย': return '<i class="fa-solid fa-lightbulb text-purple-500"></i>';
+                default: return '<i class="fa-solid fa-folder text-slate-400"></i>';
+            }
+        }
+
+        function getLatestActivity(post) {
+            let latest = parseInt(post.id); 
+            if (post.comments) {
+                post.comments.forEach(c => {
+                    const cId = parseInt(c.id);
+                    if (!isNaN(cId) && cId > latest) latest = cId;
+                    if (c.replies) {
+                        c.replies.forEach(r => {
+                            const rId = parseInt(r.id);
+                            if (!isNaN(rId) && rId > latest) latest = rId;
+                        });
+                    }
+                });
+            }
+            return latest;
+        }
+
+        function renderPostList() {
+            const listContainer = document.getElementById('postList');
+            listContainer.innerHTML = '';
+            
+            const filteredPosts = currentCategory === 'ทั้งหมด' 
+                ? posts : posts.filter(p => p.category === currentCategory);
+
+            document.getElementById('postCount').innerText = filteredPosts.length;
+
+            if (filteredPosts.length === 0) {
+                listContainer.innerHTML = `
+                    <div class="p-8 text-center text-slate-400 mt-10">
+                        <i class="fa-regular fa-folder-open text-4xl mb-3 opacity-50"></i>
+                        <p class="text-sm font-medium">ไม่มีโพสต์ในหมวดหมู่นี้</p>
+                    </div>`;
+                return;
+            }
+
+            const sortedPosts = [...filteredPosts].sort((a, b) => getLatestActivity(b) - getLatestActivity(a));
+
+            sortedPosts.forEach(post => {
+                const isActive = post.id === currentPostId;
+                let commentCount = (post.comments || []).length;
+                (post.comments || []).forEach(c => { commentCount += (c.replies || []).length; });
+                
+                const item = document.createElement('div');
+                item.className = `px-3 py-2 cursor-pointer border-b border-slate-100 transition-all duration-200 flex items-center justify-between w-full ${isActive ? 'bg-sky-50 border-l-4 border-l-sky-500' : 'bg-white hover:bg-slate-50 border-l-4 border-l-transparent'}`;
+                item.onclick = () => selectPost(post.id);
+                item.innerHTML = `
+                    <h3 class="font-bold text-[12px] ${isActive ? 'text-sky-900' : 'text-slate-800'} line-clamp-2 leading-snug flex-1 pr-2 select-none pointer-events-none">${post.title}</h3>
+                    <div class="text-[11px] font-bold text-slate-400 flex items-center space-x-1 flex-shrink-0 select-none pointer-events-none" title="จำนวนความคิดเห็น">
+                        <i class="fa-regular fa-comment text-slate-300"></i> <span>${commentCount}</span>
+                    </div>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        // --- Post Handling ---
+        function promptDeletePost() {
+            showModal(
+                "ยืนยันการลบโพสต์?", 
+                "คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้? การกระทำนี้ไม่สามารถกู้คืนได้", 
+                '<i class="fa-solid fa-triangle-exclamation text-3xl text-rose-600"></i>', 
+                'bg-rose-100', 
+                "ลบทิ้งถาวร", 
+                "bg-rose-600 hover:bg-rose-700 shadow-rose-200", 
+                () => {
+                    posts = posts.filter(p => p.id !== currentPostId);
+                    saveData();
+                    currentPostId = null;
+                    renderPostList();
+                    document.getElementById('readScreen').classList.add('hidden');
+                    document.getElementById('welcomeScreen').classList.remove('hidden');
+                    closeConfirmModal();
+                }
+            );
+        }
+
+        function selectPost(id) {
+            currentPostId = id;
+            renderPostList();
+
+            const post = posts.find(p => p.id === id);
+            if (!post) return;
+
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('editorScreen').classList.add('hidden');
+            document.getElementById('readScreen').classList.remove('hidden');
+
+            document.getElementById('readTitle').innerText = post.title;
+            document.getElementById('readAuthor').innerText = post.author;
+            document.getElementById('readDate').innerText = post.date;
+            document.getElementById('readCategory').innerHTML = `${getCategoryIcon(post.category)} ${post.category}`;
+            document.getElementById('readBody').innerHTML = post.content;
+
+            const actions = document.getElementById('postActions');
+            const isAdmin = checkIsAdmin();
+            if (currentUser && (currentUser === post.author || isAdmin)) {
+                actions.classList.remove('hidden');
+            } else {
+                actions.classList.add('hidden');
+            }
+
+            renderComments(post);
+        }
+
+        // --- Comment Handling ---
+        function renderComments(post) {
+            const list = document.getElementById('commentList');
+            const countLabel = document.getElementById('commentCount');
+            const comments = post.comments || [];
+            
+            let totalCount = comments.length;
+            comments.forEach(c => { totalCount += (c.replies || []).length; });
+            
+            countLabel.innerText = totalCount;
+            list.innerHTML = '';
+
+            if(comments.length === 0) {
+                list.innerHTML = `<p class="text-sm text-slate-400 text-center py-6 italic border border-dashed border-slate-200 rounded-xl">ยังไม่มีความคิดเห็น เป็นคนแรกที่แสดงความคิดเห็นสิ!</p>`;
+                return;
+            }
+
+            const isAdmin = checkIsAdmin();
+
+            comments.forEach(c => {
+                if(!c.id) c.id = Date.now().toString() + Math.random().toString().substr(2,5); 
+                if(!c.replies) c.replies = [];
+
+                const isMe = (c.author === currentUser);
+                const canEdit = isMe || isAdmin;
+
+                const bubble = document.createElement('div');
+                bubble.className = `flex flex-col space-y-2`;
+                
+                let html = `
+                    <div class="flex items-start space-x-3">
+                        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full ${isMe ? 'bg-sky-500 text-white shadow-sm' : 'bg-slate-200 text-slate-600'} flex items-center justify-center font-bold text-xs sm:text-sm flex-shrink-0">
+                            ${c.author.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="w-full">
+                            <div class="bg-slate-50 border border-slate-100 px-3 py-2 sm:px-4 sm:py-3 rounded-2xl rounded-tl-none inline-block min-w-[200px] max-w-[95%] shadow-sm">
+                                <div class="flex items-center space-x-2 mb-1.5">
+                                    <span class="text-xs sm:text-sm font-bold ${isMe ? 'text-sky-700' : 'text-slate-700'}">${c.author}</span>
+                                    <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium">${c.time}</span>
+                                </div>
+                                <div id="comment-text-${c.id}" class="text-xs sm:text-sm text-slate-700 leading-relaxed editor-content min-h-0">${c.text}</div>
+                            </div>
+                            
+                            <div class="flex items-center space-x-3 mt-1.5 ml-2 text-[10px] sm:text-[11px] font-semibold text-slate-500">
+                                <button onclick="toggleReplyBox('${c.id}')" class="hover:text-sky-600 transition">ตอบกลับ</button>
+                                ${canEdit ? `
+                                    <button onclick="startEditComment('${c.id}', false)" class="hover:text-amber-600 transition">แก้ไข</button>
+                                    <button onclick="promptDeleteComment('${c.id}', false)" class="hover:text-rose-600 transition">ลบ</button>
+                                ` : ''}
+                            </div>
+
+                            <div id="reply-box-${c.id}" class="hidden mt-3 max-w-[95%]">
+                                <div class="bg-white border border-slate-300 rounded-xl overflow-visible focus-within:ring-2 focus-within:ring-sky-500 transition-all">
+                                    <div class="bg-slate-50 border-b border-slate-200 px-2 py-1.5 flex items-center space-x-1 rounded-t-xl relative">
+                                        <button type="button" onclick="toggleEmojiPicker('emojiPicker-reply-${c.id}')" class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center"><i class="fa-regular fa-face-smile text-xs sm:text-sm"></i></button>
+                                        <div id="emojiPicker-reply-${c.id}" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-2 z-50">
+                                            <div class="flex flex-wrap gap-1 max-h-52 overflow-y-auto custom-scrollbar" id="emoji-container-reply-${c.id}"></div>
+                                        </div>
+                                        <button type="button" onclick="addCommentLink('reply-input-${c.id}')" class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center"><i class="fa-solid fa-link text-xs sm:text-sm"></i></button>
+                                        <label class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer">
+                                            <i class="fa-regular fa-image text-xs sm:text-sm"></i>
+                                            <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'reply-input-${c.id}')">
+                                        </label>
+                                    </div>
+                                    <div id="reply-input-${c.id}" class="comment-input-area p-2.5 text-xs sm:text-sm text-slate-800 custom-scrollbar overflow-y-auto min-h-[60px] outline-none" contenteditable="true" placeholder="เขียนการตอบกลับ..."></div>
+                                    <div class="px-2 py-1.5 bg-slate-50 rounded-b-xl flex justify-end border-t border-slate-100">
+                                        <button onclick="submitReply('${c.id}')" class="bg-sky-600 hover:bg-sky-700 text-white px-3 sm:px-4 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition">ตอบกลับ</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 pl-6 sm:pl-8 space-y-4 border-l-2 border-slate-100 ml-3 sm:ml-4">
+                                ${renderRepliesHTML(c.replies, c.id, isAdmin)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+                bubble.innerHTML = html;
+                list.appendChild(bubble);
+
+                setTimeout(() => {
+                    populateEmojiPicker(`emojiPicker-reply-${c.id}`, `reply-input-${c.id}`);
+                }, 0);
+            });
+        }
+
+        function renderRepliesHTML(replies, parentId, isAdmin) {
+            if (!replies || replies.length === 0) return '';
+            let html = '';
+            replies.forEach(r => {
+                if(!r.id) r.id = Date.now().toString() + Math.random().toString().substr(2,5);
+                const isMe = (r.author === currentUser);
+                const canEdit = isMe || isAdmin;
+
+                html += `
+                    <div class="flex items-start space-x-2 sm:space-x-3">
+                        <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full ${isMe ? 'bg-indigo-500 text-white' : 'bg-slate-200 text-slate-600'} flex items-center justify-center font-bold text-[10px] sm:text-xs flex-shrink-0">
+                            ${r.author.charAt(0).toUpperCase()}
+                        </div>
+                        <div class="w-full">
+                            <div class="bg-white border border-slate-200 px-3 py-2 rounded-2xl rounded-tl-none inline-block min-w-[150px] max-w-full shadow-sm">
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <span class="text-xs font-bold ${isMe ? 'text-indigo-700' : 'text-slate-700'}">${r.author}</span>
+                                    <span class="text-[8px] sm:text-[9px] text-slate-400 font-medium">${r.time}</span>
+                                </div>
+                                <div id="reply-text-${r.id}" class="text-xs sm:text-sm text-slate-700 leading-relaxed editor-content min-h-0">${r.text}</div>
+                            </div>
+                            
+                            ${canEdit ? `
+                            <div class="flex items-center space-x-3 mt-1 ml-2 text-[9px] sm:text-[10px] font-semibold text-slate-500">
+                                <button onclick="startEditComment('${r.id}', true, '${parentId}')" class="hover:text-amber-600 transition">แก้ไข</button>
+                                <button onclick="promptDeleteComment('${r.id}', true, '${parentId}')" class="hover:text-rose-600 transition">ลบ</button>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            return html;
+        }
+
+        function addComment() {
+            if(!currentUser) { openAuthModal('login'); return; }
+            const input = document.getElementById('commentInput');
+            const textHTML = input.innerHTML.trim();
+            if(!textHTML || textHTML === '<br>' || !currentPostId) return;
+
+            const post = posts.find(p => p.id === currentPostId);
+            if(!post) return;
+            if(!post.comments) post.comments = [];
+
+            post.comments.push({
+                id: Date.now().toString(),
+                author: currentUser,
+                text: textHTML,
+                time: getCurrentTimeStr(),
+                replies: []
+            });
+
+            saveAndRefreshComments(input);
+        }
+
+        function submitReply(parentId) {
+            if(!currentUser) { openAuthModal('login'); return; }
+            const input = document.getElementById(`reply-input-${parentId}`);
+            const textHTML = input.innerHTML.trim();
+            if(!textHTML || textHTML === '<br>') return;
+
+            const post = posts.find(p => p.id === currentPostId);
+            const parent = post.comments.find(c => c.id == parentId);
+            if(!parent.replies) parent.replies = [];
+
+            parent.replies.push({
+                id: Date.now().toString(),
+                author: currentUser,
+                text: textHTML,
+                time: getCurrentTimeStr()
+            });
+
+            saveAndRefreshComments(null);
+        }
+
+        function promptDeleteComment(commentId, isReply, parentId = null) {
+            showModal(
+                "ยืนยันการลบความคิดเห็น?", 
+                "ต้องการลบความคิดเห็นนี้ใช่หรือไม่?", 
+                '<i class="fa-solid fa-trash text-3xl text-rose-600"></i>', 
+                'bg-rose-100', 
+                "ลบทิ้ง", 
+                "bg-rose-600 hover:bg-rose-700 shadow-rose-200", 
+                () => {
+                    const post = posts.find(p => p.id === currentPostId);
+                    if(isReply) {
+                        const parent = post.comments.find(c => c.id == parentId);
+                        parent.replies = parent.replies.filter(r => r.id != commentId);
+                    } else {
+                        post.comments = post.comments.filter(c => c.id != commentId);
+                    }
+                    saveAndRefreshComments(null);
+                    closeConfirmModal();
+                }
+            );
+        }
+
+        let editingCommentId = null;
+        let originalCommentHtml = "";
+
+        function startEditComment(commentId, isReply, parentId = null) {
+            if(editingCommentId) { alert("กรุณาบันทึกข้อความที่กำลังแก้ไขก่อน"); return; }
+            
+            editingCommentId = commentId;
+            const containerId = isReply ? `reply-text-${commentId}` : `comment-text-${commentId}`;
+            const container = document.getElementById(containerId);
+            originalCommentHtml = container.innerHTML;
+
+            container.innerHTML = `
+                <div class="mt-1 bg-white border border-slate-300 rounded-lg overflow-hidden">
+                    <div class="bg-slate-100 border-b border-slate-200 px-2 py-1 flex items-center space-x-1">
+                        <button onclick="formatDoc('bold')" class="w-6 h-6 hover:bg-slate-200 rounded font-bold"><i class="fa-solid fa-bold text-xs"></i></button>
+                        <button onclick="formatDoc('italic')" class="w-6 h-6 hover:bg-slate-200 rounded italic"><i class="fa-solid fa-italic text-xs"></i></button>
+                    </div>
+                    <div id="edit-input-${commentId}" class="p-2 min-h-[40px] text-xs sm:text-sm outline-none" contenteditable="true">${originalCommentHtml}</div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-2">
+                    <button onclick="cancelEditComment('${containerId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-slate-200 hover:bg-slate-300 rounded font-medium text-slate-700">ยกเลิก</button>
+                    <button onclick="saveEditComment('${commentId}', ${isReply}, '${parentId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-amber-500 hover:bg-amber-600 rounded font-bold text-white">บันทึก</button>
+                </div>
+            `;
+            document.getElementById(`edit-input-${commentId}`).focus();
+        }
+
+        function cancelEditComment(containerId) {
+            document.getElementById(containerId).innerHTML = originalCommentHtml;
+            editingCommentId = null;
+            originalCommentHtml = "";
+        }
+
+        function saveEditComment(commentId, isReply, parentId) {
+            const newHtml = document.getElementById(`edit-input-${commentId}`).innerHTML.trim();
+            if(!newHtml || newHtml === '<br>') { alert("ข้อความว่างเปล่า"); return; }
+
+            const post = posts.find(p => p.id === currentPostId);
+            if(isReply) {
+                const parent = post.comments.find(c => c.id == parentId);
+                const reply = parent.replies.find(r => r.id == commentId);
+                reply.text = newHtml;
+            } else {
+                const comment = post.comments.find(c => c.id == commentId);
+                comment.text = newHtml;
+            }
+
+            editingCommentId = null;
+            originalCommentHtml = "";
+            saveAndRefreshComments(null);
+        }
+
+        function saveAndRefreshComments(inputEl) {
+            try {
+                saveData();
+                if(inputEl) inputEl.innerHTML = '';
+                renderPostList(); 
+                selectPost(currentPostId);
+            } catch(e) {
+                alert("ข้อผิดพลาด: พื้นที่เก็บข้อมูลเต็ม");
+            }
+        }
+
+        function toggleReplyBox(id) {
+            const box = document.getElementById(`reply-box-${id}`);
+            box.classList.toggle('hidden');
+            if(!box.classList.contains('hidden')) {
+                document.getElementById(`reply-input-${id}`).focus();
+            }
+        }
+
+        // --- Comment Rich Text Helpers ---
+        function toggleEmojiPicker(pickerId) {
+            document.getElementById(pickerId).classList.toggle('hidden');
+        }
+
+        function populateEmojiPicker(pickerId, inputId) {
+            const container = document.getElementById(pickerId).querySelector('div');
+            container.innerHTML = emojiList.map(e => `<button type="button" class="w-8 h-8 hover:bg-slate-100 rounded text-xl flex items-center justify-center" onclick="insertEmoji('${e}', '${inputId}', '${pickerId}')">${e}</button>`).join('');
+        }
+
+        function insertEmoji(emoji, inputId, pickerId) {
+            const input = document.getElementById(inputId);
+            input.focus();
+            document.execCommand('insertText', false, emoji);
+            document.getElementById(pickerId).classList.add('hidden');
+        }
+
+        function addCommentLink(inputId) {
+            const url = prompt('กรุณาใส่ URL ลิงก์ที่ต้องการ:');
+            if (url) {
+                document.getElementById(inputId).focus();
+                document.execCommand('createLink', false, url);
+            }
+        }
+
+        function insertCommentImage(input, targetId) {
+            const file = input.files[0];
+            if (file) {
+                processAndCompressImage(file, (dataUrl) => {
+                    document.getElementById(targetId).focus();
+                    document.execCommand('insertImage', false, dataUrl);
+                });
+            }
+            input.value = '';
+        }
+
+        // --- Editor Tools ---
+        function showCreatePost() {
+            if(!currentUser) { openAuthModal('login'); return; }
+            currentPostId = null;
+            document.getElementById('welcomeScreen').classList.add('hidden');
+            document.getElementById('readScreen').classList.add('hidden');
+            document.getElementById('editorScreen').classList.remove('hidden');
+            
+            document.getElementById('editorScreenTitle').innerText = 'สร้างโพสต์ใหม่';
+            document.getElementById('postTitle').value = '';
+            document.getElementById('postCategory').value = 'อื่นๆ';
+            document.getElementById('postContent').innerHTML = '';
+        }
+
+        function editPost() {
+            const post = posts.find(p => p.id === currentPostId);
+            const isAdmin = checkIsAdmin();
+            if (!post || (!isAdmin && currentUser !== post.author)) return;
+
+            document.getElementById('readScreen').classList.add('hidden');
+            document.getElementById('editorScreen').classList.remove('hidden');
+            
+            document.getElementById('editorScreenTitle').innerText = 'แก้ไขโพสต์';
+            document.getElementById('postTitle').value = post.title;
+            document.getElementById('postCategory').value = post.category || 'อื่นๆ';
+            document.getElementById('postContent').innerHTML = post.content;
+        }
+
+        function savePost() {
+            const title = document.getElementById('postTitle').value.trim();
+            const category = document.getElementById('postCategory').value;
+            const content = document.getElementById('postContent').innerHTML;
+
+            if (!title) { alert('กรุณากรอกหัวข้อโพสต์'); return; }
+
+            if (currentPostId) {
+                const index = posts.findIndex(p => p.id === currentPostId);
+                if (index !== -1) {
+                    posts[index].title = title;
+                    posts[index].category = category;
+                    posts[index].content = content;
+                }
+            } else {
+                const newPost = {
+                    id: Date.now().toString(),
+                    title: title,
+                    category: category,
+                    content: content,
+                    author: currentUser,
+                    date: getCurrentTimeStr(),
+                    comments: []
+                };
+                posts.unshift(newPost);
+                currentPostId = newPost.id;
+            }
+
+            try {
+                saveData();
+                if(currentCategory !== 'ทั้งหมด' && currentCategory !== category) {
+                    setCategory(category);
+                } else {
+                    renderPostList();
+                }
+                selectPost(currentPostId);
+            } catch(e) {
+                alert("ข้อผิดพลาด: พื้นที่เก็บข้อมูลเต็ม");
+                if (!currentPostId) posts.shift(); 
+            }
+        }
+
+        function closeEditor() {
+            document.getElementById('editorScreen').classList.add('hidden');
+            if (currentPostId) selectPost(currentPostId);
+            else document.getElementById('welcomeScreen').classList.remove('hidden');
+        }
+
+        function formatDoc(cmd) {
+            document.execCommand(cmd, false, null);
+        }
+        function addLink() {
+            const url = prompt('URL ลิงก์:');
+            if (url) document.execCommand('createLink', false, url);
+        }
+        function insertPostImage(input) {
+            const file = input.files[0];
+            if (file) {
+                processAndCompressImage(file, (dataUrl) => {
+                    document.getElementById('postContent').focus();
+                    document.execCommand('insertImage', false, dataUrl);
+                });
+            }
+            input.value = ''; 
+        }
+
+        // --- Core Utilities ---
+        function changeCover(input) {
+            const file = input.files[0];
+            if (file) {
+                processAndCompressImage(file, (dataUrl) => {
+                    document.getElementById('headerCover').style.backgroundImage = `url(${dataUrl})`;
+                    try { localStorage.setItem('blog_cover', dataUrl); } catch(e) { alert("พื้นที่เต็ม ไม่สามารถบันทึกหน้าปกได้"); }
+                });
+            }
+        }
+
+        function processAndCompressImage(file, callback) {
+            if (file.type === 'image/gif') {
+                const reader = new FileReader();
+                reader.onload = e => callback(e.target.result);
+                reader.readAsDataURL(file);
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width, h = img.height;
+                    const max_size = 1200;
+                    if (w > h) { if (w > max_size) { h *= max_size / w; w = max_size; } } 
+                    else { if (h > max_size) { w *= max_size / h; h = max_size; } }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    callback(canvas.toDataURL('image/jpeg', 0.7));
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function getCurrentTimeStr() {
+            const now = new Date();
+            const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+            return `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()+543} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        }
+
+        function saveData() { localStorage.setItem('community_posts', JSON.stringify(posts)); }
+
+        window.onload = init;
+    </script>
+</body>
+</html>
