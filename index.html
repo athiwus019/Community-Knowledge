@@ -11,7 +11,7 @@
     <!-- Google Fonts: Prompt -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
-    <!-- Firebase SDK (Compat version for standard script integration) -->
+    <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
@@ -32,7 +32,7 @@
             background-position: center;
             min-height: 150px;
             box-shadow: inset 0px 50px 100px -20px rgba(0,0,0,0.5), inset 0px -50px 100px -20px rgba(0,0,0,0.5);
-            background-color: #1e293b; /* Fallback color */
+            background-color: #1e293b;
         }
         .txt-shadow { text-shadow: 0px 2px 4px rgba(0,0,0,0.7); }
     </style>
@@ -41,7 +41,6 @@
 
     <!-- Header & Tabs -->
     <header id="headerCover" class="relative z-20 flex-shrink-0 transition-all duration-500 flex flex-col justify-between">
-        <!-- Top Bar -->
         <div class="max-w-full mx-auto px-6 py-4 flex items-center justify-between w-full">
             <div class="flex items-center space-x-3 text-white txt-shadow">
                 <div class="p-2 bg-sky-500/80 rounded-lg shadow-md">
@@ -54,12 +53,15 @@
             </div>
             
             <div class="flex items-center space-x-2 sm:space-x-3">
-                <!-- ปุ่มดูรายชื่อสมาชิก (ซ่อนเป็นค่าเริ่มต้น จะแสดงเฉพาะ Admin) -->
-                <button id="viewMembersBtn" onclick="openMembersModal()" class="hidden bg-indigo-500/80 hover:bg-indigo-600/90 text-white text-[11px] sm:text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition items-center shadow border border-indigo-400/50">
-                    <i class="fa-solid fa-users mr-1.5"></i> สมาชิก
+                <div id="userStatusArea" class="flex items-center space-x-3 mr-2">
+                    <span class="text-xs text-white/80">กำลังโหลด...</span>
+                </div>
+
+                <!-- ปุ่มดูแดชบอร์ด Admin -->
+                <button id="viewMembersBtn" onclick="openAdminDashboard()" class="hidden bg-indigo-500/80 hover:bg-indigo-600/90 text-white text-[11px] sm:text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition items-center shadow border border-indigo-400/50">
+                    <i class="fa-solid fa-chart-pie mr-1.5"></i> แดชบอร์ด Admin
                 </button>
 
-                <!-- ปุ่มเปลี่ยนหน้าปก (ซ่อนเป็นค่าเริ่มต้น จะแสดงเฉพาะ Admin) -->
                 <label id="changeCoverBtn" class="hidden cursor-pointer bg-slate-800/60 hover:bg-slate-700/80 text-white text-[11px] sm:text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition items-center shadow border border-white/20">
                     <i class="fa-solid fa-image mr-1.5"></i> เปลี่ยนปก
                     <input type="file" id="coverUpload" accept="image/*" class="hidden" onchange="changeCover(this)">
@@ -68,35 +70,17 @@
                 <button onclick="showCreatePost()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center border border-emerald-400">
                     <i class="fa-solid fa-pen-to-square mr-1.5"></i> สร้างโพสต์
                 </button>
-                
-                <!-- ย้ายสถานะผู้ใช้งาน (ปุ่มเข้าสู่ระบบ / โปรไฟล์) มาไว้ขวาสุด -->
-                <div id="userStatusArea" class="flex items-center space-x-3">
-                    <span class="text-xs text-white/80">กำลังโหลด...</span>
-                </div>
             </div>
         </div>
 
-        <!-- Bottom Bar: Categories Tabs -->
         <div class="px-6 w-full flex items-end mt-auto">
             <div class="flex space-x-4 overflow-x-auto custom-scrollbar px-2 w-full max-w-4xl pb-1">
-                <button onclick="setCategory('ทั้งหมด')" id="tab-ทั้งหมด" class="tab-btn pb-2 text-sm font-bold text-white txt-shadow border-b-2 border-sky-400 whitespace-nowrap flex items-center cursor-pointer transition-all">
-                    <i class="fa-solid fa-house w-4 mr-1.5"></i> หน้าแรก
-                </button>
-                <button onclick="setCategory('งาน')" id="tab-งาน" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all">
-                    <i class="fa-solid fa-briefcase w-4 mr-1.5"></i> งาน
-                </button>
-                <button onclick="setCategory('การเรียนรู้')" id="tab-การเรียนรู้" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all">
-                    <i class="fa-solid fa-graduation-cap w-4 mr-1.5"></i> การเรียนรู้
-                </button>
-                <button onclick="setCategory('ข่าวสาร')" id="tab-ข่าวสาร" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all">
-                    <i class="fa-solid fa-user w-4 mr-1.5"></i> ข่าวสาร
-                </button>
-                <button onclick="setCategory('ไอเดีย')" id="tab-ไอเดีย" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all">
-                    <i class="fa-solid fa-lightbulb w-4 mr-1.5"></i> ไอเดีย
-                </button>
-                <button onclick="setCategory('อื่นๆ')" id="tab-อื่นๆ" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all">
-                    <i class="fa-solid fa-folder-open w-4 mr-1.5"></i> อื่นๆ
-                </button>
+                <button onclick="setCategory('ทั้งหมด')" id="tab-ทั้งหมด" class="tab-btn pb-2 text-sm font-bold text-white txt-shadow border-b-2 border-sky-400 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-house w-4 mr-1.5"></i> หน้าแรก</button>
+                <button onclick="setCategory('งาน')" id="tab-งาน" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-briefcase w-4 mr-1.5"></i> งาน</button>
+                <button onclick="setCategory('การเรียนรู้')" id="tab-การเรียนรู้" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-graduation-cap w-4 mr-1.5"></i> การเรียนรู้</button>
+                <button onclick="setCategory('ข่าวสาร')" id="tab-ข่าวสาร" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-user w-4 mr-1.5"></i> ข่าวสาร</button>
+                <button onclick="setCategory('ไอเดีย')" id="tab-ไอเดีย" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-lightbulb w-4 mr-1.5"></i> ไอเดีย</button>
+                <button onclick="setCategory('อื่นๆ')" id="tab-อื่นๆ" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-folder-open w-4 mr-1.5"></i> อื่นๆ</button>
             </div>
         </div>
     </header>
@@ -104,7 +88,6 @@
     <!-- Main Content Area -->
     <div class="flex flex-1 overflow-hidden">
         
-        <!-- Left Sidebar (Post List) -->
         <aside class="w-[260px] bg-white border-r border-slate-200 flex flex-col z-10 flex-shrink-0 shadow-sm">
             <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                 <h2 class="text-[13px] font-bold text-slate-700">ฟีดบทความล่าสุด</h2>
@@ -113,11 +96,9 @@
             <div id="postList" class="flex-1 overflow-y-auto custom-scrollbar bg-slate-50/30"></div>
         </aside>
 
-        <!-- Right Content Area -->
         <main class="flex-1 bg-white relative flex flex-col h-full">
             <div id="mainContent" class="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8">
                 
-                <!-- Welcome Screen -->
                 <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-slate-400">
                     <div class="w-24 h-24 sm:w-28 sm:h-28 bg-slate-50 rounded-full flex items-center justify-center mb-5 border border-slate-100 shadow-inner">
                         <i class="fa-regular fa-newspaper text-4xl sm:text-5xl text-slate-300"></i>
@@ -126,18 +107,13 @@
                     <p class="text-xs sm:text-sm text-center px-4">เลือกบทความด้านซ้ายเพื่ออ่านข่าวสาร หรือกด "สร้างโพสต์" เพื่อแบ่งปันเรื่องราวของคุณ</p>
                 </div>
 
-                <!-- Read Post Screen -->
                 <div id="readScreen" class="hidden max-w-4xl mx-auto h-full flex flex-col">
                     <div class="flex-shrink-0">
                         <div class="flex justify-between items-start mb-4">
                             <h2 id="readTitle" class="text-2xl sm:text-3xl font-bold text-slate-800 leading-tight"></h2>
                             <div id="postActions" class="flex space-x-2 hidden">
-                                <button onclick="editPost()" class="bg-amber-100 text-amber-700 hover:bg-amber-200 px-3 py-1.5 rounded text-xs sm:text-sm font-semibold transition">
-                                    <i class="fa-solid fa-pen mr-1"></i> แก้ไข
-                                </button>
-                                <button onclick="promptDeletePost()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 px-3 py-1.5 rounded text-xs sm:text-sm font-semibold transition">
-                                    <i class="fa-solid fa-trash mr-1"></i> ลบ
-                                </button>
+                                <button onclick="editPost()" class="bg-amber-100 text-amber-700 hover:bg-amber-200 px-3 py-1.5 rounded text-xs sm:text-sm font-semibold transition"><i class="fa-solid fa-pen mr-1"></i> แก้ไข</button>
+                                <button onclick="promptDeletePost()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 px-3 py-1.5 rounded text-xs sm:text-sm font-semibold transition"><i class="fa-solid fa-trash mr-1"></i> ลบ</button>
                             </div>
                         </div>
                         <div class="flex items-center space-x-4 text-xs text-slate-500 mb-6 pb-4 border-b border-slate-100">
@@ -147,40 +123,29 @@
                         </div>
                     </div>
                     
-                    <!-- Post Content -->
                     <div id="readBody" class="editor-content text-slate-700 mb-10 flex-shrink-0 text-sm sm:text-base"></div>
 
-                    <!-- Comments Section -->
                     <div class="mt-8 pt-6 border-t border-slate-200 flex-1 flex flex-col">
                         <h3 class="text-base sm:text-lg font-bold text-slate-800 mb-5"><i class="fa-regular fa-comments mr-2 text-sky-500"></i>ความคิดเห็น (<span id="commentCount">0</span>)</h3>
                         
-                        <!-- Comment List -->
                         <div id="commentList" class="space-y-6 mb-6 flex-1 overflow-y-auto custom-scrollbar pr-2"></div>
 
-                        <!-- Add Main Comment Form -->
                         <div id="commentFormArea" class="mt-auto bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 flex-shrink-0 shadow-sm hidden">
                             <div class="flex items-start space-x-3">
                                 <div id="commentUserAvatar" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0 shadow-sm"></div>
                                 <div class="flex-1 relative bg-white border border-slate-300 rounded-xl overflow-visible flex flex-col focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
-                                    
                                     <div class="bg-slate-50 border-b border-slate-200 px-3 py-2 flex items-center space-x-2 rounded-t-xl relative">
-                                        <button type="button" onclick="toggleEmojiPicker('emojiPicker-main')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition">
-                                            <i class="fa-regular fa-face-smile text-base sm:text-lg"></i>
-                                        </button>
+                                        <button type="button" onclick="toggleEmojiPicker('emojiPicker-main')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-regular fa-face-smile text-base sm:text-lg"></i></button>
                                         <div id="emojiPicker-main" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-2 z-50">
                                             <div class="flex flex-wrap gap-1 max-h-52 overflow-y-auto custom-scrollbar"></div>
                                         </div>
-
                                         <button type="button" onclick="addCommentLink('commentInput')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-solid fa-link"></i></button>
-                                        
                                         <label class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer transition">
                                             <i class="fa-regular fa-image"></i>
                                             <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'commentInput')">
                                         </label>
                                     </div>
-                                    
                                     <div id="commentInput" class="comment-input-area p-3 text-sm text-slate-800 custom-scrollbar overflow-y-auto min-h-[80px] outline-none" contenteditable="true" placeholder="แสดงความคิดเห็นของคุณ... (วางรูปภาพ หรือลิงก์ได้เลย)"></div>
-                                    
                                     <div class="px-3 py-2 bg-white rounded-b-xl flex justify-between items-center border-t border-slate-100">
                                         <span class="text-[10px] sm:text-xs text-slate-400">กรุณาสุภาพในการแสดงความคิดเห็น</span>
                                         <button onclick="addComment()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 sm:px-5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition shadow-sm">ส่งข้อความ</button>
@@ -196,7 +161,6 @@
                     </div>
                 </div>
 
-                <!-- Editor Screen -->
                 <div id="editorScreen" class="hidden max-w-4xl mx-auto">
                     <div class="flex justify-between items-center mb-6">
                         <h2 id="editorScreenTitle" class="text-xl sm:text-2xl font-bold text-slate-800">สร้างข่าวสาร/โพสต์ใหม่</h2>
@@ -238,14 +202,71 @@
 
                         <div class="flex justify-end pt-4 space-x-3">
                             <button onclick="closeEditor()" class="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-100 transition">ยกเลิก</button>
-                            <button onclick="savePost()" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-bold shadow-md transition flex items-center">
-                                <i class="fa-solid fa-paper-plane mr-2"></i> โพสต์บทความ
-                            </button>
+                            <button onclick="savePost()" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-bold shadow-md transition flex items-center"><i class="fa-solid fa-paper-plane mr-2"></i> โพสต์บทความ</button>
                         </div>
                     </div>
                 </div>
             </div>
         </main>
+    </div>
+
+    <!-- 📊 Admin Dashboard Modal 📊 -->
+    <div id="adminDashboardModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh]" id="adminDashboardBox">
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-chart-pie text-indigo-500 mr-2"></i>แดชบอร์ดผู้ดูแลระบบ</h3>
+                <button onclick="closeAdminDashboard()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white space-y-6">
+                
+                <!-- Database Usage Status -->
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
+                    <h4 class="text-sm font-bold text-slate-700 mb-3"><i class="fa-solid fa-database text-sky-500 mr-1.5"></i>ประมาณการใช้พื้นที่จัดเก็บ (Storage)</h4>
+                    <div class="w-full bg-slate-200 rounded-full h-3.5 mb-2 overflow-hidden border border-slate-300/50">
+                        <div id="adminStorageBar" class="bg-sky-500 h-3.5 rounded-full transition-all duration-700" style="width: 0%"></div>
+                    </div>
+                    <div class="flex justify-between text-xs font-medium text-slate-500 mb-2">
+                        <span>ใช้ไปแล้ว: <strong id="adminStatStorageUsed" class="text-slate-700">0 MB</strong></span>
+                        <span>โควตาฟรี: 1024 MB (1GB)</span>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-2 italic">* การคำนวณนี้เป็นเพียงการกะระยะจากขนาดตัวอักษรและ Base64 หากต้องการดูโควตาการอ่าน/เขียนที่แม่นยำ กรุณาดูใน Firebase Console</p>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span class="text-3xl font-bold text-indigo-600 mb-1" id="adminStatPosts">0</span>
+                        <span class="text-xs font-bold text-indigo-500 uppercase tracking-wide">โพสต์ทั้งหมด</span>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span class="text-3xl font-bold text-emerald-600 mb-1" id="adminStatComments">0</span>
+                        <span class="text-xs font-bold text-emerald-500 uppercase tracking-wide">คอมเมนต์ทั้งหมด</span>
+                    </div>
+                </div>
+
+                <!-- Members List -->
+                <div>
+                    <h4 class="text-sm font-bold text-slate-700 mb-3 flex justify-between items-end">
+                        <span><i class="fa-solid fa-users text-slate-400 mr-1.5"></i>รายชื่อสมาชิก</span>
+                        <span class="text-xs font-medium text-sky-600 bg-sky-100 px-2 py-0.5 rounded-full">รวม <span id="totalMembersCount">0</span> คน</span>
+                    </h4>
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <div id="membersListContainer" class="divide-y divide-slate-100 max-h-48 overflow-y-auto custom-scrollbar bg-white">
+                            <!-- Members injected here -->
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            
+            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
+                <a href="https://console.firebase.google.com/" target="_blank" class="text-xs font-bold text-sky-600 hover:text-sky-800 transition flex items-center">
+                    เปิด Firebase Console <i class="fa-solid fa-arrow-up-right-from-square ml-1.5"></i>
+                </a>
+                <button onclick="closeAdminDashboard()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold px-5 py-2.5 rounded-xl transition">ปิดหน้าต่าง</button>
+            </div>
+        </div>
     </div>
 
     <!-- Generic Confirm / Info Modal -->
@@ -263,34 +284,13 @@
         </div>
     </div>
 
-    <!-- 👥 Members Modal (Admin Only) 👥 -->
-    <div id="membersModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[80vh]" id="membersModalBox">
-            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-users text-indigo-500 mr-2"></i>รายชื่อสมาชิก (<span id="totalMembersCount">0</span>)</h3>
-                <button onclick="closeMembersModal()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-times text-xl"></i></button>
-            </div>
-            <div class="p-0 overflow-y-auto custom-scrollbar flex-1 bg-white">
-                <div id="membersListContainer" class="divide-y divide-slate-100">
-                    <!-- Member items will be injected here -->
-                </div>
-            </div>
-            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-end">
-                <button onclick="closeMembersModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold px-5 py-2.5 rounded-xl transition">ปิดหน้าต่าง</button>
-            </div>
-        </div>
-    </div>
-
     <!-- 🔑 Authentication Modal 🔑 -->
     <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col" id="authModalBox">
-            
-            <!-- Auth Tabs -->
             <div class="flex border-b border-slate-200 bg-slate-50" id="authTabsContainer">
                 <button id="tabAuthLogin" onclick="switchAuthMode('login')" class="flex-1 py-4 text-sm font-bold text-sky-600 border-b-2 border-sky-500 transition-colors bg-white">เข้าสู่ระบบ</button>
                 <button id="tabAuthRegister" onclick="switchAuthMode('register')" class="flex-1 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition-colors bg-slate-50 cursor-pointer">สมัครสมาชิกใหม่</button>
             </div>
-            
             <div class="p-6 sm:p-8">
                 <div class="mb-6 text-center">
                     <div id="authIconContainer" class="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
@@ -298,24 +298,19 @@
                     </div>
                     <h3 id="authTitleText" class="text-xl font-bold text-slate-800">เข้าสู่ระบบ</h3>
                 </div>
-                
                 <form id="authForm" onsubmit="event.preventDefault(); submitAuth();" class="space-y-4">
-                    
                     <div id="authLoginIdGroup">
                         <label class="block text-xs font-semibold text-slate-600 mb-1">อีเมล หรือ ชื่อผู้ใช้งาน <span class="text-rose-500">*</span></label>
                         <input type="text" id="authLoginId" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="your@email.com หรือ username">
                     </div>
-
                     <div id="authEmailGroup" class="hidden">
                         <label class="block text-xs font-semibold text-slate-600 mb-1">อีเมล <span class="text-rose-500">*</span></label>
                         <input type="email" id="authEmail" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="your@email.com">
                     </div>
-                    
                     <div id="authUsernameGroup" class="hidden">
                         <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อผู้ใช้งาน (แสดงในเว็บ) <span class="text-rose-500">*</span></label>
                         <input type="text" id="authUsername" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="ตั้งชื่อโปรไฟล์ของคุณ">
                     </div>
-
                     <div id="authPasswordGroup">
                         <div class="flex justify-between items-center mb-1">
                             <label class="block text-xs font-semibold text-slate-600">รหัสผ่าน <span class="text-rose-500">*</span></label>
@@ -323,14 +318,11 @@
                         </div>
                         <input type="password" id="authPassword" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="••••••••">
                     </div>
-
                     <div id="authConfirmPasswordGroup" class="hidden">
                         <label class="block text-xs font-semibold text-slate-600 mb-1">ยืนยันรหัสผ่าน <span class="text-rose-500">*</span></label>
                         <input type="password" id="authConfirmPassword" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="••••••••">
                     </div>
-
                     <div id="authErrorMsg" class="text-rose-500 text-xs font-semibold text-center hidden bg-rose-50 p-2 rounded border border-rose-200"></div>
-
                     <div class="flex space-x-3 mt-6 pt-2">
                         <button type="button" id="authCancelBtn" onclick="closeAuthModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold py-3 rounded-xl transition">ยกเลิก</button>
                         <button type="submit" id="authSubmitBtn" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold py-3 rounded-xl transition shadow-md shadow-sky-200">เข้าสู่ระบบ</button>
@@ -362,19 +354,15 @@
         let confirmCallback = null;
         let currentAuthMode = 'login'; 
 
-        // กำหนดให้มีแอดมินคนเดียวเท่านั้น
         const ADMIN_USERNAME = 'admin'; 
-        
         const emojiList = ["😀","😂","😅","🥰","😎","😭","😡","👍","🙏","❤️","🔥","✨","🎉","👏","👀","🤔","🙌","🤝","✅","❌","💡","💯","🚀","🌟","🍕","☕","🥳","😱","🥺","🥶","😷","😴","🤫","🧐","🤓","👻","👽","🤖","💩","🙊","💖","💔","💬","🔔","🎵","🎮","🏆","💸","📸"];
 
-        // ฟังก์ชันตรวจสอบสิทธิ์ Admin
         function checkIsAdmin() {
             return currentUser && currentUser.toLowerCase() === ADMIN_USERNAME.toLowerCase();
         }
 
         // --- 🚀 Initialization 🚀 ---
         function init() {
-            // Watch Auth State
             auth.onAuthStateChanged(user => {
                 if(user) {
                     currentUser = user.displayName || user.email.split('@')[0];
@@ -385,14 +373,12 @@
                 if(currentPostId) selectPost(currentPostId);
             });
 
-            // Sync Cover Image
             db.collection("settings").doc("general").onSnapshot(doc => {
                 if(doc.exists && doc.data().blog_cover) {
                     document.getElementById('headerCover').style.backgroundImage = `url(${doc.data().blog_cover})`;
                 }
             });
 
-            // Sync Posts
             db.collection("posts").orderBy("timestamp", "desc").onSnapshot(snap => {
                 posts = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
                 renderPostList();
@@ -411,17 +397,16 @@
             });
         }
 
-        // --- 👥 Admin Members Viewer 👥 ---
-        function openMembersModal() {
+        // --- 📊 Admin Dashboard (Smart Estimation) 📊 ---
+        function openAdminDashboard() {
             if(!checkIsAdmin()) return;
             
-            const modal = document.getElementById('membersModal');
-            const box = document.getElementById('membersModalBox');
+            const modal = document.getElementById('adminDashboardModal');
+            const box = document.getElementById('adminDashboardBox');
             const listContainer = document.getElementById('membersListContainer');
             const countLabel = document.getElementById('totalMembersCount');
             
-            listContainer.innerHTML = '<div class="p-8 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-3xl mb-3 text-indigo-400"></i><br><span class="text-sm">กำลังโหลดรายชื่อสมาชิก...</span></div>';
-            countLabel.innerText = "...";
+            listContainer.innerHTML = '<div class="p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-indigo-400"></i><br><span class="text-xs">กำลังโหลดข้อมูล...</span></div>';
             
             modal.classList.remove('hidden');
             setTimeout(() => {
@@ -429,10 +414,38 @@
                 box.classList.remove('scale-95');
             }, 10);
 
+            // 1. Calculate Storage & Stats locally from `posts` array
+            let totalComments = 0;
+            posts.forEach(p => {
+                totalComments += (p.comments || []).length;
+                (p.comments || []).forEach(c => {
+                    totalComments += (c.replies || []).length;
+                });
+            });
+
+            const storageBytes = new Blob([JSON.stringify(posts)]).size;
+            // Convert to MB (Keep 3 decimals for precision if very small)
+            const storageMB = (storageBytes / (1024 * 1024)).toFixed(3);
+            const maxMB = 1024; // 1GB
+            const percent = Math.min(((storageMB / maxMB) * 100), 100).toFixed(4);
+            const displayPercent = percent > 0 && percent < 1 ? 1 : percent; // Show at least 1% if there is data
+
+            // Update UI
+            document.getElementById('adminStatPosts').innerText = posts.length;
+            document.getElementById('adminStatComments').innerText = totalComments;
+            document.getElementById('adminStatStorageUsed').innerText = `${storageMB} MB`;
+            
+            const bar = document.getElementById('adminStorageBar');
+            bar.style.width = `${displayPercent}%`;
+            if (percent > 90) bar.className = "bg-rose-500 h-3.5 rounded-full transition-all duration-700";
+            else if (percent > 70) bar.className = "bg-amber-500 h-3.5 rounded-full transition-all duration-700";
+            else bar.className = "bg-sky-500 h-3.5 rounded-full transition-all duration-700";
+
+            // 2. Fetch Users
             db.collection("users").orderBy("username_lower").get().then(snap => {
                 countLabel.innerText = snap.size;
                 if(snap.empty) {
-                    listContainer.innerHTML = '<div class="p-8 text-center text-slate-400 text-sm">ยังไม่มีสมาชิกในระบบ</div>';
+                    listContainer.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs">ยังไม่มีสมาชิกในระบบ</div>';
                     return;
                 }
                 
@@ -441,14 +454,14 @@
                     const data = doc.data();
                     const initial = data.username ? data.username.charAt(0).toUpperCase() : '?';
                     html += `
-                        <div class="px-6 py-4 flex items-center justify-between hover:bg-slate-50 transition">
-                            <div class="flex items-center space-x-4">
-                                <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-sm shadow-sm border border-indigo-200">
+                        <div class="px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition">
+                            <div class="flex items-center space-x-3">
+                                <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs shadow-sm border border-indigo-200">
                                     ${initial}
                                 </div>
                                 <div>
-                                    <h4 class="text-sm font-bold text-slate-800">${data.username || 'No Name'}</h4>
-                                    <p class="text-xs text-slate-500 font-medium">${data.email || 'No Email'}</p>
+                                    <h4 class="text-sm font-bold text-slate-800 leading-tight">${data.username || 'No Name'}</h4>
+                                    <p class="text-[10px] text-slate-500 font-medium">${data.email || 'No Email'}</p>
                                 </div>
                             </div>
                         </div>
@@ -456,14 +469,14 @@
                 });
                 listContainer.innerHTML = html;
             }).catch(err => {
-                listContainer.innerHTML = '<div class="p-8 text-center text-rose-500 text-sm font-medium">เกิดข้อผิดพลาดในการดึงข้อมูลจากฐานข้อมูล</div>';
+                listContainer.innerHTML = '<div class="p-6 text-center text-rose-500 text-xs font-medium">เกิดข้อผิดพลาดในการดึงข้อมูลสมาชิก</div>';
                 console.error(err);
             });
         }
 
-        function closeMembersModal() {
-            const modal = document.getElementById('membersModal');
-            const box = document.getElementById('membersModalBox');
+        function closeAdminDashboard() {
+            const modal = document.getElementById('adminDashboardModal');
+            const box = document.getElementById('adminDashboardBox');
             modal.classList.add('opacity-0');
             box.classList.add('scale-95');
             setTimeout(() => { modal.classList.add('hidden'); }, 300);
@@ -674,7 +687,6 @@
                 const isAdmin = checkIsAdmin();
                 const badge = isAdmin ? `<span class="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded shadow-sm ml-1.5 font-bold">ADMIN</span>` : '';
 
-                // แสดง/ซ่อน ปุ่มของ Admin
                 if (isAdmin) {
                     changeCoverBtn.classList.remove('hidden'); changeCoverBtn.classList.add('flex');
                     viewMembersBtn.classList.remove('hidden'); viewMembersBtn.classList.add('flex');
@@ -1140,7 +1152,7 @@
                 </div>
                 <div class="flex justify-end space-x-2 mt-2">
                     <button onclick="cancelEditComment('${containerId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-slate-200 hover:bg-slate-300 rounded font-medium text-slate-700">ยกเลิก</button>
-                    <button onclick="saveEditComment('${commentId}', ${isReply}, '${parentId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-amber-500 hover:bg-amber-600 rounded font-bold text-white">บันึก</button>
+                    <button onclick="saveEditComment('${commentId}', ${isReply}, '${parentId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-amber-500 hover:bg-amber-600 rounded font-bold text-white">บันทึก</button>
                 </div>
             `;
             document.getElementById(`edit-input-${commentId}`).focus();
