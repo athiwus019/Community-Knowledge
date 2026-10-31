@@ -16,6 +16,22 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
+    <!-- MathJax for rendering math formulas -->
+    <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['\\(', '\\)'], ['$', '$']],
+          displayMath: [['\\[', '\\]'], ['$$', '$$']]
+        },
+        svg: {
+          fontCache: 'global'
+        }
+      };
+    </script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
+
     <style>
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
@@ -27,6 +43,8 @@
         .editor-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; cursor: pointer; transition: transform 0.2s;}
         .editor-content img:hover { transform: scale(1.02); }
         .editor-content a { color: #0ea5e9; text-decoration: underline; cursor: pointer; }
+        .editor-content ul { list-style-type: disc; padding-left: 1.5rem; margin-bottom: 0.5rem; }
+        .editor-content ol { list-style-type: decimal; padding-left: 1.5rem; margin-bottom: 0.5rem; }
         
         .comment-input-area img { max-width: 200px; border-radius: 8px; margin-top: 8px; cursor: pointer;}
         .comment-input-area:empty:before { content: attr(placeholder); color: #94a3b8; pointer-events: none; display: block; }
@@ -37,6 +55,7 @@
         
         .chat-message-content img { cursor: pointer; max-width: 280px; border-radius: 8px; transition: opacity 0.2s; display: block; margin: 0;}
         .chat-message-content img:hover { opacity: 0.85; }
+        .chat-message-content a { color: #bae6fd; text-decoration: underline; }
         
         /* Image or Emoji Only Bubble */
         .image-only-bubble { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; }
@@ -49,6 +68,7 @@
         .message-row:hover .reaction-btn-group { opacity: 1; }
         .reaction-badge { font-size: 0.75rem; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 2px 6px; display: inline-flex; align-items: center; cursor: pointer; z-index: 10; position: relative; margin-top: -6px;}
         .reaction-badge:hover { background: #e2e8f0; }
+        
         .message-row .flex-col { gap: 2px; }
 
         #headerCover {
@@ -88,8 +108,18 @@
             transform: translateX(0);
         }
 
-        /* Fix for Reaction Picker Modal overlay */
         #reactionPicker { z-index: 500; }
+        
+        /* MathJax adjustments to make block formulas fit nicely */
+        mjx-container[jax="SVG"][display="true"] {
+            margin: 1em 0;
+            padding: 0.5em;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            overflow-x: auto;
+            overflow-y: hidden;
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -138,7 +168,6 @@
                 <button onclick="setCategory('การเรียนรู้')" id="tab-การเรียนรู้" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-graduation-cap w-4 mr-1.5"></i> การเรียนรู้</button>
                 <button onclick="setCategory('ข่าวสาร')" id="tab-ข่าวสาร" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-user w-4 mr-1.5"></i> ข่าวสาร</button>
                 <button onclick="setCategory('ไอเดีย')" id="tab-ไอเดีย" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-lightbulb w-4 mr-1.5"></i> ไอเดีย</button>
-                <!-- เพิ่มหมวดหมู่ การเงิน -->
                 <button onclick="setCategory('การเงิน')" id="tab-การเงิน" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-sack-dollar w-4 mr-1.5"></i> การเงิน</button>
                 <button onclick="setCategory('อื่นๆ')" id="tab-อื่นๆ" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-folder-open w-4 mr-1.5"></i> อื่นๆ</button>
             </div>
@@ -221,7 +250,7 @@
                     </div>
                 </div>
 
-                <div id="editorScreen" class="hidden max-w-4xl mx-auto">
+                <div id="editorScreen" class="hidden max-w-4xl mx-auto pb-10">
                     <div class="flex justify-between items-center mb-6">
                         <h2 id="editorScreenTitle" class="text-xl sm:text-2xl font-bold text-slate-800">สร้างข่าวสาร/โพสต์ใหม่</h2>
                         <button onclick="closeEditor()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-times text-xl"></i></button>
@@ -240,26 +269,61 @@
                                     <option value="การเรียนรู้">การเรียนรู้</option>
                                     <option value="ข่าวสาร">ข่าวสาร</option>
                                     <option value="ไอเดีย">ไอเดีย</option>
-                                    <!-- เพิ่มตัวเลือก การเงิน -->
                                     <option value="การเงิน">การเงิน</option>
                                     <option value="อื่นๆ" selected>อื่นๆ</option>
                                 </select>
                             </div>
                         </div>
                         
+                        <!-- Rich Text Editor (Upgraded) -->
                         <div class="border border-slate-300 rounded-xl overflow-hidden flex flex-col bg-white">
-                            <div class="bg-slate-100 border-b border-slate-200 px-3 py-2 flex items-center space-x-1 overflow-x-auto">
-                                <button type="button" onclick="formatDoc('bold')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center font-bold" title="ตัวหนา"><i class="fa-solid fa-bold"></i></button>
-                                <button type="button" onclick="formatDoc('italic')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center italic" title="ตัวเอียง"><i class="fa-solid fa-italic"></i></button>
-                                <button type="button" onclick="formatDoc('underline')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center underline" title="ขีดเส้นใต้"><i class="fa-solid fa-underline"></i></button>
+                            <div class="bg-slate-100 border-b border-slate-200 px-2 py-2 flex flex-wrap gap-1 items-center">
+                                
+                                <!-- Font Size -->
+                                <select onchange="formatDoc('formatBlock', this.value); this.selectedIndex=0;" class="text-xs border border-slate-300 rounded px-1 py-1 mr-1 text-slate-700 bg-white">
+                                    <option value="">ขนาด...</option>
+                                    <option value="H3">หัวข้อใหญ่</option>
+                                    <option value="H4">หัวข้อรอง</option>
+                                    <option value="P">ปกติ</option>
+                                </select>
+
+                                <!-- Text Color -->
+                                <div class="relative flex items-center border border-slate-300 rounded bg-white px-1 mr-1">
+                                    <i class="fa-solid fa-palette text-xs text-slate-500 mr-1"></i>
+                                    <input type="color" onchange="formatDoc('foreColor', this.value)" class="w-5 h-6 p-0 border-0 bg-transparent cursor-pointer" title="สีข้อความ">
+                                </div>
+
                                 <div class="w-px h-5 bg-slate-300 mx-1"></div>
-                                <button type="button" onclick="addLink()" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center"><i class="fa-solid fa-link"></i></button>
-                                <label class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center cursor-pointer">
+
+                                <button type="button" onclick="formatDoc('bold')" class="w-7 h-7 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center font-bold" title="ตัวหนา"><i class="fa-solid fa-bold"></i></button>
+                                <button type="button" onclick="formatDoc('italic')" class="w-7 h-7 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center italic" title="ตัวเอียง"><i class="fa-solid fa-italic"></i></button>
+                                <button type="button" onclick="formatDoc('underline')" class="w-7 h-7 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center underline" title="ขีดเส้นใต้"><i class="fa-solid fa-underline"></i></button>
+                                <button type="button" onclick="formatDoc('strikeThrough')" class="w-7 h-7 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center line-through" title="ขีดฆ่า"><i class="fa-solid fa-strikethrough"></i></button>
+                                
+                                <div class="w-px h-5 bg-slate-300 mx-1"></div>
+
+                                <button type="button" onclick="formatDoc('justifyLeft')" class="w-7 h-7 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center" title="ชิดซ้าย"><i class="fa-solid fa-align-left"></i></button>
+                                <button type="button" onclick="formatDoc('justifyCenter')" class="w-7 h-7 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center" title="กึ่งกลาง"><i class="fa-solid fa-align-center"></i></button>
+                                <button type="button" onclick="formatDoc('justifyRight')" class="w-7 h-7 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center" title="ชิดขวา"><i class="fa-solid fa-align-right"></i></button>
+                                
+                                <div class="w-px h-5 bg-slate-300 mx-1"></div>
+
+                                <button type="button" onclick="formatDoc('insertUnorderedList')" class="w-7 h-7 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center" title="รายการแบบจุด"><i class="fa-solid fa-list-ul"></i></button>
+                                <button type="button" onclick="formatDoc('insertOrderedList')" class="w-7 h-7 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center" title="รายการแบบตัวเลข"><i class="fa-solid fa-list-ol"></i></button>
+
+                                <div class="w-px h-5 bg-slate-300 mx-1"></div>
+
+                                <button type="button" onclick="addLink()" class="w-7 h-7 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center" title="แทรกลิงก์"><i class="fa-solid fa-link"></i></button>
+                                <label class="w-7 h-7 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center cursor-pointer" title="แทรกรูปภาพ (ระบบจะบีบอัดให้อัตโนมัติ)">
                                     <i class="fa-regular fa-image"></i>
                                     <input type="file" accept="image/*" class="hidden" onchange="insertPostImage(this)">
                                 </label>
+
+                                <div class="w-px h-5 bg-slate-300 mx-1"></div>
+                                <button type="button" onclick="formatDoc('removeFormat')" class="w-7 h-7 rounded hover:bg-slate-200 text-rose-500 flex justify-center items-center" title="ล้างการจัดรูปแบบ"><i class="fa-solid fa-eraser"></i></button>
                             </div>
-                            <div id="postContent" class="editor-content p-5 text-sm sm:text-base text-slate-800 custom-scrollbar overflow-y-auto h-80" contenteditable="true" placeholder="เขียนเนื้อหาบทความของคุณที่นี่... สามารถวางภาพ ลิงก์ หรือจัดรูปแบบได้ตามต้องการ"></div>
+                            <!-- Allow paste HTML format now for richer text -->
+                            <div id="postContent" class="editor-content p-5 text-sm sm:text-base text-slate-800 custom-scrollbar overflow-y-auto h-96" contenteditable="true" placeholder="เขียนเนื้อหาบทความของคุณที่นี่... สามารถวางภาพ ลิงก์ หรือจัดรูปแบบได้ตามต้องการ&#10;&#10;เคล็ดลับ: สามารถพิมพ์สมการคณิตศาสตร์ด้วย LaTeX ได้ เช่น \( x^2 \) หรือ $$ a = b $$"></div>
                         </div>
 
                         <div class="flex justify-end pt-4 space-x-3">
@@ -662,6 +726,8 @@
                 if(currentPostId) selectPost(currentPostId); 
             });
             
+            // Format HTML before saving in editor to support MathJax properly if needed (Basic support here)
+            
             populateEmojiPicker('emojiPicker-main', 'commentInput');
             populateReactionPicker();
 
@@ -685,6 +751,13 @@
                 }
             });
 
+            // Paste logic to preserve text format inside Editor but prevent massive image blobs directly if needed, handled via standard execCommand
+            document.getElementById('postContent').addEventListener('paste', function(e) {
+                // For Editor, we let the browser handle standard text paste. 
+                // But for images, we intercept to compress.
+                handleImagePaste(e);
+            });
+
             document.getElementById('chatMessageInput').addEventListener('paste', handleImagePaste);
             document.getElementById('commentInput').addEventListener('paste', handleImagePaste);
             
@@ -698,6 +771,7 @@
 
         function handleImagePaste(e) {
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            let imagePasted = false;
             for (let index in items) {
                 const item = items[index];
                 if (item.kind === 'file' && item.type.includes('image/')) {
@@ -707,9 +781,11 @@
                         document.getElementById(targetId).focus();
                         document.execCommand('insertImage', false, dataUrl);
                     });
-                    e.preventDefault();
+                    e.preventDefault(); // Stop default massive base64 paste
+                    imagePasted = true;
                 }
             }
+            // If it's pure text, we let browser handle the formatting paste
         }
 
         // --- ⚙️ Edit Profile Modal ⚙️ ---
@@ -1887,6 +1963,7 @@
                 case 'การเรียนรู้': return '<i class="fa-solid fa-graduation-cap text-emerald-500"></i>';
                 case 'ข่าวสาร': return '<i class="fa-solid fa-user text-amber-500"></i>';
                 case 'ไอเดีย': return '<i class="fa-solid fa-lightbulb text-purple-500"></i>';
+                case 'การเงิน': return '<i class="fa-solid fa-sack-dollar text-emerald-700"></i>';
                 default: return '<i class="fa-solid fa-folder text-slate-400"></i>';
             }
         }
@@ -1980,6 +2057,13 @@
             document.getElementById('readDate').innerText = post.date;
             document.getElementById('readCategory').innerHTML = `${getCategoryIcon(post.category)} ${post.category}`;
             document.getElementById('readBody').innerHTML = post.content;
+            
+            // Trigger MathJax to render equations in the newly populated readBody
+            if(window.MathJax) {
+                MathJax.typesetPromise([document.getElementById('readBody')]).catch(function (err) {
+                    console.log('MathJax error: ', err.message);
+                });
+            }
 
             const actions = document.getElementById('postActions');
             const isAdmin = checkIsAdmin();
@@ -2113,9 +2197,9 @@
                                         <div id="emojiPicker-reply-${c.id}" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-2 z-50">
                                             <div class="flex flex-wrap gap-1 max-h-52 overflow-y-auto custom-scrollbar" id="emoji-container-main"></div>
                                         </div>
-                                        <button type="button" onclick="addCommentLink('reply-input-${c.id}')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-solid fa-link"></i></button>
-                                        <label class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer transition">
-                                            <i class="fa-regular fa-image"></i>
+                                        <button type="button" onclick="addCommentLink('reply-input-${c.id}')" class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center"><i class="fa-solid fa-link text-xs sm:text-sm"></i></button>
+                                        <label class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer">
+                                            <i class="fa-regular fa-image text-xs sm:text-sm"></i>
                                             <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'reply-input-${c.id}')">
                                         </label>
                                     </div>
@@ -2139,6 +2223,12 @@
                     populateEmojiPicker(`emojiPicker-reply-${c.id}`, `reply-input-${c.id}`);
                 }, 0);
             });
+            
+            if(window.MathJax) {
+                MathJax.typesetPromise([document.getElementById('commentList')]).catch(function (err) {
+                    console.log('MathJax error: ', err.message);
+                });
+            }
         }
 
         function renderRepliesHTML(replies, parentId, isAdmin) {
@@ -2257,6 +2347,13 @@
             document.getElementById(containerId).innerHTML = originalCommentHtml;
             editingCommentId = null;
             originalCommentHtml = "";
+            
+            // Re-render math if any
+            if(window.MathJax) {
+                MathJax.typesetPromise([document.getElementById(containerId)]).catch(function (err) {
+                    console.log('MathJax error: ', err.message);
+                });
+            }
         }
 
         function saveEditComment(commentId, isReply, parentId) {
@@ -2298,7 +2395,9 @@
             document.getElementById(pickerId).classList.add('hidden');
         }
 
-        function formatDoc(cmd) { document.execCommand(cmd, false, null); }
+        function formatDoc(cmd, value=null) { 
+            document.execCommand(cmd, false, value); 
+        }
         
         function addLink() {
             const url = prompt('URL ลิงก์:');
