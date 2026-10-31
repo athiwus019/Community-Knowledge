@@ -43,12 +43,12 @@
         .image-only-bubble img { margin: 0 !important; border-radius: 12px; display: block; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);}
         .emoji-only-bubble { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; font-size: 3rem; line-height: 1; }
 
-        /* Reaction & Message Row Styles */
-        .message-row { transition: background-color 0.5s ease; border-radius: 16px; padding: 2px 8px; }
+        /* Reaction Styles */
         .reaction-btn-group { opacity: 0; transition: opacity 0.2s ease; }
         .message-row:hover .reaction-btn-group { opacity: 1; }
         .reaction-badge { font-size: 0.75rem; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 2px 6px; display: inline-flex; align-items: center; cursor: pointer; z-index: 10; position: relative; margin-top: -6px;}
         .reaction-badge:hover { background: #e2e8f0; }
+        
         .message-row .flex-col { gap: 2px; }
 
         #headerCover {
@@ -88,7 +88,6 @@
             transform: translateX(0);
         }
 
-        /* Fix for Reaction Picker Modal overlay */
         #reactionPicker { z-index: 500; }
     </style>
 </head>
@@ -301,8 +300,10 @@
                 </div>
 
                 <!-- Chat Reaction Picker Popup -->
-                <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 flex items-center z-50 transition-all duration-200 transform scale-95 opacity-0 overflow-hidden w-72">
-                    <div id="reactionEmojiList" class="flex space-x-1 overflow-x-auto custom-scrollbar pb-1 px-1"></div>
+                <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 flex items-center transition-all duration-200 transform scale-95 opacity-0 overflow-hidden w-72">
+                    <div id="reactionEmojiList" class="flex space-x-1 overflow-x-auto custom-scrollbar pb-1 px-1">
+                        <!-- Emoji list generated via JS -->
+                    </div>
                 </div>
                 
                 <!-- Chat Input Form -->
@@ -334,7 +335,6 @@
                             <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'chatMessageInput')">
                         </label>
                         
-                        <!-- Hint for Enter key -->
                         <span class="text-[10px] text-slate-400 ml-auto hidden sm:block">กด <b>Enter</b> เพื่อส่ง / <b>Shift+Enter</b> ขึ้นบรรทัดใหม่</span>
                     </div>
 
@@ -432,8 +432,45 @@
         </div>
     </div>
 
+    <!-- 🛠️ Edit Profile Modal 🛠️ -->
+    <div id="editProfileModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col" id="editProfileModalBox">
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-user-pen text-sky-500 mr-2"></i>ตั้งค่าโปรไฟล์</h3>
+                <button onclick="closeEditProfileModal()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 sm:p-8">
+                <form id="editProfileForm" onsubmit="event.preventDefault(); submitEditProfile();" class="space-y-4">
+                    
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">เปลี่ยนชื่อผู้ใช้งาน (Username) <span class="text-rose-500">*</span></label>
+                        <input type="text" id="editProfileName" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all">
+                        <p class="text-[10px] text-slate-400 mt-1">ชื่อใหม่จะถูกอัปเดตในโพสต์และแชทเก่าของคุณด้วยอัตโนมัติ</p>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">เปลี่ยนรหัสผ่านใหม่ <span class="text-slate-400 font-normal">(เว้นว่างไว้ถ้าไม่ต้องการเปลี่ยน)</span></label>
+                        <input type="password" id="editProfilePassword" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="••••••••">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ยืนยันรหัสผ่านใหม่</label>
+                        <input type="password" id="editProfileConfirmPassword" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="••••••••">
+                    </div>
+
+                    <div id="editProfileErrorMsg" class="text-rose-500 text-xs font-semibold text-center hidden bg-rose-50 p-2 rounded border border-rose-200"></div>
+
+                    <div class="flex space-x-3 mt-6 pt-2">
+                        <button type="button" onclick="closeEditProfileModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold py-3 rounded-xl transition">ยกเลิก</button>
+                        <button type="submit" id="editProfileSubmitBtn" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold py-3 rounded-xl transition shadow-md shadow-sky-200">บันทึกการเปลี่ยนแปลง</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     <!-- Generic Confirm / Info Modal -->
-    <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[150] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[250] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300" id="confirmModalBox">
             <div class="p-6 text-center">
                 <div id="confirmIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"></div>
@@ -494,6 +531,9 @@
             </div>
         </div>
     </div>
+
+    <!-- 🔔 Toast Notification Container 🔔 -->
+    <div id="toast-container"></div>
 
     <script>
         // --- ⚙️ Firebase Setup ⚙️ ---
@@ -586,7 +626,6 @@
                 if(currentPostId) selectPost(currentPostId);
             });
 
-            // ดึงข้อมูลสมาชิกเพื่อนำมาใช้แสดงรูปโปรไฟล์
             db.collection("users").onSnapshot(snap => {
                 usersMap = {};
                 snap.forEach(doc => {
@@ -665,6 +704,114 @@
                     });
                     e.preventDefault();
                 }
+            }
+        }
+
+        // --- ⚙️ Edit Profile Modal ⚙️ ---
+        function openEditProfileModal() {
+            if(!currentUser) return;
+            document.getElementById('editProfileName').value = currentUser;
+            document.getElementById('editProfilePassword').value = '';
+            document.getElementById('editProfileConfirmPassword').value = '';
+            document.getElementById('editProfileErrorMsg').classList.add('hidden');
+
+            const modal = document.getElementById('editProfileModal');
+            const box = document.getElementById('editProfileModalBox');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                document.getElementById('editProfileName').focus();
+            }, 10);
+        }
+
+        function closeEditProfileModal() {
+            const modal = document.getElementById('editProfileModal');
+            const box = document.getElementById('editProfileModalBox');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        async function submitEditProfile() {
+            const newName = document.getElementById('editProfileName').value.trim();
+            const newPass = document.getElementById('editProfilePassword').value;
+            const confirmPass = document.getElementById('editProfileConfirmPassword').value;
+            const errorEl = document.getElementById('editProfileErrorMsg');
+            const submitBtn = document.getElementById('editProfileSubmitBtn');
+            
+            const user = auth.currentUser;
+            if(!user || !newName) return;
+
+            errorEl.classList.add('hidden');
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> รอสักครู่...';
+            submitBtn.disabled = true;
+
+            try {
+                // 1. Update Username if changed
+                if (newName !== currentUser) {
+                    const snap = await db.collection("users").where("username_lower", "==", newName.toLowerCase()).get();
+                    if (!snap.empty) {
+                        throw new Error("ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาตั้งใหม่");
+                    }
+                    
+                    const oldName = currentUser;
+                    
+                    // Update Auth Profile
+                    await user.updateProfile({ displayName: newName });
+                    
+                    // Update Users Collection
+                    await db.collection("users").doc(user.uid).update({
+                        username: newName,
+                        username_lower: newName.toLowerCase()
+                    });
+                    
+                    // Batch Update Group Chats to prevent losing access
+                    const groupsSnap = await db.collection("group_chats").where("members", "array-contains", oldName).get();
+                    const batch = db.batch();
+                    groupsSnap.forEach(doc => {
+                        let members = doc.data().members;
+                        let index = members.indexOf(oldName);
+                        if (index !== -1) {
+                            members[index] = newName;
+                            batch.update(doc.ref, { members: members });
+                        }
+                        if (doc.data().createdBy === oldName) {
+                            batch.update(doc.ref, { createdBy: newName });
+                        }
+                    });
+
+                    // Update Posts authorship
+                    const postsSnap = await db.collection("posts").where("author", "==", oldName).get();
+                    postsSnap.forEach(doc => {
+                        batch.update(doc.ref, { author: newName });
+                    });
+
+                    await batch.commit();
+                    currentUser = newName;
+                }
+
+                // 2. Update Password if provided
+                if (newPass) {
+                    if (newPass !== confirmPass) throw new Error("รหัสผ่านใหม่ไม่ตรงกัน");
+                    if (newPass.length < 6) throw new Error("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+                    await user.updatePassword(newPass);
+                }
+
+                closeEditProfileModal();
+                showModal("สำเร็จ!", "อัปเดตข้อมูลโปรไฟล์ของคุณเรียบร้อยแล้ว", '<i class="fa-solid fa-circle-check text-4xl text-emerald-600"></i>', 'bg-emerald-100', "ตกลง", "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200", () => {});
+                renderUserStatus();
+
+            } catch (error) {
+                let msg = error.message;
+                if (error.code === 'auth/requires-recent-login') {
+                    msg = "เพื่อความปลอดภัย กรุณาออกจากระบบและเข้าสู่ระบบใหม่อีกครั้งก่อนเปลี่ยนรหัสผ่าน";
+                }
+                errorEl.innerText = msg;
+                errorEl.classList.remove('hidden');
+            } finally {
+                submitBtn.innerText = 'บันทึกการเปลี่ยนแปลง';
+                submitBtn.disabled = false;
             }
         }
 
@@ -875,6 +1022,7 @@
                     const data = doc.data();
                     if(data.username && data.username !== currentUser) {
                         const roomId = [currentUser, data.username].sort().join('_');
+                        
                         const safeUsername = data.username.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                         const safeRoomId = roomId.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                         const htmlRoomId = roomId.replace(/"/g, "&quot;");
@@ -948,7 +1096,7 @@
             currentChatRoomType = type;
             currentChatRoomCreator = creator;
             closeReactionPicker();
-            cancelReply();
+            cancelReply(); 
             
             const delGroupBtn = document.getElementById('deleteGroupBtn');
             if(type === 'group' && (checkIsAdmin() || currentUser === creator)) {
@@ -1642,7 +1790,7 @@
                             </div>
                             <input type="file" accept="image/*" class="hidden" onchange="changeProfileImage(this)">
                         </label>
-                        <span class="text-xs sm:text-sm font-medium flex items-center drop-shadow-md">
+                        <span onclick="openEditProfileModal()" class="cursor-pointer hover:text-sky-300 transition text-xs sm:text-sm font-medium flex items-center drop-shadow-md" title="แก้ไขโปรไฟล์">
                             <span class="truncate max-w-[80px] sm:max-w-[120px]">${currentUser}</span>
                             ${badge}
                         </span>
