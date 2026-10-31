@@ -175,7 +175,7 @@
                             </div>
                         </div>
                         <div class="flex items-center space-x-4 text-xs text-slate-500 mb-6 pb-4 border-b border-slate-100">
-                            <span class="flex items-center"><i class="fa-solid fa-user-circle mr-1.5 text-slate-400"></i> <span id="readAuthor" class="font-medium text-slate-700"></span></span>
+                            <span id="readAuthorContainer" class="flex items-center"></span>
                             <span class="flex items-center"><i class="fa-regular fa-clock mr-1.5 text-slate-400"></i> <span id="readDate"></span></span>
                             <span id="readCategory" class="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-md font-medium border border-slate-200"></span>
                         </div>
@@ -190,7 +190,7 @@
 
                         <div id="commentFormArea" class="mt-auto bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 flex-shrink-0 shadow-sm hidden">
                             <div class="flex items-start space-x-3">
-                                <div id="commentUserAvatar" class="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-sky-500 flex items-center justify-center text-white font-bold text-base sm:text-lg flex-shrink-0 shadow-sm"></div>
+                                <div id="commentUserAvatarContainer" class="flex-shrink-0"></div>
                                 <div class="flex-1 relative bg-white border border-slate-300 rounded-xl overflow-visible flex flex-col focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
                                     <div class="bg-slate-50 border-b border-slate-200 px-3 py-2 flex items-center space-x-2 rounded-t-xl relative">
                                         <button type="button" onclick="toggleEmojiPicker('emojiPicker-main')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-regular fa-face-smile text-base sm:text-lg"></i></button>
@@ -301,10 +301,8 @@
                 </div>
 
                 <!-- Chat Reaction Picker Popup -->
-                <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 flex items-center transition-all duration-200 transform scale-95 opacity-0 overflow-hidden w-72">
-                    <div id="reactionEmojiList" class="flex space-x-1 overflow-x-auto custom-scrollbar pb-1 px-1">
-                        <!-- Emoji list generated via JS -->
-                    </div>
+                <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 flex items-center z-50 transition-all duration-200 transform scale-95 opacity-0 overflow-hidden w-72">
+                    <div id="reactionEmojiList" class="flex space-x-1 overflow-x-auto custom-scrollbar pb-1 px-1"></div>
                 </div>
                 
                 <!-- Chat Input Form -->
@@ -497,9 +495,6 @@
         </div>
     </div>
 
-    <!-- 🔔 Toast Notification Container 🔔 -->
-    <div id="toast-container"></div>
-
     <script>
         // --- ⚙️ Firebase Setup ⚙️ ---
         const firebaseConfig = {
@@ -519,20 +514,20 @@
         let currentPostId = null;
         let currentCategory = 'ทั้งหมด';
         let currentUser = null; 
+        let currentUserUid = null;
         let confirmCallback = null;
         let currentAuthMode = 'login'; 
+        let usersMap = {};
 
         // Chat Variables
         let chatUnsubscribe = null;
         let activeChatRoomId = null;
+        let currentChatRoomTitle = '';
         let currentChatRoomType = 'private'; 
         let currentChatRoomCreator = null; 
         let activeReactionMsgId = null;
         let isChatModalOpen = false;
-        let chatReplyTo = null; // ข้อมูลข้อความที่กำลังจะตอบกลับ
-
-        // Base64 Notification Sound (Short Pop)
-        const notificationSound = new Audio("data:audio/wav;base64,UklGRmYBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUMBAACAeHyIhoiJjI6OkpWWmZ2gnqKkpqmrrK+wtbS3uLq8vb7BwsPExsfJysvMz9DR09XW19jZ29zd3t/h4uPk5efp6uvs7e7v8PHy8/T19vf4+fr7/P3+/wAAAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8AAAMCBAYHCAkLCw0NDg8REhMUFhYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdodHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8=");
+        let chatReplyTo = null; 
 
         const ADMIN_USERNAME = 'admin'; 
         
@@ -544,18 +539,71 @@
             return currentUser && currentUser.toLowerCase() === ADMIN_USERNAME.toLowerCase();
         }
 
+        // --- 🧑‍💻 Avatar Helper 🧑‍💻 ---
+        function getAvatarHtml(username, containerClasses = "w-8 h-8", textClasses = "text-xs") {
+            if(!username) return '';
+            const initial = username.charAt(0).toUpperCase();
+            
+            let userKey = Object.keys(usersMap).find(k => k.toLowerCase() === username.toLowerCase());
+            
+            if(userKey && usersMap[userKey].avatar) {
+                return `<img src="${usersMap[userKey].avatar}" class="${containerClasses} rounded-full object-cover shadow-sm border border-slate-200 flex-shrink-0" alt="${username}">`;
+            }
+
+            let bgColor = (username === currentUser) ? "bg-sky-500" : "bg-slate-200";
+            let textColor = (username === currentUser) ? "text-white" : "text-slate-600";
+
+            return `<div class="${containerClasses} rounded-full ${bgColor} ${textColor} flex items-center justify-center font-bold ${textClasses} shadow-sm border border-slate-200 flex-shrink-0">${initial}</div>`;
+        }
+
+        function changeProfileImage(input) {
+            if (!currentUserUid || !input.files[0]) return;
+            
+            processAndCompressImage(input.files[0], (dataUrl) => {
+                db.collection("users").doc(currentUserUid).update({
+                    avatar: dataUrl
+                }).catch(err => {
+                    console.error(err);
+                    alert("ไม่สามารถเปลี่ยนรูปโปรไฟล์ได้ พื้นที่อาจจะเต็ม");
+                });
+            });
+            input.value = '';
+        }
+
         // --- 🚀 Initialization 🚀 ---
         function init() {
             auth.onAuthStateChanged(user => {
                 if(user) {
                     currentUser = user.displayName || user.email.split('@')[0];
+                    currentUserUid = user.uid;
                     setupGlobalMessageListener(); 
                 } else {
                     currentUser = null;
+                    currentUserUid = null;
                     if(activeChatRoomId) closeChatModal();
                 }
                 renderUserStatus();
                 if(currentPostId) selectPost(currentPostId);
+            });
+
+            // ดึงข้อมูลสมาชิกเพื่อนำมาใช้แสดงรูปโปรไฟล์
+            db.collection("users").onSnapshot(snap => {
+                usersMap = {};
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.username) {
+                        usersMap[data.username] = data;
+                    }
+                });
+                
+                renderUserStatus();
+                if(currentPostId) selectPost(currentPostId);
+                if(isChatModalOpen) {
+                    loadChatContacts();
+                }
+                if(!document.getElementById('adminDashboardModal').classList.contains('hidden')) {
+                    openAdminDashboard();
+                }
             });
 
             db.collection("settings").doc("general").onSnapshot(doc => {
@@ -596,14 +644,11 @@
             document.getElementById('chatMessageInput').addEventListener('paste', handleImagePaste);
             document.getElementById('commentInput').addEventListener('paste', handleImagePaste);
             
-            // 🚀 ตั้งค่าการกด Enter ในช่องแชท 🚀
             document.getElementById('chatMessageInput').addEventListener('keydown', function(e) {
-                // หากกด Enter โดยไม่กด Shift ให้ส่งข้อความ
                 if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault(); // ป้องกันการขึ้นบรรทัดใหม่
+                    e.preventDefault(); 
                     sendChatMessage();
                 }
-                // หากกด Shift+Enter เบราว์เซอร์จะทำการขึ้นบรรทัดใหม่ให้ตามปกติ
             });
         }
 
@@ -719,10 +764,10 @@
                 setTimeout(() => toast.remove(), 300);
             };
 
+            const avatarHtml = getAvatarHtml(sender, "w-8 h-8 mt-1", "text-xs");
+
             toast.innerHTML = `
-                <div class="w-8 h-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0 mt-1">
-                    <i class="fa-regular fa-comment-dots"></i>
-                </div>
+                ${avatarHtml}
                 <div class="flex-1 overflow-hidden">
                     <h4 class="text-sm font-bold text-slate-800 truncate">${sender} <span class="text-[10px] text-slate-400 font-normal">(${roomName})</span></h4>
                     <p class="text-xs text-slate-600 truncate">${previewText}</p>
@@ -830,17 +875,14 @@
                     const data = doc.data();
                     if(data.username && data.username !== currentUser) {
                         const roomId = [currentUser, data.username].sort().join('_');
-                        
                         const safeUsername = data.username.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                         const safeRoomId = roomId.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                         const htmlRoomId = roomId.replace(/"/g, "&quot;");
                         
-                        const initial = data.username.charAt(0).toUpperCase();
+                        const avatarHtml = getAvatarHtml(data.username, "w-10 h-10", "text-lg");
                         html += `
                             <div onclick="selectChatRoom('${safeRoomId}', '${safeUsername}', 'private', null)" id="chat-tab-${htmlRoomId}" class="chat-tab-item p-3 rounded-xl cursor-pointer hover:bg-slate-200 flex items-center space-x-3 transition">
-                                <div class="w-10 h-10 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold shadow-sm border border-slate-300 flex-shrink-0">
-                                    ${initial}
-                                </div>
+                                ${avatarHtml}
                                 <div class="flex-1 overflow-hidden">
                                     <h4 class="text-sm font-bold text-slate-800 truncate">${data.username}</h4>
                                     <p class="text-[10px] text-slate-500">แชทส่วนตัว</p>
@@ -886,7 +928,6 @@
             return 'text';
         }
 
-        // ฟังก์ชันลัดในการพรีวิวข้อความสั้นๆ สำหรับตอบกลับ
         function getShortPreviewText(htmlContent) {
             const type = analyzeMessageContent(htmlContent);
             if(type === 'image') return "📷 ส่งรูปภาพ";
@@ -903,10 +944,11 @@
 
         function selectChatRoom(roomId, titleName, type = 'private', creator = null) {
             activeChatRoomId = roomId;
+            currentChatRoomTitle = titleName;
             currentChatRoomType = type;
             currentChatRoomCreator = creator;
             closeReactionPicker();
-            cancelReply(); // ล้างข้อมูลตอบกลับเมื่อเปลี่ยนห้อง
+            cancelReply();
             
             const delGroupBtn = document.getElementById('deleteGroupBtn');
             if(type === 'group' && (checkIsAdmin() || currentUser === creator)) {
@@ -917,7 +959,8 @@
 
             let displayTitle = titleName;
             if(type === 'private') {
-                displayTitle = `<span class="flex items-center"><div class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] mr-2 flex-shrink-0 border border-slate-300">${titleName.charAt(0).toUpperCase()}</div> <span class="truncate">${titleName}</span></span>`;
+                const avatarHtml = getAvatarHtml(titleName, "w-6 h-6", "text-[10px]");
+                displayTitle = `<span class="flex items-center">${avatarHtml} <span class="truncate ml-2">${titleName}</span></span>`;
             } else if (type === 'group') {
                 displayTitle = `<span class="flex items-center"><i class="fa-solid fa-users-viewfinder text-indigo-500 mr-2 flex-shrink-0"></i> <span class="truncate">${titleName}</span></span>`;
             } else {
@@ -958,7 +1001,6 @@
                         
                         let actionBtns = '';
                         actionBtns += `<button onclick="openReactionPicker(event, '${msgId}')" class="reaction-trigger-btn text-slate-400 hover:text-sky-500 mx-1 transition" title="React"><i class="fa-regular fa-face-smile"></i></button>`;
-                        // ปุ่ม Reply 
                         actionBtns += `<button onclick="startReplyChatMessage('${msgId}', '${msg.sender.replace(/'/g, "\\'")}', '${safeText}')" class="text-slate-400 hover:text-sky-500 mx-1 transition" title="ตอบกลับ"><i class="fa-solid fa-reply"></i></button>`;
 
                         if(canEdit) {
@@ -968,7 +1010,6 @@
                             actionBtns += `<button onclick="promptDeleteChatMessage('${msgId}')" class="text-slate-400 hover:text-rose-500 mx-1 transition" title="ลบ"><i class="fa-solid fa-trash"></i></button>`;
                         }
 
-                        // Style สำหรับข้อความหลัก
                         let bubbleClass = '';
                         if (contentType === 'image') {
                             bubbleClass = `rounded-2xl ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} text-sm chat-message-content image-only-bubble`;
@@ -980,7 +1021,6 @@
                                 : `bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-2xl rounded-tl-none shadow-sm text-sm break-words whitespace-pre-wrap chat-message-content`;
                         }
 
-                        // แสดงข้อความที่ตอบกลับ (ถ้ามี)
                         let replyBlockHtml = '';
                         if (msg.replyTo) {
                             if (isMe) {
@@ -998,7 +1038,6 @@
                             }
                         }
 
-                        // แสดง Reaction
                         let reactionHtml = '';
                         if(msg.reactions && Object.keys(msg.reactions).length > 0) {
                             const reactionCounts = {};
@@ -1025,11 +1064,11 @@
                                 </div>
                             `;
                         } else {
-                            const initial = msg.sender.charAt(0).toUpperCase();
+                            const avatarHtml = getAvatarHtml(msg.sender, "w-8 h-8 mt-1", "text-xs");
                             html += `
                                 <div class="flex justify-start mb-4 message-row relative" id="msg-${msgId}">
-                                    <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs shadow-sm mr-2 flex-shrink-0 mt-1 border border-slate-300">
-                                        ${initial}
+                                    <div class="mr-2 flex-shrink-0 mt-1">
+                                        ${avatarHtml}
                                     </div>
                                     <div class="flex flex-col items-start max-w-[85%] sm:max-w-[75%]">
                                         <span class="text-[10px] text-slate-500 ml-1 mb-0.5 font-medium">${msg.sender}</span>
@@ -1082,12 +1121,11 @@
             const el = document.getElementById(`msg-${msgId}`);
             if(el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Highlight temporary
                 const bubble = el.querySelector('.chat-message-content');
                 if(bubble) {
                     const oldBg = bubble.style.backgroundColor;
                     bubble.style.transition = "background-color 0.5s ease";
-                    bubble.style.backgroundColor = "#fef08a"; // Yellow highlight
+                    bubble.style.backgroundColor = "#fef08a"; 
                     setTimeout(() => {
                         bubble.style.backgroundColor = oldBg;
                     }, 1500);
@@ -1152,7 +1190,6 @@
             const input = document.getElementById('chatMessageInput');
             let text = input.innerHTML.trim();
             
-            // Cleanup trailing break tags added by enter sometimes
             while(text.endsWith('<br>')) { text = text.slice(0, -4).trim(); }
             
             if(!text || !activeChatRoomId || !currentUser) return;
@@ -1163,13 +1200,12 @@
                 timestamp: Date.now()
             };
 
-            // แนบข้อมูลการตอบกลับ (ถ้ามี)
             if (chatReplyTo) {
                 payload.replyTo = chatReplyTo;
             }
             
             input.innerHTML = ''; 
-            cancelReply(); // เคลียร์กล่องตอบกลับเมื่อส่งเสร็จ
+            cancelReply(); 
             
             db.collection("chats").doc(activeChatRoomId).collection("messages").add(payload).catch(e => {
                 console.error("Error sending message", e);
@@ -1222,9 +1258,11 @@
                     const data = doc.data();
                     if(data.username && data.username !== currentUser) {
                         const safeUsername = data.username.replace(/"/g, "&quot;");
+                        const avatarHtml = getAvatarHtml(data.username, "w-6 h-6", "text-[10px]");
                         html += `
                             <label class="flex items-center space-x-2 p-2 hover:bg-slate-100 rounded cursor-pointer transition">
                                 <input type="checkbox" value="${safeUsername}" class="group-member-cb w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500">
+                                ${avatarHtml}
                                 <span class="text-sm font-medium text-slate-700">${data.username}</span>
                             </label>
                         `;
@@ -1334,7 +1372,7 @@
                 snap.forEach(doc => {
                     const data = doc.data();
                     const docId = doc.id;
-                    const initial = data.username ? data.username.charAt(0).toUpperCase() : '?';
+                    const avatarHtml = getAvatarHtml(data.username, "w-8 h-8", "text-xs");
                     
                     const isSelfAdmin = data.username.toLowerCase() === ADMIN_USERNAME.toLowerCase();
                     const deleteBtn = isSelfAdmin ? '' : `<button onclick="promptDeleteUser('${docId}', '${data.username.replace(/'/g, "\\'")}')" class="text-rose-400 hover:text-rose-600 transition p-1"><i class="fa-solid fa-trash-alt"></i></button>`;
@@ -1342,9 +1380,7 @@
                     html += `
                         <div class="px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition">
                             <div class="flex items-center space-x-3">
-                                <div class="w-8 h-8 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center font-bold text-xs shadow-sm border border-indigo-200">
-                                    ${initial}
-                                </div>
+                                ${avatarHtml}
                                 <div>
                                     <h4 class="text-sm font-bold text-slate-800 leading-tight">${data.username || 'No Name'}</h4>
                                     <p class="text-[10px] text-slate-500 font-medium">${data.email || 'No Email'}</p>
@@ -1518,7 +1554,7 @@
                     auth.createUserWithEmailAndPassword(email, password).then(cred => {
                         return cred.user.updateProfile({ displayName: username }).then(() => {
                             return db.collection("users").doc(cred.user.uid).set({
-                                email: email, username: username, username_lower: username.toLowerCase()
+                                email: email, username: username, username_lower: username.toLowerCase(), avatar: ""
                             });
                         });
                     }).then(() => {
@@ -1576,15 +1612,16 @@
             const area = document.getElementById('userStatusArea');
             const commentFormArea = document.getElementById('commentFormArea');
             const loginToCommentMsg = document.getElementById('loginToCommentMsg');
-            const commentAvatar = document.getElementById('commentUserAvatar');
+            
             const changeCoverBtn = document.getElementById('changeCoverBtn');
             const viewMembersBtn = document.getElementById('viewMembersBtn');
             const chatBtn = document.getElementById('chatBtn');
 
             if (currentUser) {
-                const initial = currentUser.charAt(0).toUpperCase();
                 const isAdmin = checkIsAdmin();
                 const badge = isAdmin ? `<span class="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded shadow-sm ml-1.5 font-bold">ADMIN</span>` : '';
+                
+                const avatarHtml = getAvatarHtml(currentUser, "w-6 h-6 sm:w-7 sm:h-7", "text-[10px] sm:text-xs");
 
                 if (isAdmin) {
                     changeCoverBtn.classList.remove('hidden'); changeCoverBtn.classList.add('flex');
@@ -1598,7 +1635,13 @@
 
                 area.innerHTML = `
                     <div class="flex items-center space-x-2 bg-slate-900/60 backdrop-blur px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-white/10 shadow-sm text-white">
-                        <div class="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-sky-500 flex items-center justify-center text-white text-[10px] sm:text-xs font-bold shadow-sm">${initial}</div>
+                        <label class="cursor-pointer relative group flex-shrink-0" title="เปลี่ยนรูปโปรไฟล์">
+                            ${avatarHtml}
+                            <div class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i class="fa-solid fa-camera text-[10px] text-white"></i>
+                            </div>
+                            <input type="file" accept="image/*" class="hidden" onchange="changeProfileImage(this)">
+                        </label>
                         <span class="text-xs sm:text-sm font-medium flex items-center drop-shadow-md">
                             <span class="truncate max-w-[80px] sm:max-w-[120px]">${currentUser}</span>
                             ${badge}
@@ -1606,10 +1649,11 @@
                         <button onclick="handleLogout()" class="text-slate-300 hover:text-rose-400 ml-2 sm:ml-3 transition" title="ออกจากระบบ"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
                     </div>
                 `;
+                
                 if(commentFormArea) {
                     commentFormArea.classList.remove('hidden');
                     loginToCommentMsg.classList.add('hidden');
-                    commentAvatar.innerHTML = initial;
+                    document.getElementById('commentUserAvatarContainer').innerHTML = getAvatarHtml(currentUser, "w-8 h-8 sm:w-10 sm:h-10", "text-base sm:text-lg");
                 }
             } else {
                 changeCoverBtn.classList.add('hidden'); changeCoverBtn.classList.remove('flex');
@@ -1782,7 +1826,10 @@
             document.getElementById('readScreen').classList.remove('hidden');
 
             document.getElementById('readTitle').innerText = post.title;
-            document.getElementById('readAuthor').innerText = post.author;
+            
+            const avatarHtml = getAvatarHtml(post.author, "w-5 h-5 mr-1.5", "text-[9px]");
+            document.getElementById('readAuthorContainer').innerHTML = `${avatarHtml} <span class="font-medium text-slate-700">${post.author}</span>`;
+            
             document.getElementById('readDate').innerText = post.date;
             document.getElementById('readCategory').innerHTML = `${getCategoryIcon(post.category)} ${post.category}`;
             document.getElementById('readBody').innerHTML = post.content;
@@ -1890,11 +1937,11 @@
                 const bubble = document.createElement('div');
                 bubble.className = `flex flex-col space-y-2`;
                 
+                const avatarHtml = getAvatarHtml(c.author, "w-8 h-8 sm:w-10 sm:h-10", "text-xs sm:text-sm");
+
                 let html = `
                     <div class="flex items-start space-x-3">
-                        <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-full ${isMe ? 'bg-sky-500 text-white shadow-sm' : 'bg-slate-200 text-slate-600'} flex items-center justify-center font-bold text-xs sm:text-sm flex-shrink-0">
-                            ${c.author.charAt(0).toUpperCase()}
-                        </div>
+                        ${avatarHtml}
                         <div class="w-full">
                             <div class="bg-slate-50 border border-slate-100 px-3 py-2 sm:px-4 sm:py-3 rounded-2xl rounded-tl-none inline-block min-w-[200px] max-w-[95%] shadow-sm">
                                 <div class="flex items-center space-x-2 mb-1.5">
@@ -1954,12 +2001,11 @@
                 if(!r.id) r.id = Date.now().toString() + Math.random().toString().substr(2,5);
                 const isMe = (r.author === currentUser);
                 const canEdit = isMe || isAdmin;
+                const avatarHtml = getAvatarHtml(r.author, "w-6 h-6 sm:w-8 sm:h-8", "text-[10px] sm:text-xs");
 
                 html += `
                     <div class="flex items-start space-x-2 sm:space-x-3">
-                        <div class="w-6 h-6 sm:w-8 sm:h-8 rounded-full ${isMe ? 'bg-indigo-500 text-white' : 'bg-slate-200 text-slate-600'} flex items-center justify-center font-bold text-[10px] sm:text-xs flex-shrink-0">
-                            ${r.author.charAt(0).toUpperCase()}
-                        </div>
+                        ${avatarHtml}
                         <div class="w-full">
                             <div class="bg-white border border-slate-200 px-3 py-2 rounded-2xl rounded-tl-none inline-block min-w-[150px] max-w-full shadow-sm">
                                 <div class="flex items-center space-x-2 mb-1">
