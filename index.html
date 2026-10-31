@@ -8,8 +8,9 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Google Fonts: Prompt -->
-    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Google Fonts: Load multiple fonts for editor -->
+    <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Firebase SDK -->
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -110,7 +111,7 @@
 
         #reactionPicker { z-index: 500; }
         
-        /* MathJax adjustments to make block formulas fit nicely */
+        /* MathJax adjustments */
         mjx-container[jax="SVG"][display="true"] {
             margin: 1em 0;
             padding: 0.5em;
@@ -275,22 +276,36 @@
                             </div>
                         </div>
                         
-                        <!-- Rich Text Editor (Upgraded) -->
+                        <!-- Rich Text Editor -->
                         <div class="border border-slate-300 rounded-xl overflow-hidden flex flex-col bg-white">
                             <div class="bg-slate-100 border-b border-slate-200 px-2 py-2 flex flex-wrap gap-1 items-center">
                                 
+                                <!-- Font Family -->
+                                <select onchange="formatDoc('fontName', this.value); this.selectedIndex=0;" class="text-xs border border-slate-300 rounded px-1 py-1 mr-1 text-slate-700 bg-white">
+                                    <option value="">รูปแบบฟอนต์...</option>
+                                    <option value="Prompt">Prompt</option>
+                                    <option value="Sarabun">Sarabun</option>
+                                    <option value="Kanit">Kanit</option>
+                                    <option value="Arial">Arial</option>
+                                    <option value="Tahoma">Tahoma</option>
+                                </select>
+
                                 <!-- Font Size -->
-                                <select onchange="formatDoc('formatBlock', this.value); this.selectedIndex=0;" class="text-xs border border-slate-300 rounded px-1 py-1 mr-1 text-slate-700 bg-white">
+                                <select onchange="formatDoc('fontSize', this.value); this.selectedIndex=0;" class="text-xs border border-slate-300 rounded px-1 py-1 mr-1 text-slate-700 bg-white">
                                     <option value="">ขนาด...</option>
-                                    <option value="H3">หัวข้อใหญ่</option>
-                                    <option value="H4">หัวข้อรอง</option>
-                                    <option value="P">ปกติ</option>
+                                    <option value="1">เล็กจิ๋ว</option>
+                                    <option value="2">เล็ก</option>
+                                    <option value="3">ปกติ</option>
+                                    <option value="4">ใหญ่ขึ้น</option>
+                                    <option value="5">ใหญ่</option>
+                                    <option value="6">ใหญ่มาก</option>
+                                    <option value="7">ใหญ่สุด</option>
                                 </select>
 
                                 <!-- Text Color -->
-                                <div class="relative flex items-center border border-slate-300 rounded bg-white px-1 mr-1">
-                                    <i class="fa-solid fa-palette text-xs text-slate-500 mr-1"></i>
-                                    <input type="color" onchange="formatDoc('foreColor', this.value)" class="w-5 h-6 p-0 border-0 bg-transparent cursor-pointer" title="สีข้อความ">
+                                <div class="relative flex items-center border border-slate-300 rounded bg-white px-1 mr-1 h-[26px]">
+                                    <i class="fa-solid fa-palette text-[10px] text-slate-500 mr-1"></i>
+                                    <input type="color" onchange="formatDoc('foreColor', this.value)" class="w-4 h-5 p-0 border-0 bg-transparent cursor-pointer" title="สีข้อความ">
                                 </div>
 
                                 <div class="w-px h-5 bg-slate-300 mx-1"></div>
@@ -322,7 +337,6 @@
                                 <div class="w-px h-5 bg-slate-300 mx-1"></div>
                                 <button type="button" onclick="formatDoc('removeFormat')" class="w-7 h-7 rounded hover:bg-slate-200 text-rose-500 flex justify-center items-center" title="ล้างการจัดรูปแบบ"><i class="fa-solid fa-eraser"></i></button>
                             </div>
-                            <!-- Allow paste HTML format now for richer text -->
                             <div id="postContent" class="editor-content p-5 text-sm sm:text-base text-slate-800 custom-scrollbar overflow-y-auto h-96" contenteditable="true" placeholder="เขียนเนื้อหาบทความของคุณที่นี่... สามารถวางภาพ ลิงก์ หรือจัดรูปแบบได้ตามต้องการ&#10;&#10;เคล็ดลับ: สามารถพิมพ์สมการคณิตศาสตร์ด้วย LaTeX ได้ เช่น \( x^2 \) หรือ $$ a = b $$"></div>
                         </div>
 
@@ -369,7 +383,7 @@
                 </div>
 
                 <!-- Chat Reaction Picker Popup -->
-                <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 flex items-center transition-all duration-200 transform scale-95 opacity-0 overflow-hidden w-72">
+                <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 flex items-center z-50 transition-all duration-200 transform scale-95 opacity-0 overflow-hidden w-72">
                     <div id="reactionEmojiList" class="flex space-x-1 overflow-x-auto custom-scrollbar pb-1 px-1">
                         <!-- Emoji list generated via JS -->
                     </div>
@@ -726,8 +740,6 @@
                 if(currentPostId) selectPost(currentPostId); 
             });
             
-            // Format HTML before saving in editor to support MathJax properly if needed (Basic support here)
-            
             populateEmojiPicker('emojiPicker-main', 'commentInput');
             populateReactionPicker();
 
@@ -751,13 +763,7 @@
                 }
             });
 
-            // Paste logic to preserve text format inside Editor but prevent massive image blobs directly if needed, handled via standard execCommand
-            document.getElementById('postContent').addEventListener('paste', function(e) {
-                // For Editor, we let the browser handle standard text paste. 
-                // But for images, we intercept to compress.
-                handleImagePaste(e);
-            });
-
+            document.getElementById('postContent').addEventListener('paste', handleImagePaste);
             document.getElementById('chatMessageInput').addEventListener('paste', handleImagePaste);
             document.getElementById('commentInput').addEventListener('paste', handleImagePaste);
             
@@ -771,7 +777,6 @@
 
         function handleImagePaste(e) {
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
-            let imagePasted = false;
             for (let index in items) {
                 const item = items[index];
                 if (item.kind === 'file' && item.type.includes('image/')) {
@@ -781,11 +786,9 @@
                         document.getElementById(targetId).focus();
                         document.execCommand('insertImage', false, dataUrl);
                     });
-                    e.preventDefault(); // Stop default massive base64 paste
-                    imagePasted = true;
+                    e.preventDefault(); 
                 }
             }
-            // If it's pure text, we let browser handle the formatting paste
         }
 
         // --- ⚙️ Edit Profile Modal ⚙️ ---
@@ -2058,7 +2061,6 @@
             document.getElementById('readCategory').innerHTML = `${getCategoryIcon(post.category)} ${post.category}`;
             document.getElementById('readBody').innerHTML = post.content;
             
-            // Trigger MathJax to render equations in the newly populated readBody
             if(window.MathJax) {
                 MathJax.typesetPromise([document.getElementById('readBody')]).catch(function (err) {
                     console.log('MathJax error: ', err.message);
@@ -2348,7 +2350,6 @@
             editingCommentId = null;
             originalCommentHtml = "";
             
-            // Re-render math if any
             if(window.MathJax) {
                 MathJax.typesetPromise([document.getElementById(containerId)]).catch(function (err) {
                     console.log('MathJax error: ', err.message);
