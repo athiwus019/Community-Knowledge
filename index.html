@@ -79,13 +79,18 @@
             display: flex;
             align-items: flex-start;
             min-w-[250px];
-            max-w-xs;
+            max-width: 320px;
             transform: translateX(120%);
             transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
             cursor: pointer;
         }
         .toast-notification.show {
             transform: translateX(0);
+        }
+
+        /* Fix for Reaction Picker Modal overlay */
+        #reactionPicker {
+            z-index: 500;
         }
     </style>
 </head>
@@ -297,8 +302,9 @@
                     <div class="flex items-center justify-center h-full text-slate-400 text-sm">กรุณาเลือกผู้ติดต่อจากเมนูด้านซ้าย</div>
                 </div>
 
-                <!-- Chat Reaction Picker Popup (Upgraded) -->
-                <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 flex items-center z-50 transition-all duration-200 transform scale-95 opacity-0 overflow-hidden w-72">
+                <!-- Chat Reaction Picker Popup -->
+                <!-- แก้ไขให้อยู่เหนือกล่องแชทและเลื่อนแนวนอนได้ -->
+                <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 flex items-center transition-all duration-200 transform scale-95 opacity-0 overflow-hidden w-72">
                     <div id="reactionEmojiList" class="flex space-x-1 overflow-x-auto custom-scrollbar pb-1 px-1">
                         <!-- Emoji list generated via JS -->
                     </div>
@@ -555,11 +561,10 @@
             });
             
             populateEmojiPicker('emojiPicker-main', 'commentInput');
-            populateReactionPicker(); // Populate the new horizontal reaction picker
+            populateReactionPicker(); // Populate the horizontal reaction picker
 
             // Auto close emoji pickers & reaction picker
             document.addEventListener('click', function(e) {
-                // Emoji pickers
                 document.querySelectorAll('.emoji-picker').forEach(picker => {
                     const toggleBtn = picker.previousElementSibling;
                     if (!picker.classList.contains('hidden') && !picker.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
@@ -567,7 +572,6 @@
                     }
                 });
 
-                // Reaction picker
                 const reactionPicker = document.getElementById('reactionPicker');
                 if(!reactionPicker.classList.contains('hidden') && !reactionPicker.contains(e.target) && !e.target.closest('.reaction-trigger-btn')) {
                     closeReactionPicker();
@@ -716,10 +720,8 @@
 
             container.appendChild(toast);
             
-            // Trigger animation
             setTimeout(() => toast.classList.add('show'), 10);
 
-            // Auto remove after 5 seconds
             setTimeout(() => {
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 300);
@@ -819,7 +821,7 @@
                     if(data.username && data.username !== currentUser) {
                         const roomId = [currentUser, data.username].sort().join('_');
                         
-                        // Prevent injection from usernames with quotes
+                        // Prevent injection
                         const safeUsername = data.username.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                         const safeRoomId = roomId.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                         const htmlRoomId = roomId.replace(/"/g, "&quot;");
@@ -855,26 +857,22 @@
             document.querySelectorAll('.chat-tab-item').forEach(el => {
                 el.classList.remove('bg-sky-100', 'border', 'border-sky-200');
             });
-            // Escape any potential quotes for query selector
             const htmlRoomId = roomId.replace(/"/g, "&quot;");
             const activeTab = document.getElementById(`chat-tab-${htmlRoomId}`);
             if(activeTab) activeTab.classList.add('bg-sky-100', 'border', 'border-sky-200');
         }
 
-        // Logic to determine if content is just an image or just a single emoji
         function analyzeMessageContent(htmlContent) {
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = htmlContent.replace(/<br\s*[\/]?>/gi, ''); // remove breaks
+            tempDiv.innerHTML = htmlContent.replace(/<br\s*[\/]?>/gi, ''); 
             
             const imgs = tempDiv.getElementsByTagName('img');
             const text = tempDiv.textContent.trim();
             
-            // Check if it's only one image and no text
             if (imgs.length === 1 && text === '') {
                 return 'image';
             }
             
-            // Check if it's a single emoji (using basic length check for simplicity)
             const emojiRegex = /^[\p{Emoji}\u200d]+$/u;
             if (imgs.length === 0 && emojiRegex.test(text) && Array.from(text).length <= 3) {
                 return 'emoji';
@@ -1009,6 +1007,10 @@
                     area.innerHTML = html;
                     area.scrollTop = area.scrollHeight; 
                 });
+                
+                setTimeout(() => {
+                    populateEmojiPicker('emojiPicker-chat', 'chatMessageInput');
+                }, 100);
         }
 
         // --- 💖 Reactions System (Upgraded Picker) 💖 ---
@@ -1022,15 +1024,17 @@
             activeReactionMsgId = msgId;
             
             const btnRect = event.currentTarget.getBoundingClientRect();
-            const areaRect = document.getElementById('chatMessagesArea').getBoundingClientRect();
             
-            let topPos = btnRect.top - areaRect.top - 50;
-            let leftPos = btnRect.left - areaRect.left - 130; 
+            // Adjust position so it floats next to the button
+            let topPos = btnRect.top - 50;
+            let leftPos = btnRect.left - 130; 
             
-            if(topPos < 0) topPos = btnRect.bottom - areaRect.top + 5; 
-            if(leftPos < 0) leftPos = 10;
+            // Ensure it doesn't go off-screen
+            if(topPos < 10) topPos = btnRect.bottom + 5; 
+            if(leftPos < 10) leftPos = 10;
+            if(leftPos + 288 > window.innerWidth) leftPos = window.innerWidth - 300;
             
-            picker.style.top = `${topPos + document.getElementById('chatMessagesArea').scrollTop}px`;
+            picker.style.top = `${topPos}px`;
             picker.style.left = `${leftPos}px`;
             
             picker.classList.remove('hidden');
@@ -1124,7 +1128,6 @@
                 snap.forEach(doc => {
                     const data = doc.data();
                     if(data.username && data.username !== currentUser) {
-                        // ป้องกันบั๊กชื่อที่มี Single Quote ในหน้าสร้างกลุ่ม
                         const safeUsername = data.username.replace(/"/g, "&quot;");
                         html += `
                             <label class="flex items-center space-x-2 p-2 hover:bg-slate-100 rounded cursor-pointer transition">
@@ -1186,7 +1189,6 @@
             );
         }
 
-
         // --- 📊 Admin Dashboard 📊 ---
         function openAdminDashboard() {
             if(!checkIsAdmin()) return;
@@ -1204,7 +1206,6 @@
                 box.classList.remove('scale-95');
             }, 10);
 
-            // Calculate Storage & Stats
             let totalComments = 0;
             posts.forEach(p => {
                 totalComments += (p.comments || []).length;
@@ -1229,7 +1230,6 @@
             else if (percent > 70) bar.className = "bg-amber-500 h-3.5 rounded-full transition-all duration-700";
             else bar.className = "bg-sky-500 h-3.5 rounded-full transition-all duration-700";
 
-            // Fetch Users
             db.collection("users").orderBy("username_lower").get().then(snap => {
                 countLabel.innerText = snap.size;
                 if(snap.empty) {
@@ -1240,7 +1240,13 @@
                 let html = '';
                 snap.forEach(doc => {
                     const data = doc.data();
+                    const docId = doc.id;
                     const initial = data.username ? data.username.charAt(0).toUpperCase() : '?';
+                    
+                    // Do not allow deleting the admin account itself
+                    const isSelfAdmin = data.username.toLowerCase() === ADMIN_USERNAME.toLowerCase();
+                    const deleteBtn = isSelfAdmin ? '' : `<button onclick="promptDeleteUser('${docId}', '${data.username.replace(/'/g, "\\'")}')" class="text-rose-400 hover:text-rose-600 transition p-1"><i class="fa-solid fa-trash-alt"></i></button>`;
+
                     html += `
                         <div class="px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition">
                             <div class="flex items-center space-x-3">
@@ -1252,6 +1258,7 @@
                                     <p class="text-[10px] text-slate-500 font-medium">${data.email || 'No Email'}</p>
                                 </div>
                             </div>
+                            <div>${deleteBtn}</div>
                         </div>
                     `;
                 });
@@ -1259,6 +1266,19 @@
             }).catch(err => {
                 listContainer.innerHTML = '<div class="p-6 text-center text-rose-500 text-xs font-medium">เกิดข้อผิดพลาดในการดึงข้อมูลสมาชิก</div>';
                 console.error(err);
+            });
+        }
+
+        // New function to delete user from Firestore
+        function promptDeleteUser(userDocId, username) {
+            showModal("ลบสมาชิก?", `คุณต้องการลบบัญชีผู้ใช้ "${username}" ออกจากระบบใช่หรือไม่?\n\n(การลบนี้จะลบแค่ข้อมูลโปรไฟล์ แต่โพสต์เก่าของเขาจะยังคงอยู่)`, '<i class="fa-solid fa-user-xmark text-3xl text-rose-600"></i>', 'bg-rose-100', "ลบสมาชิก", "bg-rose-600 hover:bg-rose-700 shadow-rose-200", () => {
+                db.collection("users").doc(userDocId).delete().then(() => {
+                    closeConfirmModal();
+                    // Refresh Dashboard
+                    setTimeout(() => openAdminDashboard(), 300);
+                }).catch(err => {
+                    alert("เกิดข้อผิดพลาดในการลบสมาชิก");
+                });
             });
         }
 
