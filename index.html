@@ -355,7 +355,9 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-2">เลือกสมาชิกที่จะเชิญเข้ากลุ่ม:</label>
-                    <div id="groupMembersList" class="border border-slate-200 rounded-lg p-3 max-h-48 overflow-y-auto custom-scrollbar bg-slate-50 space-y-2"></div>
+                    <div id="groupMembersList" class="border border-slate-200 rounded-lg p-3 max-h-48 overflow-y-auto custom-scrollbar bg-slate-50 space-y-2">
+                        <!-- Checkboxes injected here -->
+                    </div>
                 </div>
             </div>
             <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex space-x-3">
@@ -557,6 +559,7 @@
 
             // Auto close emoji pickers & reaction picker
             document.addEventListener('click', function(e) {
+                // Emoji pickers
                 document.querySelectorAll('.emoji-picker').forEach(picker => {
                     const toggleBtn = picker.previousElementSibling;
                     if (!picker.classList.contains('hidden') && !picker.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
@@ -564,6 +567,7 @@
                     }
                 });
 
+                // Reaction picker
                 const reactionPicker = document.getElementById('reactionPicker');
                 if(!reactionPicker.classList.contains('hidden') && !reactionPicker.contains(e.target) && !e.target.closest('.reaction-trigger-btn')) {
                     closeReactionPicker();
@@ -693,7 +697,8 @@
             toast.onclick = () => {
                 openChatModal();
                 setTimeout(() => {
-                    document.getElementById(`chat-tab-${roomId}`)?.click();
+                    const safeRoomId = roomId.replace(/"/g, '&quot;');
+                    document.getElementById(`chat-tab-${safeRoomId}`)?.click();
                 }, 500);
                 toast.classList.remove('show');
                 setTimeout(() => toast.remove(), 300);
@@ -792,8 +797,9 @@
                     html += `<div class="my-2 border-t border-slate-200 w-full"></div><div class="px-3 pb-1 text-[10px] font-bold text-slate-400">แชทกลุ่มส่วนตัว</div>`;
                     groupsSnap.forEach(doc => {
                         const data = doc.data();
+                        const safeGroupName = data.name ? data.name.replace(/'/g, "\\'").replace(/"/g, "&quot;") : '';
                         html += `
-                            <div onclick="selectChatRoom('${doc.id}', '${data.name}', 'group', '${data.createdBy}')" id="chat-tab-${doc.id}" class="chat-tab-item p-3 rounded-xl cursor-pointer hover:bg-slate-200 flex items-center space-x-3 transition">
+                            <div onclick="selectChatRoom('${doc.id}', '${safeGroupName}', 'group', '${data.createdBy}')" id="chat-tab-${doc.id}" class="chat-tab-item p-3 rounded-xl cursor-pointer hover:bg-slate-200 flex items-center space-x-3 transition">
                                 <div class="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold shadow-sm flex-shrink-0">
                                     <i class="fa-solid fa-users-viewfinder"></i>
                                 </div>
@@ -812,9 +818,15 @@
                     const data = doc.data();
                     if(data.username && data.username !== currentUser) {
                         const roomId = [currentUser, data.username].sort().join('_');
+                        
+                        // Prevent injection from usernames with quotes
+                        const safeUsername = data.username.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                        const safeRoomId = roomId.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                        const htmlRoomId = roomId.replace(/"/g, "&quot;");
+                        
                         const initial = data.username.charAt(0).toUpperCase();
                         html += `
-                            <div onclick="selectChatRoom('${roomId}', '${data.username}', 'private', null)" id="chat-tab-${roomId}" class="chat-tab-item p-3 rounded-xl cursor-pointer hover:bg-slate-200 flex items-center space-x-3 transition">
+                            <div onclick="selectChatRoom('${safeRoomId}', '${safeUsername}', 'private', null)" id="chat-tab-${htmlRoomId}" class="chat-tab-item p-3 rounded-xl cursor-pointer hover:bg-slate-200 flex items-center space-x-3 transition">
                                 <div class="w-10 h-10 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold shadow-sm border border-slate-300 flex-shrink-0">
                                     ${initial}
                                 </div>
@@ -843,21 +855,26 @@
             document.querySelectorAll('.chat-tab-item').forEach(el => {
                 el.classList.remove('bg-sky-100', 'border', 'border-sky-200');
             });
-            const activeTab = document.getElementById(`chat-tab-${roomId}`);
+            // Escape any potential quotes for query selector
+            const htmlRoomId = roomId.replace(/"/g, "&quot;");
+            const activeTab = document.getElementById(`chat-tab-${htmlRoomId}`);
             if(activeTab) activeTab.classList.add('bg-sky-100', 'border', 'border-sky-200');
         }
 
+        // Logic to determine if content is just an image or just a single emoji
         function analyzeMessageContent(htmlContent) {
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = htmlContent.replace(/<br\s*[\/]?>/gi, ''); 
+            tempDiv.innerHTML = htmlContent.replace(/<br\s*[\/]?>/gi, ''); // remove breaks
             
             const imgs = tempDiv.getElementsByTagName('img');
             const text = tempDiv.textContent.trim();
             
+            // Check if it's only one image and no text
             if (imgs.length === 1 && text === '') {
                 return 'image';
             }
             
+            // Check if it's a single emoji (using basic length check for simplicity)
             const emojiRegex = /^[\p{Emoji}\u200d]+$/u;
             if (imgs.length === 0 && emojiRegex.test(text) && Array.from(text).length <= 3) {
                 return 'emoji';
@@ -951,7 +968,7 @@
                             });
                             
                             Object.entries(reactionCounts).forEach(([emoji, count]) => {
-                                reactionHtml += `<div class="reaction-badge shadow-sm">${emoji} ${count > 1 ? `<span class="ml-1 text-[9px] text-slate-500 font-bold">${count}</span>` : ''}</div>`;
+                                reactionHtml += `<div class="reaction-badge shadow-sm" onclick="addReaction('${emoji}', '${msgId}')">${emoji} ${count > 1 ? `<span class="ml-1 text-[9px] text-slate-500 font-bold">${count}</span>` : ''}</div>`;
                             });
                         }
 
@@ -992,10 +1009,6 @@
                     area.innerHTML = html;
                     area.scrollTop = area.scrollHeight; 
                 });
-                
-                setTimeout(() => {
-                    populateEmojiPicker('emojiPicker-chat', 'chatMessageInput');
-                }, 100);
         }
 
         // --- 💖 Reactions System (Upgraded Picker) 💖 ---
@@ -1035,10 +1048,11 @@
             }, 200);
         }
 
-        function addReaction(emoji) {
-            if(!activeReactionMsgId || !activeChatRoomId || !currentUser) return;
+        function addReaction(emoji, overrideMsgId = null) {
+            const targetMsgId = overrideMsgId || activeReactionMsgId;
+            if(!targetMsgId || !activeChatRoomId || !currentUser) return;
             
-            const msgRef = db.collection("chats").doc(activeChatRoomId).collection("messages").doc(activeReactionMsgId);
+            const msgRef = db.collection("chats").doc(activeChatRoomId).collection("messages").doc(targetMsgId);
             
             msgRef.set({
                 reactions: {
@@ -1110,9 +1124,11 @@
                 snap.forEach(doc => {
                     const data = doc.data();
                     if(data.username && data.username !== currentUser) {
+                        // ป้องกันบั๊กชื่อที่มี Single Quote ในหน้าสร้างกลุ่ม
+                        const safeUsername = data.username.replace(/"/g, "&quot;");
                         html += `
                             <label class="flex items-center space-x-2 p-2 hover:bg-slate-100 rounded cursor-pointer transition">
-                                <input type="checkbox" value="${data.username}" class="group-member-cb w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500">
+                                <input type="checkbox" value="${safeUsername}" class="group-member-cb w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500">
                                 <span class="text-sm font-medium text-slate-700">${data.username}</span>
                             </label>
                         `;
@@ -1137,7 +1153,7 @@
             const checkboxes = document.querySelectorAll('.group-member-cb:checked');
             if(checkboxes.length === 0) { alert("กรุณาเลือกสมาชิกอย่างน้อย 1 คน"); return; }
             
-            const members = Array.from(checkboxes).map(cb => cb.value);
+            const members = Array.from(checkboxes).map(cb => cb.value.replace(/&quot;/g, '"'));
             members.push(currentUser); 
 
             db.collection("group_chats").add({
