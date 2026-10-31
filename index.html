@@ -43,12 +43,12 @@
         .image-only-bubble img { margin: 0 !important; border-radius: 12px; display: block; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);}
         .emoji-only-bubble { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; font-size: 3rem; line-height: 1; }
 
-        /* Reaction Styles */
+        /* Reaction & Message Row Styles */
+        .message-row { transition: background-color 0.5s ease; border-radius: 16px; padding: 2px 8px; }
         .reaction-btn-group { opacity: 0; transition: opacity 0.2s ease; }
         .message-row:hover .reaction-btn-group { opacity: 1; }
         .reaction-badge { font-size: 0.75rem; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 2px 6px; display: inline-flex; align-items: center; cursor: pointer; z-index: 10; position: relative; margin-top: -6px;}
         .reaction-badge:hover { background: #e2e8f0; }
-        
         .message-row .flex-col { gap: 2px; }
 
         #headerCover {
@@ -88,6 +88,7 @@
             transform: translateX(0);
         }
 
+        /* Fix for Reaction Picker Modal overlay */
         #reactionPicker { z-index: 500; }
     </style>
 </head>
@@ -137,6 +138,8 @@
                 <button onclick="setCategory('การเรียนรู้')" id="tab-การเรียนรู้" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-graduation-cap w-4 mr-1.5"></i> การเรียนรู้</button>
                 <button onclick="setCategory('ข่าวสาร')" id="tab-ข่าวสาร" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-user w-4 mr-1.5"></i> ข่าวสาร</button>
                 <button onclick="setCategory('ไอเดีย')" id="tab-ไอเดีย" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-lightbulb w-4 mr-1.5"></i> ไอเดีย</button>
+                <!-- เพิ่มหมวดหมู่ การเงิน -->
+                <button onclick="setCategory('การเงิน')" id="tab-การเงิน" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-sack-dollar w-4 mr-1.5"></i> การเงิน</button>
                 <button onclick="setCategory('อื่นๆ')" id="tab-อื่นๆ" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-folder-open w-4 mr-1.5"></i> อื่นๆ</button>
             </div>
         </div>
@@ -237,6 +240,8 @@
                                     <option value="การเรียนรู้">การเรียนรู้</option>
                                     <option value="ข่าวสาร">ข่าวสาร</option>
                                     <option value="ไอเดีย">ไอเดีย</option>
+                                    <!-- เพิ่มตัวเลือก การเงิน -->
+                                    <option value="การเงิน">การเงิน</option>
                                     <option value="อื่นๆ" selected>อื่นๆ</option>
                                 </select>
                             </div>
@@ -748,7 +753,6 @@
             submitBtn.disabled = true;
 
             try {
-                // 1. Update Username if changed
                 if (newName !== currentUser) {
                     const snap = await db.collection("users").where("username_lower", "==", newName.toLowerCase()).get();
                     if (!snap.empty) {
@@ -757,16 +761,13 @@
                     
                     const oldName = currentUser;
                     
-                    // Update Auth Profile
                     await user.updateProfile({ displayName: newName });
                     
-                    // Update Users Collection
                     await db.collection("users").doc(user.uid).update({
                         username: newName,
                         username_lower: newName.toLowerCase()
                     });
                     
-                    // Batch Update Group Chats to prevent losing access
                     const groupsSnap = await db.collection("group_chats").where("members", "array-contains", oldName).get();
                     const batch = db.batch();
                     groupsSnap.forEach(doc => {
@@ -781,7 +782,6 @@
                         }
                     });
 
-                    // Update Posts authorship
                     const postsSnap = await db.collection("posts").where("author", "==", oldName).get();
                     postsSnap.forEach(doc => {
                         batch.update(doc.ref, { author: newName });
@@ -791,7 +791,6 @@
                     currentUser = newName;
                 }
 
-                // 2. Update Password if provided
                 if (newPass) {
                     if (newPass !== confirmPass) throw new Error("รหัสผ่านใหม่ไม่ตรงกัน");
                     if (newPass.length < 6) throw new Error("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
@@ -2111,12 +2110,12 @@
                                 <div class="bg-white border border-slate-300 rounded-xl overflow-visible focus-within:ring-2 focus-within:ring-sky-500 transition-all">
                                     <div class="bg-slate-50 border-b border-slate-200 px-2 py-1.5 flex items-center space-x-1 rounded-t-xl relative">
                                         <button type="button" onclick="toggleEmojiPicker('emojiPicker-reply-${c.id}')" class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center"><i class="fa-regular fa-face-smile text-xs sm:text-sm"></i></button>
-                                        <div id="emojiPicker-reply-${c.id}" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-72 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50">
-                                            <div class="flex flex-wrap gap-2 max-h-60 overflow-y-auto custom-scrollbar" id="emoji-container-reply-${c.id}"></div>
+                                        <div id="emojiPicker-reply-${c.id}" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-2 z-50">
+                                            <div class="flex flex-wrap gap-1 max-h-52 overflow-y-auto custom-scrollbar" id="emoji-container-main"></div>
                                         </div>
-                                        <button type="button" onclick="addCommentLink('reply-input-${c.id}')" class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center"><i class="fa-solid fa-link text-xs sm:text-sm"></i></button>
-                                        <label class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer">
-                                            <i class="fa-regular fa-image text-xs sm:text-sm"></i>
+                                        <button type="button" onclick="addCommentLink('reply-input-${c.id}')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-solid fa-link"></i></button>
+                                        <label class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer transition">
+                                            <i class="fa-regular fa-image"></i>
                                             <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'reply-input-${c.id}')">
                                         </label>
                                     </div>
