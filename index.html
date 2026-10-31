@@ -38,7 +38,7 @@
         .chat-message-content img { cursor: pointer; max-width: 280px; border-radius: 8px; transition: opacity 0.2s; display: block; margin: 0;}
         .chat-message-content img:hover { opacity: 0.85; }
         
-        /* Image or Emoji Only Bubble (No Background, No Padding) */
+        /* Image or Emoji Only Bubble */
         .image-only-bubble { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; }
         .image-only-bubble img { margin: 0 !important; border-radius: 12px; display: block; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);}
         .emoji-only-bubble { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; font-size: 3rem; line-height: 1; }
@@ -48,8 +48,7 @@
         .message-row:hover .reaction-btn-group { opacity: 1; }
         .reaction-badge { font-size: 0.75rem; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 2px 6px; display: inline-flex; align-items: center; cursor: pointer; z-index: 10; position: relative; }
         .reaction-badge:hover { background: #e2e8f0; }
-
-        /* Fix bottom margin when reaction exists under image */
+        
         .message-row .flex-col { gap: 2px; }
 
         #headerCover {
@@ -60,6 +59,34 @@
             background-color: #1e293b;
         }
         .txt-shadow { text-shadow: 0px 2px 4px rgba(0,0,0,0.7); }
+
+        /* Toast Notification Styles */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .toast-notification {
+            background-color: #ffffff;
+            border-left: 4px solid #0ea5e9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-start;
+            min-w-[250px];
+            max-w-xs;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            cursor: pointer;
+        }
+        .toast-notification.show {
+            transform: translateX(0);
+        }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -240,10 +267,9 @@
 
     <!-- 💬 CHAT MODAL (FULL SCREEN) 💬 -->
     <div id="chatModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[110] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 sm:p-4">
-        <!-- ขยายความกว้างและความสูงให้เกือบเต็มจอ -->
         <div class="bg-white sm:rounded-2xl shadow-2xl w-full h-full sm:w-[95vw] sm:h-[95vh] flex flex-col sm:flex-row overflow-hidden transform scale-95 transition-transform duration-300" id="chatModalBox">
             
-            <!-- Left Sidebar (Contacts & Groups) - ปรับความกว้างให้แคบลงตามกรอบสีแดง -->
+            <!-- Left Sidebar -->
             <div class="w-full sm:w-[280px] sm:min-w-[280px] bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-200 flex flex-col h-[40%] sm:h-full flex-shrink-0">
                 <div class="p-4 border-b border-slate-200 bg-white flex justify-between items-center shadow-sm z-10">
                     <h3 class="font-bold text-slate-800"><i class="fa-regular fa-comments text-sky-500 mr-2"></i>แชท & พูดคุย</h3>
@@ -271,25 +297,20 @@
                     <div class="flex items-center justify-center h-full text-slate-400 text-sm">กรุณาเลือกผู้ติดต่อจากเมนูด้านซ้าย</div>
                 </div>
 
-                <!-- Chat Reaction Picker Popup -->
-                <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-3 py-1.5 flex space-x-2 z-50 transition-all duration-200 transform scale-95 opacity-0">
-                    <button type="button" onclick="addReaction('👍')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition">👍</button>
-                    <button type="button" onclick="addReaction('❤️')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition">❤️</button>
-                    <button type="button" onclick="addReaction('😂')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition">😂</button>
-                    <button type="button" onclick="addReaction('😮')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition">😮</button>
-                    <button type="button" onclick="addReaction('😢')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition">😢</button>
-                    <button type="button" onclick="addReaction('🙏')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition">🙏</button>
+                <!-- Chat Reaction Picker Popup (Upgraded) -->
+                <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 flex items-center z-50 transition-all duration-200 transform scale-95 opacity-0 overflow-hidden w-72">
+                    <div id="reactionEmojiList" class="flex space-x-1 overflow-x-auto custom-scrollbar pb-1 px-1">
+                        <!-- Emoji list generated via JS -->
+                    </div>
                 </div>
                 
                 <!-- Chat Input Form -->
                 <div class="p-3 sm:p-4 bg-white border-t border-slate-200 flex flex-col" id="chatFormContainer" style="display:none;">
-                    <!-- Chat Toolbar -->
                     <div class="flex items-center space-x-2 mb-2 relative">
                         <button type="button" onclick="toggleEmojiPicker('emojiPicker-chat')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition" title="ใส่อีโมจิ">
                             <i class="fa-regular fa-face-smile text-sm sm:text-base"></i>
                         </button>
                         <div id="emojiPicker-chat" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-72 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50">
-                            <!-- เพิ่มขนาดความสูงเพื่อ Scroll ง่ายขึ้น -->
                             <div class="flex flex-wrap gap-2 max-h-60 overflow-y-auto custom-scrollbar" id="emoji-container-chat"></div>
                         </div>
 
@@ -334,9 +355,7 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-600 mb-2">เลือกสมาชิกที่จะเชิญเข้ากลุ่ม:</label>
-                    <div id="groupMembersList" class="border border-slate-200 rounded-lg p-3 max-h-48 overflow-y-auto custom-scrollbar bg-slate-50 space-y-2">
-                        <!-- Checkboxes injected here -->
-                    </div>
+                    <div id="groupMembersList" class="border border-slate-200 rounded-lg p-3 max-h-48 overflow-y-auto custom-scrollbar bg-slate-50 space-y-2"></div>
                 </div>
             </div>
             <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex space-x-3">
@@ -460,6 +479,9 @@
         </div>
     </div>
 
+    <!-- 🔔 Toast Notification Container 🔔 -->
+    <div id="toast-container"></div>
+
     <script>
         // --- ⚙️ Firebase Setup ⚙️ ---
         const firebaseConfig = {
@@ -488,12 +510,16 @@
         let currentChatRoomType = 'private'; 
         let currentChatRoomCreator = null; 
         let activeReactionMsgId = null;
+        let isChatModalOpen = false;
+
+        // Base64 Notification Sound (Short Pop)
+        const notificationSound = new Audio("data:audio/wav;base64,UklGRmYBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUMBAACAeHyIhoiJjI6OkpWWmZ2gnqKkpqmrrK+wtbS3uLq8vb7BwsPExsfJysvMz9DR09XW19jZ29zd3t/h4uPk5efp6uvs7e7v8PHy8/T19vf4+fr7/P3+/wAAAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8AAAMCBAYHCAkLCw0NDg8REhMUFhYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdodHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8=");
 
         const ADMIN_USERNAME = 'admin'; 
         
         // ชุดอิโมจิที่เพิ่มจำนวนให้เยอะขึ้น
         const emojiList = [
-            "😀","😃","😄","😁","😆","😅","😂","🤣","🥲","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😮‍💨","😤","😠","😡","🤬","🤯","😳","ร้อน","🥶","😱","😨","😰","😥","😓","🤗","🤔","🫣","🤭","🫢","🫡","🤫","🫠","🤥","😶","🫥","😐","🫤","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","😵‍💫","🫨","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸","😹","😻","😼","😽","🙀","😿","😾","❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❤️‍🔥","❤️‍🩹","❣️","💕","💞","💓","💗","💖","💘","💝","👍","👎","👊","✊","🤛","🤜","🤞","✌️","🫰","🤟","🤘","👌","🤌","🤏","🫳","🫴","👈","👉","👆","👇","☝️","✋","🤚","🖐","🖖","👋","🤙","🫲","🫱","💪","🦾","🖕","✍️","🙏","🫵","👀","🔥","✨","🌟","💫","💥","💢","💦","💧","💤","💨","👂","🦻","👃","🧠","🫀","🫁","🦷","👅","👄","🫦","👶","👧","🧒","👦","👩","🧑","👨","👩‍🦱","🧑‍🦱","👨‍🦱","👩‍🦰","🧑‍🦰","👨‍🦰","👱‍♀️","👱","👱‍♂️","👩‍🦳","🧑‍🦳","👨‍🦳","👩‍🦲","🧑‍🦲","👨‍🦲","🧔‍♀️","🧔","🧔‍♂️","👵","🧓","👴","👲","👳‍♀️","👳","👳‍♂️","🧕","👮‍♀️","👮","👮‍♂️","👷‍♀️","👷","👷‍♂️","💂‍♀️","💂","💂‍♂️","🕵️‍♀️","🕵️","🕵️‍♂️","👩‍⚕️","🧑‍⚕️","👨‍⚕️","👩‍🌾","🧑‍🌾","👨‍🌾","👩‍🍳","🧑‍🍳","👨‍🍳","👩‍🎓","🧑‍🎓","👨‍🎓","👩‍🎤","🧑‍🎤","👨‍🎤","👩‍🏫","🧑‍🏫","👨‍🏫","👩‍🏭","🧑‍🏭","👨‍🏭","👩‍💻","🧑‍💻","👨‍💻","👩‍💼","🧑‍💼","👨‍💼","👩‍🔧","🧑‍🔧","👨‍🔧","👩‍🔬","🧑‍🔬","👨‍🔬","👩‍🎨","🧑‍🎨","👨‍🎨","👩‍🚒","🧑‍🚒","👨‍🚒","👩‍✈️","🧑‍✈️","👨‍✈️","👩‍🚀","🧑‍🚀","👨‍🚀","👩‍⚖️","🧑‍⚖️","👨‍⚖️","👰‍♀️","👰","👰‍♂️","🤵‍♀️","🤵","🤵‍♂️","👸","🫅","🤴","🥷","🦸‍♀️","🦸","🦸‍♂️","🦹‍♀️","🦹","🦹‍♂️","🤶","🧑‍🎄","🎅","🧙‍♀️","🧙","🧙‍♂️","🧝‍♀️","🧝","🧝‍♂️","🧛‍♀️","🧛","🧛‍♂️","🧟‍♀️","🧟","🧟‍♂️","🧞‍♀️","🧞","🧞‍♂️","🧜‍♀️","🧜","🧜‍♂️","🧚‍♀️","🧚","🧚‍♂️","👼","🤰","🫄","🫃","🤱","👩‍🍼","🧑‍🍼","👨‍🍼","🙇‍♀️","🙇","🙇‍♂️","💁‍♀️","💁","💁‍♂️","🙅‍♀️","🙅","🙅‍♂️","🙆‍♀️","🙆","🙆‍♂️","🙋‍♀️","🙋","🙋‍♂️","🧏‍♀️","🧏","🧏‍♂️","🤦‍♀️","🤦","🤦‍♂️","🤷‍♀️","🤷","🤷‍♂️","🙎‍♀️","🙎","🙎‍♂️","🙍‍♀️","🙍","🙍‍♂️","💇‍♀️","💇","💇‍♂️","💆‍♀️","💆","💆‍♂️","🧖‍♀️","🧖","🧖‍♂️","💅","🤳","💃","🕺","👯‍♀️","👯","👯‍♂️","🕴","👩‍🦽","🧑‍🦽","👨‍🦽","👩‍🦼","🧑‍🦼","👨‍🦼","🚶‍♀️","🚶","🚶‍♂️","👩‍🦯","🧑‍🦯","👨‍🦯","🧎‍♀️","🧎","🧎‍♂️","🏃‍♀️","🏃","🏃‍♂️","🧍‍♀️","🧍","🧍‍♂️","👭","🧑‍🤝‍🧑","👬","👫","👩‍❤️‍👩","💑","👨‍❤️‍👨","👩‍❤️‍💋‍👩","💏","👨‍❤️‍💋‍👨","👨‍👩‍👦","👨‍👩‍👧","👨‍👩‍👧‍👦","👨‍👩‍👦‍👦","👨‍👩‍👧‍👧","👩‍👩‍👦","👩‍👩‍👧","👩‍👩‍👧‍👦","👩‍👩‍👦‍👦","👩‍👩‍👧‍👧","👨‍👨‍👦","👨‍👨‍👧","👨‍👨‍👧‍👦","👨‍👨‍👦‍👦","👨‍👨‍👧‍👧","👩‍👦","👩‍👧","👩‍👧‍👦","👩‍👦‍👦","👩‍👧‍👧","👨‍👦","👨‍👧","👨‍👧‍👦","👨‍👦‍👦","👨‍👧‍👧","🗣","👤","👥","🫂","🎒","🧳","🌂","☂️","🧵","🪡","🪢","🧶","👓","🕶","🥽","🥼","🦺","👔","👕","👖","🧣","🧤","🧥","🧦","👗","👘","🥻","🩱","🩲","🩳","👙","👚","👛","👜","👝","🎒","👞","👟","🥾","🥿","👠","👡","🩰","👢","👑","👒","🎩","🎓","🧢","🪖","⛑","💄","💍","💼"
+            "👍","❤️","😂","😮","😢","🙏","😀","😃","😄","😁","😆","😅","🤣","🥲","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😭","😮‍💨","😤","😠","😡","🤬","🤯","😳","ร้อน","🥶","😱","😨","😰","😥","😓","🤗","🤔","🫣","🤭","🫢","🫡","🤫","🫠","🤥","😶","🫥","😐","🫤","😑","😬","🙄","😯","😦","😧","😲","🥱","😴","🤤","😪","😵","😵‍💫","🫨","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸","😹","😻","😼","😽","🙀","😿","😾","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❤️‍🔥","❤️‍🩹","❣️","💕","💞","💓","💗","💖","💘","💝","👎","👊","✊","🤛","🤜","🤞","✌️","🫰","🤟","🤘","👌","🤌","🤏","🫳","🫴","👈","👉","👆","👇","☝️","✋","🤚","🖐","🖖","👋","🤙","🫲","🫱","💪","🦾","🖕","✍️","🫵","👀","🔥","✨","🌟","💫","💥","💢","💦","💧","💤","💨","👂","🦻","👃","🧠","🫀","🫁","🦷","👅","👄","🫦","👶","👧","🧒","👦","👩","🧑","👨","👩‍🦱","🧑‍🦱","👨‍🦱","👩‍🦰","🧑‍🦰","👨‍🦰","👱‍♀️","👱","👱‍♂️","👩‍🦳","🧑‍🦳","👨‍🦳","👩‍🦲","🧑‍🦲","👨‍🦲","🧔‍♀️","🧔","🧔‍♂️","👵","🧓","👴","👲","👳‍♀️","👳","👳‍♂️","🧕","👮‍♀️","👮","👮‍♂️","👷‍♀️","👷","👷‍♂️","💂‍♀️","💂","💂‍♂️","🕵️‍♀️","🕵️","🕵️‍♂️","👩‍⚕️","🧑‍⚕️","👨‍⚕️","👩‍🌾","🧑‍🌾","👨‍🌾","👩‍🍳","🧑‍🍳","👨‍🍳","👩‍🎓","🧑‍🎓","👨‍🎓","👩‍🎤","🧑‍🎤","👨‍🎤","👩‍🏫","🧑‍🏫","👨‍🏫","👩‍🏭","🧑‍🏭","👨‍🏭","👩‍💻","🧑‍💻","👨‍💻","👩‍💼","🧑‍💼","👨‍💼","👩‍🔧","🧑‍🔧","👨‍🔧","👩‍🔬","🧑‍🔬","👨‍🔬","👩‍🎨","🧑‍🎨","👨‍🎨","👩‍🚒","🧑‍🚒","👨‍🚒","👩‍✈️","🧑‍✈️","👨‍✈️","👩‍🚀","🧑‍🚀","👨‍🚀","👩‍⚖️","🧑‍⚖️","👨‍⚖️","👰‍♀️","👰","👰‍♂️","🤵‍♀️","🤵","🤵‍♂️","👸","🫅","🤴","🥷","🦸‍♀️","🦸","🦸‍♂️","🦹‍♀️","🦹","🦹‍♂️","🤶","🧑‍🎄","🎅","🧙‍♀️","🧙","🧙‍♂️","🧝‍♀️","🧝","🧝‍♂️","🧛‍♀️","🧛","🧛‍♂️","🧟‍♀️","🧟","🧟‍♂️","🧞‍♀️","🧞","🧞‍♂️","🧜‍♀️","🧜","🧜‍♂️","🧚‍♀️","🧚","🧚‍♂️","👼","🤰","🫄","🫃","🤱","👩‍🍼","🧑‍🍼","👨‍🍼","🙇‍♀️","🙇","🙇‍♂️","💁‍♀️","💁","💁‍♂️","🙅‍♀️","🙅","🙅‍♂️","🙆‍♀️","🙆","🙆‍♂️","🙋‍♀️","🙋","🙋‍♂️","🧏‍♀️","🧏","🧏‍♂️","🤦‍♀️","🤦","🤦‍♂️","🤷‍♀️","🤷","🤷‍♂️","🙎‍♀️","🙎","🙎‍♂️","🙍‍♀️","🙍","🙍‍♂️","💇‍♀️","💇","💇‍♂️","💆‍♀️","💆","💆‍♂️","🧖‍♀️","🧖","🧖‍♂️","💅","🤳","💃","🕺","👯‍♀️","👯","👯‍♂️","🕴","👩‍🦽","🧑‍🦽","👨‍🦽","👩‍🦼","🧑‍🦼","👨‍🦼","🚶‍♀️","🚶","🚶‍♂️","👩‍🦯","🧑‍🦯","👨‍🦯","🧎‍♀️","🧎","🧎‍♂️","🏃‍♀️","🏃","🏃‍♂️","🧍‍♀️","🧍","🧍‍♂️","👭","🧑‍🤝‍🧑","👬","👫","👩‍❤️‍👩","💑","👨‍❤️‍👨","👩‍❤️‍💋‍👩","💏","👨‍❤️‍💋‍👨","👨‍👩‍👦","👨‍👩‍👧","👨‍👩‍👧‍👦","👨‍👩‍👦‍👦","👨‍👩‍👧‍👧","👩‍👩‍👦","👩‍👩‍👧","👩‍👩‍👧‍👦","👩‍👩‍👦‍👦","👩‍👩‍👧‍👧","👨‍👨‍👦","👨‍👨‍👧","👨‍👨‍👧‍👦","👨‍👨‍👦‍👦","👨‍👨‍👧‍👧","👩‍👦","👩‍👧","👩‍👧‍👦","👩‍👦‍👦","👩‍👧‍👧","👨‍👦","👨‍👧","👨‍👧‍👦","👨‍👦‍👦","👨‍👧‍👧","🗣","👤","👥","🫂","🎒","🧳","🌂","☂️","🧵","🪡","🪢","🧶","👓","🕶","🥽","🥼","🦺","👔","👕","👖","🧣","🧤","🧥","🧦","👗","👘","🥻","🩱","🩲","🩳","👙","👚","👛","👜","👝","🎒","👞","👟","🥾","🥿","👠","👡","🩰","👢","👑","👒","🎩","🎓","🧢","🪖","⛑","💄","💍","💼"
         ];
 
         function checkIsAdmin() {
@@ -505,6 +531,7 @@
             auth.onAuthStateChanged(user => {
                 if(user) {
                     currentUser = user.displayName || user.email.split('@')[0];
+                    setupGlobalMessageListener(); // Start listening for notifications
                 } else {
                     currentUser = null;
                     if(activeChatRoomId) closeChatModal();
@@ -526,10 +553,10 @@
             });
             
             populateEmojiPicker('emojiPicker-main', 'commentInput');
+            populateReactionPicker(); // Populate the new horizontal reaction picker
 
             // Auto close emoji pickers & reaction picker
             document.addEventListener('click', function(e) {
-                // Emoji pickers
                 document.querySelectorAll('.emoji-picker').forEach(picker => {
                     const toggleBtn = picker.previousElementSibling;
                     if (!picker.classList.contains('hidden') && !picker.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
@@ -537,7 +564,6 @@
                     }
                 });
 
-                // Reaction picker
                 const reactionPicker = document.getElementById('reactionPicker');
                 if(!reactionPicker.classList.contains('hidden') && !reactionPicker.contains(e.target) && !e.target.closest('.reaction-trigger-btn')) {
                     closeReactionPicker();
@@ -572,6 +598,129 @@
             }
         }
 
+        // --- 🔔 Global Notification System 🔔 ---
+        let globalChatListeners = [];
+        let initialLoadComplete = false;
+
+        function setupGlobalMessageListener() {
+            if(!currentUser) return;
+            
+            // Unsubscribe existing
+            globalChatListeners.forEach(unsub => unsub());
+            globalChatListeners = [];
+            initialLoadComplete = false;
+
+            const now = Date.now();
+
+            // Listen to private chats where user is involved
+            db.collection("users").get().then(snap => {
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.username && data.username !== currentUser) {
+                        const roomId = [currentUser, data.username].sort().join('_');
+                        const unsub = db.collection("chats").doc(roomId).collection("messages")
+                            .where("timestamp", ">=", now)
+                            .onSnapshot(msgSnap => {
+                                handleIncomingNotification(msgSnap, data.username, roomId);
+                            });
+                        globalChatListeners.push(unsub);
+                    }
+                });
+            });
+
+            // Listen to Global chat
+            const unsubGlobal = db.collection("chats").doc('global').collection("messages")
+                .where("timestamp", ">=", now)
+                .onSnapshot(msgSnap => {
+                    handleIncomingNotification(msgSnap, 'ห้องพูดคุยรวม', 'global');
+                });
+            globalChatListeners.push(unsubGlobal);
+
+            // Listen to Group chats
+            db.collection("group_chats").where("members", "array-contains", currentUser).get().then(snap => {
+                snap.forEach(doc => {
+                    const roomId = doc.id;
+                    const groupName = doc.data().name;
+                    const unsubGroup = db.collection("chats").doc(roomId).collection("messages")
+                        .where("timestamp", ">=", now)
+                        .onSnapshot(msgSnap => {
+                            handleIncomingNotification(msgSnap, groupName, roomId);
+                        });
+                    globalChatListeners.push(unsubGroup);
+                });
+            });
+
+            setTimeout(() => { initialLoadComplete = true; }, 3000);
+        }
+
+        function handleIncomingNotification(snapshot, roomName, roomId) {
+            if(!initialLoadComplete) return; // Prevent old messages from triggering on load
+            
+            snapshot.docChanges().forEach(change => {
+                if (change.type === "added") {
+                    const msg = change.doc.data();
+                    if(msg.sender !== currentUser) {
+                        // Only show toast if chat modal is closed OR looking at a different room
+                        if(!isChatModalOpen || activeChatRoomId !== roomId) {
+                            showToastNotification(msg.sender, roomName, msg.text, roomId);
+                            playNotificationSound();
+                        }
+                    }
+                }
+            });
+        }
+
+        function playNotificationSound() {
+            notificationSound.currentTime = 0;
+            notificationSound.play().catch(e => console.log("Audio play prevented by browser", e));
+        }
+
+        function showToastNotification(sender, roomName, htmlContent, roomId) {
+            const container = document.getElementById('toast-container');
+            
+            // Extract text preview
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            let previewText = tempDiv.textContent.trim();
+            if(tempDiv.getElementsByTagName('img').length > 0 && previewText === '') {
+                previewText = "ส่งรูปภาพ";
+            } else {
+                previewText = previewText.substring(0, 40) + (previewText.length > 40 ? '...' : '');
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification flex items-start space-x-3 mb-2';
+            toast.onclick = () => {
+                openChatModal();
+                setTimeout(() => {
+                    document.getElementById(`chat-tab-${roomId}`)?.click();
+                }, 500);
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            };
+
+            toast.innerHTML = `
+                <div class="w-8 h-8 rounded-full bg-sky-100 text-sky-600 flex items-center justify-center font-bold text-xs shadow-sm flex-shrink-0 mt-1">
+                    <i class="fa-regular fa-comment-dots"></i>
+                </div>
+                <div class="flex-1 overflow-hidden">
+                    <h4 class="text-sm font-bold text-slate-800 truncate">${sender} <span class="text-[10px] text-slate-400 font-normal">(${roomName})</span></h4>
+                    <p class="text-xs text-slate-600 truncate">${previewText}</p>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            
+            // Trigger animation
+            setTimeout(() => toast.classList.add('show'), 10);
+
+            // Auto remove after 5 seconds
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
         // --- 🖼️ Image Lightbox Viewer 🖼️ ---
         function openImageViewer(src) {
             document.getElementById('imageViewerSrc').src = src;
@@ -593,6 +742,7 @@
         function openChatModal() {
             if(!currentUser) { openAuthModal('login'); return; }
             
+            isChatModalOpen = true;
             const modal = document.getElementById('chatModal');
             const box = document.getElementById('chatModalBox');
             modal.classList.remove('hidden');
@@ -605,6 +755,7 @@
         }
 
         function closeChatModal() {
+            isChatModalOpen = false;
             const modal = document.getElementById('chatModal');
             const box = document.getElementById('chatModalBox');
             modal.classList.add('opacity-0');
@@ -696,20 +847,17 @@
             if(activeTab) activeTab.classList.add('bg-sky-100', 'border', 'border-sky-200');
         }
 
-        // Logic to determine if content is just an image or just a single emoji
         function analyzeMessageContent(htmlContent) {
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = htmlContent.replace(/<br\s*[\/]?>/gi, ''); // remove breaks
+            tempDiv.innerHTML = htmlContent.replace(/<br\s*[\/]?>/gi, ''); 
             
             const imgs = tempDiv.getElementsByTagName('img');
             const text = tempDiv.textContent.trim();
             
-            // Check if it's only one image and no text
             if (imgs.length === 1 && text === '') {
                 return 'image';
             }
             
-            // Check if it's a single emoji (using basic length check for simplicity, emoji characters can be length 2-4 depending on surrogate pairs)
             const emojiRegex = /^[\p{Emoji}\u200d]+$/u;
             if (imgs.length === 0 && emojiRegex.test(text) && Array.from(text).length <= 3) {
                 return 'emoji';
@@ -850,20 +998,23 @@
                 }, 100);
         }
 
-        // --- 💖 Reactions System 💖 ---
+        // --- 💖 Reactions System (Upgraded Picker) 💖 ---
+        function populateReactionPicker() {
+            const container = document.getElementById('reactionEmojiList');
+            container.innerHTML = emojiList.map(e => `<button type="button" onclick="addReaction('${e}')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition flex-shrink-0">${e}</button>`).join('');
+        }
+
         function openReactionPicker(event, msgId) {
             const picker = document.getElementById('reactionPicker');
             activeReactionMsgId = msgId;
             
-            // Calculate Position relative to button clicked
             const btnRect = event.currentTarget.getBoundingClientRect();
             const areaRect = document.getElementById('chatMessagesArea').getBoundingClientRect();
             
-            // Adjust position (place above the button if possible)
-            let topPos = btnRect.top - areaRect.top - 45;
-            let leftPos = btnRect.left - areaRect.left - 50; // Center approx
+            let topPos = btnRect.top - areaRect.top - 50;
+            let leftPos = btnRect.left - areaRect.left - 130; 
             
-            if(topPos < 0) topPos = btnRect.bottom - areaRect.top + 5; // Show below if no space above
+            if(topPos < 0) topPos = btnRect.bottom - areaRect.top + 5; 
             if(leftPos < 0) leftPos = 10;
             
             picker.style.top = `${topPos + document.getElementById('chatMessagesArea').scrollTop}px`;
@@ -889,7 +1040,6 @@
             
             const msgRef = db.collection("chats").doc(activeChatRoomId).collection("messages").doc(activeReactionMsgId);
             
-            // We use { username: emoji } format so a user can only have 1 reaction per message (overwrites if clicked again)
             msgRef.set({
                 reactions: {
                     [currentUser]: emoji
@@ -925,7 +1075,6 @@
         }
 
         function promptEditChatMessage(msgId) {
-            // ดึงข้อความต้นฉบับจาก Database ก่อนเพื่อความปลอดภัย (กันบั๊ก Base64 ยาวเกิน)
             db.collection("chats").doc(activeChatRoomId).collection("messages").doc(msgId).get().then(doc => {
                 if(doc.exists) {
                     const oldText = doc.data().text;
@@ -1022,7 +1171,7 @@
         }
 
 
-        // --- 📊 Admin Dashboard (Smart Estimation) 📊 ---
+        // --- 📊 Admin Dashboard 📊 ---
         function openAdminDashboard() {
             if(!checkIsAdmin()) return;
             
@@ -1821,7 +1970,7 @@
 
         function populateEmojiPicker(pickerId, inputId) {
             const container = document.getElementById(pickerId).querySelector('div');
-            container.innerHTML = emojiList.map(e => `<button type="button" class="w-8 h-8 hover:bg-slate-100 rounded text-xl flex items-center justify-center" onclick="insertEmoji('${e}', '${inputId}', '${pickerId}')">${e}</button>`).join('');
+            container.innerHTML = emojiList.map(e => `<button type="button" class="w-8 h-8 hover:bg-slate-100 rounded text-xl flex items-center justify-center flex-shrink-0" onclick="insertEmoji('${e}', '${inputId}', '${pickerId}')">${e}</button>`).join('');
         }
 
         function insertEmoji(emoji, inputId, pickerId) {
