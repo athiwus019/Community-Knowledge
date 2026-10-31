@@ -43,12 +43,12 @@
         .image-only-bubble img { margin: 0 !important; border-radius: 12px; display: block; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);}
         .emoji-only-bubble { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; font-size: 3rem; line-height: 1; }
 
-        /* Reaction Styles */
+        /* Reaction & Message Row Styles */
+        .message-row { transition: background-color 0.5s ease; border-radius: 16px; padding: 2px 8px; }
         .reaction-btn-group { opacity: 0; transition: opacity 0.2s ease; }
         .message-row:hover .reaction-btn-group { opacity: 1; }
-        .reaction-badge { font-size: 0.75rem; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 2px 6px; display: inline-flex; align-items: center; cursor: pointer; z-index: 10; position: relative; }
+        .reaction-badge { font-size: 0.75rem; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 2px 6px; display: inline-flex; align-items: center; cursor: pointer; z-index: 10; position: relative; margin-top: -6px;}
         .reaction-badge:hover { background: #e2e8f0; }
-        
         .message-row .flex-col { gap: 2px; }
 
         #headerCover {
@@ -89,9 +89,7 @@
         }
 
         /* Fix for Reaction Picker Modal overlay */
-        #reactionPicker {
-            z-index: 500;
-        }
+        #reactionPicker { z-index: 500; }
     </style>
 </head>
 <body class="h-screen flex flex-col overflow-hidden">
@@ -303,7 +301,6 @@
                 </div>
 
                 <!-- Chat Reaction Picker Popup -->
-                <!-- แก้ไขให้อยู่เหนือกล่องแชทและเลื่อนแนวนอนได้ -->
                 <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 flex items-center transition-all duration-200 transform scale-95 opacity-0 overflow-hidden w-72">
                     <div id="reactionEmojiList" class="flex space-x-1 overflow-x-auto custom-scrollbar pb-1 px-1">
                         <!-- Emoji list generated via JS -->
@@ -311,7 +308,17 @@
                 </div>
                 
                 <!-- Chat Input Form -->
-                <div class="p-3 sm:p-4 bg-white border-t border-slate-200 flex flex-col" id="chatFormContainer" style="display:none;">
+                <div class="p-3 sm:p-4 bg-white border-t border-slate-200 flex flex-col relative" id="chatFormContainer" style="display:none;">
+                    
+                    <!-- Reply Preview Area -->
+                    <div id="chatReplyPreview" class="hidden mb-2 bg-slate-50 border-l-4 border-sky-500 p-2 rounded-lg flex justify-between items-center text-xs shadow-sm">
+                        <div class="truncate text-slate-600 pr-4">
+                            <i class="fa-solid fa-reply mr-1.5 text-sky-500"></i> ตอบกลับ <span class="font-bold text-sky-700" id="replyPreviewSender"></span>: 
+                            <span id="replyPreviewText" class="text-slate-500 ml-1"></span>
+                        </div>
+                        <button type="button" onclick="cancelReply()" class="text-slate-400 hover:text-rose-500 transition px-1"><i class="fa-solid fa-times text-sm"></i></button>
+                    </div>
+
                     <div class="flex items-center space-x-2 mb-2 relative">
                         <button type="button" onclick="toggleEmojiPicker('emojiPicker-chat')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition" title="ใส่อีโมจิ">
                             <i class="fa-regular fa-face-smile text-sm sm:text-base"></i>
@@ -328,6 +335,9 @@
                             <i class="fa-regular fa-image text-sm sm:text-base"></i>
                             <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'chatMessageInput')">
                         </label>
+                        
+                        <!-- Hint for Enter key -->
+                        <span class="text-[10px] text-slate-400 ml-auto hidden sm:block">กด <b>Enter</b> เพื่อส่ง / <b>Shift+Enter</b> ขึ้นบรรทัดใหม่</span>
                     </div>
 
                     <div class="flex space-x-3 items-end">
@@ -519,13 +529,13 @@
         let currentChatRoomCreator = null; 
         let activeReactionMsgId = null;
         let isChatModalOpen = false;
+        let chatReplyTo = null; // ข้อมูลข้อความที่กำลังจะตอบกลับ
 
         // Base64 Notification Sound (Short Pop)
         const notificationSound = new Audio("data:audio/wav;base64,UklGRmYBAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YUMBAACAeHyIhoiJjI6OkpWWmZ2gnqKkpqmrrK+wtbS3uLq8vb7BwsPExsfJysvMz9DR09XW19jZ29zd3t/h4uPk5efp6uvs7e7v8PHy8/T19vf4+fr7/P3+/wAAAgMEBQYHCAkKCwwNDg8QERITFBUWFxgZGhscHR4fICEiIyQlJicoKSorLC0uLzAxMjM0NTY3ODk6Ozw9Pj9AQUJDREVGR0hJSktMTU5PUFFSU1RVVldYWVpbXF1eX2BhYmNkZWZnaGlqa2xtbm9wcXJzdHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8AAAMCBAYHCAkLCw0NDg8REhMUFhYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdodHV2d3h5ent8fX5/gIGCg4SFhoeIiYqLjI2Oj5CRkpOUlZaXmJmam5ydnp+goaKjpKWmp6ipqqusra6vsLGys7S1tre4ubq7vL2+v8DBwsPExcbHyMnKy8zNzs/Q0dLT1NXW19jZ2tvc3d7f4OHi4+Tl5ufo6err7O3u7/Dx8vP09fb3+Pn6+/z9/v8=");
 
         const ADMIN_USERNAME = 'admin'; 
         
-        // ชุดอิโมจิที่เพิ่มจำนวนให้เยอะขึ้น
         const emojiList = [
             "👍","❤️","😂","😮","😢","🙏","😀","😃","😄","😁","😆","😅","🤣","🥲","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😭","😮‍💨","😤","😠","😡","🤬","🤯","😳","ร้อน","🥶","😱","😨","😰","😥","😓","🤗","🤔","🫣","🤭","🫢","🫡","🤫","🫠","🤥","😶","🫥","😐","🫤","😑","😬","🙄","😯","😦","😧","😲","🥱","😴","🤤","😪","😵","😵‍💫","🫨","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸","😹","😻","😼","😽","🙀","😿","😾","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❤️‍🔥","❤️‍🩹","❣️","💕","💞","💓","💗","💖","💘","💝","👎","👊","✊","🤛","🤜","🤞","✌️","🫰","🤟","🤘","👌","🤌","🤏","🫳","🫴","👈","👉","👆","👇","☝️","✋","🤚","🖐","🖖","👋","🤙","🫲","🫱","💪","🦾","🖕","✍️","🫵","👀","🔥","✨","🌟","💫","💥","💢","💦","💧","💤","💨","👂","🦻","👃","🧠","🫀","🫁","🦷","👅","👄","🫦","👶","👧","🧒","👦","👩","🧑","👨","👩‍🦱","🧑‍🦱","👨‍🦱","👩‍🦰","🧑‍🦰","👨‍🦰","👱‍♀️","👱","👱‍♂️","👩‍🦳","🧑‍🦳","👨‍🦳","👩‍🦲","🧑‍🦲","👨‍🦲","🧔‍♀️","🧔","🧔‍♂️","👵","🧓","👴","👲","👳‍♀️","👳","👳‍♂️","🧕","👮‍♀️","👮","👮‍♂️","👷‍♀️","👷","👷‍♂️","💂‍♀️","💂","💂‍♂️","🕵️‍♀️","🕵️","🕵️‍♂️","👩‍⚕️","🧑‍⚕️","👨‍⚕️","👩‍🌾","🧑‍🌾","👨‍🌾","👩‍🍳","🧑‍🍳","👨‍🍳","👩‍🎓","🧑‍🎓","👨‍🎓","👩‍🎤","🧑‍🎤","👨‍🎤","👩‍🏫","🧑‍🏫","👨‍🏫","👩‍🏭","🧑‍🏭","👨‍🏭","👩‍💻","🧑‍💻","👨‍💻","👩‍💼","🧑‍💼","👨‍💼","👩‍🔧","🧑‍🔧","👨‍🔧","👩‍🔬","🧑‍🔬","👨‍🔬","👩‍🎨","🧑‍🎨","👨‍🎨","👩‍🚒","🧑‍🚒","👨‍🚒","👩‍✈️","🧑‍✈️","👨‍✈️","👩‍🚀","🧑‍🚀","👨‍🚀","👩‍⚖️","🧑‍⚖️","👨‍⚖️","👰‍♀️","👰","👰‍♂️","🤵‍♀️","🤵","🤵‍♂️","👸","🫅","🤴","🥷","🦸‍♀️","🦸","🦸‍♂️","🦹‍♀️","🦹","🦹‍♂️","🤶","🧑‍🎄","🎅","🧙‍♀️","🧙","🧙‍♂️","🧝‍♀️","🧝","🧝‍♂️","🧛‍♀️","🧛","🧛‍♂️","🧟‍♀️","🧟","🧟‍♂️","🧞‍♀️","🧞","🧞‍♂️","🧜‍♀️","🧜","🧜‍♂️","🧚‍♀️","🧚","🧚‍♂️","👼","🤰","🫄","🫃","🤱","👩‍🍼","🧑‍🍼","👨‍🍼","🙇‍♀️","🙇","🙇‍♂️","💁‍♀️","💁","💁‍♂️","🙅‍♀️","🙅","🙅‍♂️","🙆‍♀️","🙆","🙆‍♂️","🙋‍♀️","🙋","🙋‍♂️","🧏‍♀️","🧏","🧏‍♂️","🤦‍♀️","🤦","🤦‍♂️","🤷‍♀️","🤷","🤷‍♂️","🙎‍♀️","🙎","🙎‍♂️","🙍‍♀️","🙍","🙍‍♂️","💇‍♀️","💇","💇‍♂️","💆‍♀️","💆","💆‍♂️","🧖‍♀️","🧖","🧖‍♂️","💅","🤳","💃","🕺","👯‍♀️","👯","👯‍♂️","🕴","👩‍🦽","🧑‍🦽","👨‍🦽","👩‍🦼","🧑‍🦼","👨‍🦼","🚶‍♀️","🚶","🚶‍♂️","👩‍🦯","🧑‍🦯","👨‍🦯","🧎‍♀️","🧎","🧎‍♂️","🏃‍♀️","🏃","🏃‍♂️","🧍‍♀️","🧍","🧍‍♂️","👭","🧑‍🤝‍🧑","👬","👫","👩‍❤️‍👩","💑","👨‍❤️‍👨","👩‍❤️‍💋‍👩","💏","👨‍❤️‍💋‍👨","👨‍👩‍👦","👨‍👩‍👧","👨‍👩‍👧‍👦","👨‍👩‍👦‍👦","👨‍👩‍👧‍👧","👩‍👩‍👦","👩‍👩‍👧","👩‍👩‍👧‍👦","👩‍👩‍👦‍👦","👩‍👩‍👧‍👧","👨‍👨‍👦","👨‍👨‍👧","👨‍👨‍👧‍👦","👨‍👨‍👦‍👦","👨‍👨‍👧‍👧","👩‍👦","👩‍👧","👩‍👧‍👦","👩‍👦‍👦","👩‍👧‍👧","👨‍👦","👨‍👧","👨‍👧‍👦","👨‍👦‍👦","👨‍👧‍👧","🗣","👤","👥","🫂","🎒","🧳","🌂","☂️","🧵","🪡","🪢","🧶","👓","🕶","🥽","🥼","🦺","👔","👕","👖","🧣","🧤","🧥","🧦","👗","👘","🥻","🩱","🩲","🩳","👙","👚","👛","👜","👝","🎒","👞","👟","🥾","🥿","👠","👡","🩰","👢","👑","👒","🎩","🎓","🧢","🪖","⛑","💄","💍","💼"
         ];
@@ -539,7 +549,7 @@
             auth.onAuthStateChanged(user => {
                 if(user) {
                     currentUser = user.displayName || user.email.split('@')[0];
-                    setupGlobalMessageListener(); // Start listening for notifications
+                    setupGlobalMessageListener(); 
                 } else {
                     currentUser = null;
                     if(activeChatRoomId) closeChatModal();
@@ -561,9 +571,8 @@
             });
             
             populateEmojiPicker('emojiPicker-main', 'commentInput');
-            populateReactionPicker(); // Populate the horizontal reaction picker
+            populateReactionPicker();
 
-            // Auto close emoji pickers & reaction picker
             document.addEventListener('click', function(e) {
                 document.querySelectorAll('.emoji-picker').forEach(picker => {
                     const toggleBtn = picker.previousElementSibling;
@@ -578,16 +587,24 @@
                 }
             });
 
-            // Global Image Click Listener (Lightbox)
             document.addEventListener('click', function(e) {
                 if(e.target.tagName === 'IMG' && (e.target.closest('.editor-content') || e.target.closest('.chat-message-content') || e.target.closest('.chat-input-area'))) {
                     openImageViewer(e.target.src);
                 }
             });
 
-            // Paste Image Support
             document.getElementById('chatMessageInput').addEventListener('paste', handleImagePaste);
             document.getElementById('commentInput').addEventListener('paste', handleImagePaste);
+            
+            // 🚀 ตั้งค่าการกด Enter ในช่องแชท 🚀
+            document.getElementById('chatMessageInput').addEventListener('keydown', function(e) {
+                // หากกด Enter โดยไม่กด Shift ให้ส่งข้อความ
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); // ป้องกันการขึ้นบรรทัดใหม่
+                    sendChatMessage();
+                }
+                // หากกด Shift+Enter เบราว์เซอร์จะทำการขึ้นบรรทัดใหม่ให้ตามปกติ
+            });
         }
 
         function handleImagePaste(e) {
@@ -613,14 +630,12 @@
         function setupGlobalMessageListener() {
             if(!currentUser) return;
             
-            // Unsubscribe existing
             globalChatListeners.forEach(unsub => unsub());
             globalChatListeners = [];
             initialLoadComplete = false;
 
             const now = Date.now();
 
-            // Listen to private chats where user is involved
             db.collection("users").get().then(snap => {
                 snap.forEach(doc => {
                     const data = doc.data();
@@ -636,7 +651,6 @@
                 });
             });
 
-            // Listen to Global chat
             const unsubGlobal = db.collection("chats").doc('global').collection("messages")
                 .where("timestamp", ">=", now)
                 .onSnapshot(msgSnap => {
@@ -644,7 +658,6 @@
                 });
             globalChatListeners.push(unsubGlobal);
 
-            // Listen to Group chats
             db.collection("group_chats").where("members", "array-contains", currentUser).get().then(snap => {
                 snap.forEach(doc => {
                     const roomId = doc.id;
@@ -662,13 +675,12 @@
         }
 
         function handleIncomingNotification(snapshot, roomName, roomId) {
-            if(!initialLoadComplete) return; // Prevent old messages from triggering on load
+            if(!initialLoadComplete) return; 
             
             snapshot.docChanges().forEach(change => {
                 if (change.type === "added") {
                     const msg = change.doc.data();
                     if(msg.sender !== currentUser) {
-                        // Only show toast if chat modal is closed OR looking at a different room
                         if(!isChatModalOpen || activeChatRoomId !== roomId) {
                             showToastNotification(msg.sender, roomName, msg.text, roomId);
                             playNotificationSound();
@@ -686,7 +698,6 @@
         function showToastNotification(sender, roomName, htmlContent, roomId) {
             const container = document.getElementById('toast-container');
             
-            // Extract text preview
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = htmlContent;
             let previewText = tempDiv.textContent.trim();
@@ -771,6 +782,7 @@
             
             if(chatUnsubscribe) chatUnsubscribe();
             activeChatRoomId = null;
+            cancelReply();
             closeReactionPicker();
         }
 
@@ -794,7 +806,6 @@
                     </div>
                 `;
                 
-                // Group Chats
                 if(!groupsSnap.empty) {
                     html += `<div class="my-2 border-t border-slate-200 w-full"></div><div class="px-3 pb-1 text-[10px] font-bold text-slate-400">แชทกลุ่มส่วนตัว</div>`;
                     groupsSnap.forEach(doc => {
@@ -814,14 +825,12 @@
                     });
                 }
 
-                // Private Chats
                 html += `<div class="my-2 border-t border-slate-200 w-full"></div><div class="px-3 pb-1 text-[10px] font-bold text-slate-400">สมาชิกคนอื่นๆ</div>`;
                 usersSnap.forEach(doc => {
                     const data = doc.data();
                     if(data.username && data.username !== currentUser) {
                         const roomId = [currentUser, data.username].sort().join('_');
                         
-                        // Prevent injection
                         const safeUsername = data.username.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                         const safeRoomId = roomId.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                         const htmlRoomId = roomId.replace(/"/g, "&quot;");
@@ -869,16 +878,27 @@
             const imgs = tempDiv.getElementsByTagName('img');
             const text = tempDiv.textContent.trim();
             
-            if (imgs.length === 1 && text === '') {
-                return 'image';
-            }
+            if (imgs.length === 1 && text === '') return 'image';
             
             const emojiRegex = /^[\p{Emoji}\u200d]+$/u;
-            if (imgs.length === 0 && emojiRegex.test(text) && Array.from(text).length <= 3) {
-                return 'emoji';
-            }
+            if (imgs.length === 0 && emojiRegex.test(text) && Array.from(text).length <= 3) return 'emoji';
             
             return 'text';
+        }
+
+        // ฟังก์ชันลัดในการพรีวิวข้อความสั้นๆ สำหรับตอบกลับ
+        function getShortPreviewText(htmlContent) {
+            const type = analyzeMessageContent(htmlContent);
+            if(type === 'image') return "📷 ส่งรูปภาพ";
+            if(type === 'emoji') {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                return tempDiv.textContent.trim();
+            }
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            const text = tempDiv.textContent.trim();
+            return text.substring(0, 40) + (text.length > 40 ? '...' : '');
         }
 
         function selectChatRoom(roomId, titleName, type = 'private', creator = null) {
@@ -886,6 +906,7 @@
             currentChatRoomType = type;
             currentChatRoomCreator = creator;
             closeReactionPicker();
+            cancelReply(); // ล้างข้อมูลตอบกลับเมื่อเปลี่ยนห้อง
             
             const delGroupBtn = document.getElementById('deleteGroupBtn');
             if(type === 'group' && (checkIsAdmin() || currentUser === creator)) {
@@ -933,10 +954,12 @@
                         const contentType = analyzeMessageContent(msg.text);
 
                         const timeStr = new Date(msg.timestamp).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+                        const safeText = msg.text.replace(/'/g, "\\'").replace(/"/g, "&quot;");
                         
                         let actionBtns = '';
-                        // Reaction Trigger Btn
                         actionBtns += `<button onclick="openReactionPicker(event, '${msgId}')" class="reaction-trigger-btn text-slate-400 hover:text-sky-500 mx-1 transition" title="React"><i class="fa-regular fa-face-smile"></i></button>`;
+                        // ปุ่ม Reply 
+                        actionBtns += `<button onclick="startReplyChatMessage('${msgId}', '${msg.sender.replace(/'/g, "\\'")}', '${safeText}')" class="text-slate-400 hover:text-sky-500 mx-1 transition" title="ตอบกลับ"><i class="fa-solid fa-reply"></i></button>`;
 
                         if(canEdit) {
                             if(contentType === 'text') {
@@ -945,7 +968,7 @@
                             actionBtns += `<button onclick="promptDeleteChatMessage('${msgId}')" class="text-slate-400 hover:text-rose-500 mx-1 transition" title="ลบ"><i class="fa-solid fa-trash"></i></button>`;
                         }
 
-                        // Determine Bubble Styling
+                        // Style สำหรับข้อความหลัก
                         let bubbleClass = '';
                         if (contentType === 'image') {
                             bubbleClass = `rounded-2xl ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} text-sm chat-message-content image-only-bubble`;
@@ -957,7 +980,25 @@
                                 : `bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-2xl rounded-tl-none shadow-sm text-sm break-words whitespace-pre-wrap chat-message-content`;
                         }
 
-                        // Reactions display logic
+                        // แสดงข้อความที่ตอบกลับ (ถ้ามี)
+                        let replyBlockHtml = '';
+                        if (msg.replyTo) {
+                            if (isMe) {
+                                replyBlockHtml = `
+                                    <div class="bg-sky-700/40 border-l-2 border-sky-200 px-2 py-1 rounded text-[10px] mb-1.5 text-sky-100 truncate max-w-[200px] cursor-pointer" onclick="scrollToMessage('${msg.replyTo.id}')" title="คลิกเพื่อไปยังข้อความต้นฉบับ">
+                                        <span class="font-bold">${msg.replyTo.sender}</span><br>${msg.replyTo.text}
+                                    </div>
+                                `;
+                            } else {
+                                replyBlockHtml = `
+                                    <div class="bg-slate-100 border-l-2 border-slate-400 px-2 py-1 rounded text-[10px] mb-1.5 text-slate-500 truncate max-w-[200px] cursor-pointer" onclick="scrollToMessage('${msg.replyTo.id}')" title="คลิกเพื่อไปยังข้อความต้นฉบับ">
+                                        <span class="font-bold text-slate-700">${msg.replyTo.sender}</span><br>${msg.replyTo.text}
+                                    </div>
+                                `;
+                            }
+                        }
+
+                        // แสดง Reaction
                         let reactionHtml = '';
                         if(msg.reactions && Object.keys(msg.reactions).length > 0) {
                             const reactionCounts = {};
@@ -972,9 +1013,9 @@
 
                         if(isMe) {
                             html += `
-                                <div class="flex justify-end mb-4 message-row relative">
+                                <div class="flex justify-end mb-4 message-row relative" id="msg-${msgId}">
                                     <div class="flex flex-col items-end max-w-[85%] sm:max-w-[75%]">
-                                        <div class="${bubbleClass}">${msg.text}</div>
+                                        <div class="${bubbleClass}">${replyBlockHtml}${msg.text}</div>
                                         ${reactionHtml ? `<div class="flex flex-wrap justify-end gap-1 mt-0.5">${reactionHtml}</div>` : ''}
                                         <div class="flex items-center mt-1">
                                             <div class="reaction-btn-group flex">${actionBtns}</div>
@@ -986,13 +1027,13 @@
                         } else {
                             const initial = msg.sender.charAt(0).toUpperCase();
                             html += `
-                                <div class="flex justify-start mb-4 message-row relative">
+                                <div class="flex justify-start mb-4 message-row relative" id="msg-${msgId}">
                                     <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs shadow-sm mr-2 flex-shrink-0 mt-1 border border-slate-300">
                                         ${initial}
                                     </div>
                                     <div class="flex flex-col items-start max-w-[85%] sm:max-w-[75%]">
                                         <span class="text-[10px] text-slate-500 ml-1 mb-0.5 font-medium">${msg.sender}</span>
-                                        <div class="${bubbleClass}">${msg.text}</div>
+                                        <div class="${bubbleClass}">${replyBlockHtml}${msg.text}</div>
                                         ${reactionHtml ? `<div class="flex flex-wrap justify-start gap-1 mt-0.5 ml-2">${reactionHtml}</div>` : ''}
                                         <div class="flex items-center mt-1">
                                             <span class="text-[9px] text-slate-400 mr-1 ml-1">${timeStr}</span>
@@ -1013,6 +1054,47 @@
                 }, 100);
         }
 
+        // --- 💬 Chat Reply Logic 💬 ---
+        function startReplyChatMessage(msgId, sender, htmlContent) {
+            const previewText = getShortPreviewText(htmlContent);
+            
+            chatReplyTo = {
+                id: msgId,
+                sender: sender,
+                text: previewText
+            };
+
+            document.getElementById('replyPreviewSender').innerText = sender;
+            document.getElementById('replyPreviewText').innerText = previewText;
+            document.getElementById('chatReplyPreview').classList.remove('hidden');
+            document.getElementById('chatReplyPreview').classList.add('flex');
+            
+            document.getElementById('chatMessageInput').focus();
+        }
+
+        function cancelReply() {
+            chatReplyTo = null;
+            document.getElementById('chatReplyPreview').classList.add('hidden');
+            document.getElementById('chatReplyPreview').classList.remove('flex');
+        }
+
+        function scrollToMessage(msgId) {
+            const el = document.getElementById(`msg-${msgId}`);
+            if(el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                // Highlight temporary
+                const bubble = el.querySelector('.chat-message-content');
+                if(bubble) {
+                    const oldBg = bubble.style.backgroundColor;
+                    bubble.style.transition = "background-color 0.5s ease";
+                    bubble.style.backgroundColor = "#fef08a"; // Yellow highlight
+                    setTimeout(() => {
+                        bubble.style.backgroundColor = oldBg;
+                    }, 1500);
+                }
+            }
+        }
+
         // --- 💖 Reactions System (Upgraded Picker) 💖 ---
         function populateReactionPicker() {
             const container = document.getElementById('reactionEmojiList');
@@ -1025,11 +1107,9 @@
             
             const btnRect = event.currentTarget.getBoundingClientRect();
             
-            // Adjust position so it floats next to the button
             let topPos = btnRect.top - 50;
             let leftPos = btnRect.left - 130; 
             
-            // Ensure it doesn't go off-screen
             if(topPos < 10) topPos = btnRect.bottom + 5; 
             if(leftPos < 10) leftPos = 10;
             if(leftPos + 288 > window.innerWidth) leftPos = window.innerWidth - 300;
@@ -1067,18 +1147,31 @@
             });
         }
 
+        // --- Core Message Sending ---
         function sendChatMessage() {
             const input = document.getElementById('chatMessageInput');
-            const text = input.innerHTML.trim();
-            if(!text || text === '<br>' || !activeChatRoomId || !currentUser) return;
+            let text = input.innerHTML.trim();
             
-            input.innerHTML = ''; 
+            // Cleanup trailing break tags added by enter sometimes
+            while(text.endsWith('<br>')) { text = text.slice(0, -4).trim(); }
             
-            db.collection("chats").doc(activeChatRoomId).collection("messages").add({
+            if(!text || !activeChatRoomId || !currentUser) return;
+            
+            const payload = {
                 sender: currentUser,
                 text: text,
                 timestamp: Date.now()
-            }).catch(e => {
+            };
+
+            // แนบข้อมูลการตอบกลับ (ถ้ามี)
+            if (chatReplyTo) {
+                payload.replyTo = chatReplyTo;
+            }
+            
+            input.innerHTML = ''; 
+            cancelReply(); // เคลียร์กล่องตอบกลับเมื่อส่งเสร็จ
+            
+            db.collection("chats").doc(activeChatRoomId).collection("messages").add(payload).catch(e => {
                 console.error("Error sending message", e);
                 alert("ไม่สามารถส่งข้อความได้ กรุณาลองใหม่");
             });
@@ -1243,7 +1336,6 @@
                     const docId = doc.id;
                     const initial = data.username ? data.username.charAt(0).toUpperCase() : '?';
                     
-                    // Do not allow deleting the admin account itself
                     const isSelfAdmin = data.username.toLowerCase() === ADMIN_USERNAME.toLowerCase();
                     const deleteBtn = isSelfAdmin ? '' : `<button onclick="promptDeleteUser('${docId}', '${data.username.replace(/'/g, "\\'")}')" class="text-rose-400 hover:text-rose-600 transition p-1"><i class="fa-solid fa-trash-alt"></i></button>`;
 
@@ -1269,12 +1361,10 @@
             });
         }
 
-        // New function to delete user from Firestore
         function promptDeleteUser(userDocId, username) {
             showModal("ลบสมาชิก?", `คุณต้องการลบบัญชีผู้ใช้ "${username}" ออกจากระบบใช่หรือไม่?\n\n(การลบนี้จะลบแค่ข้อมูลโปรไฟล์ แต่โพสต์เก่าของเขาจะยังคงอยู่)`, '<i class="fa-solid fa-user-xmark text-3xl text-rose-600"></i>', 'bg-rose-100', "ลบสมาชิก", "bg-rose-600 hover:bg-rose-700 shadow-rose-200", () => {
                 db.collection("users").doc(userDocId).delete().then(() => {
                     closeConfirmModal();
-                    // Refresh Dashboard
                     setTimeout(() => openAdminDashboard(), 300);
                 }).catch(err => {
                     alert("เกิดข้อผิดพลาดในการลบสมาชิก");
@@ -2086,7 +2176,6 @@
             return `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()+543} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
         }
 
-        // Run
         window.onload = init;
     </script>
 </body>
