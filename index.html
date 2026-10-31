@@ -22,11 +22,36 @@
         .custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
         .editor-content { min-height: 200px; outline: none; line-height: 1.6; }
-        .editor-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; }
+        .editor-content img { max-width: 100%; height: auto; border-radius: 8px; margin: 10px 0; cursor: pointer; transition: transform 0.2s;}
+        .editor-content img:hover { transform: scale(1.02); }
         .editor-content a { color: #0ea5e9; text-decoration: underline; cursor: pointer; }
-        .comment-input-area img { max-width: 200px; border-radius: 8px; margin-top: 8px; }
+        
+        .comment-input-area img { max-width: 200px; border-radius: 8px; margin-top: 8px; cursor: pointer;}
         .comment-input-area:empty:before { content: attr(placeholder); color: #94a3b8; pointer-events: none; display: block; }
+        
+        /* Chat Specific Styles */
+        .chat-input-area img { max-width: 180px; border-radius: 8px; margin-top: 4px; display: inline-block;}
+        .chat-input-area:empty:before { content: attr(placeholder); color: #94a3b8; pointer-events: none; display: block; }
+        
+        .chat-message-content img { cursor: pointer; max-width: 280px; border-radius: 8px; transition: opacity 0.2s; display: block; margin: 0;}
+        .chat-message-content img:hover { opacity: 0.85; }
+        
+        /* Image or Emoji Only Bubble (No Background, No Padding) */
+        .image-only-bubble { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; }
+        .image-only-bubble img { margin: 0 !important; border-radius: 12px; display: block; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);}
+        .emoji-only-bubble { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; font-size: 3rem; line-height: 1; }
+
+        /* Reaction Styles */
+        .reaction-btn-group { opacity: 0; transition: opacity 0.2s ease; }
+        .message-row:hover .reaction-btn-group { opacity: 1; }
+        .reaction-badge { font-size: 0.75rem; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 2px 6px; display: inline-flex; align-items: center; cursor: pointer; z-index: 10; position: relative; }
+        .reaction-badge:hover { background: #e2e8f0; }
+
+        /* Fix bottom margin when reaction exists under image */
+        .message-row .flex-col { gap: 2px; }
+
         #headerCover {
             background-size: cover;
             background-position: center;
@@ -53,21 +78,23 @@
             </div>
             
             <div class="flex items-center space-x-2 sm:space-x-3">
-                <!-- ปุ่มดูแดชบอร์ด Admin -->
                 <button id="viewMembersBtn" onclick="openAdminDashboard()" class="hidden bg-indigo-500/80 hover:bg-indigo-600/90 text-white text-[11px] sm:text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition items-center shadow border border-indigo-400/50">
-                    <i class="fa-solid fa-chart-pie mr-1.5"></i> แดชบอร์ด Admin
+                    <i class="fa-solid fa-chart-pie sm:mr-1.5"></i> <span class="hidden sm:inline">แดชบอร์ด Admin</span>
                 </button>
 
                 <label id="changeCoverBtn" class="hidden cursor-pointer bg-slate-800/60 hover:bg-slate-700/80 text-white text-[11px] sm:text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition items-center shadow border border-white/20">
-                    <i class="fa-solid fa-image mr-1.5"></i> เปลี่ยนปก
+                    <i class="fa-solid fa-image sm:mr-1.5"></i> <span class="hidden sm:inline">เปลี่ยนปก</span>
                     <input type="file" id="coverUpload" accept="image/*" class="hidden" onchange="changeCover(this)">
                 </label>
 
-                <button onclick="showCreatePost()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center border border-emerald-400">
-                    <i class="fa-solid fa-pen-to-square mr-1.5"></i> สร้างโพสต์
+                <button id="chatBtn" onclick="openChatModal()" class="hidden bg-sky-500 hover:bg-sky-600 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg transition shadow-md items-center border border-sky-400">
+                    <i class="fa-solid fa-comments sm:mr-1.5"></i> <span class="hidden sm:inline">แชท</span>
                 </button>
 
-                <!-- ย้ายส่วน User Status (เข้าสู่ระบบ / โปรไฟล์) มาไว้ตรงนี้ (ขวาสุด) -->
+                <button onclick="showCreatePost()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center border border-emerald-400">
+                    <i class="fa-solid fa-pen-to-square sm:mr-1.5"></i> <span class="hidden sm:inline">สร้างโพสต์</span>
+                </button>
+
                 <div id="userStatusArea" class="flex items-center">
                     <span class="text-xs text-white/80">กำลังโหลด...</span>
                 </div>
@@ -138,7 +165,7 @@
                                     <div class="bg-slate-50 border-b border-slate-200 px-3 py-2 flex items-center space-x-2 rounded-t-xl relative">
                                         <button type="button" onclick="toggleEmojiPicker('emojiPicker-main')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-regular fa-face-smile text-base sm:text-lg"></i></button>
                                         <div id="emojiPicker-main" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-2 z-50">
-                                            <div class="flex flex-wrap gap-1 max-h-52 overflow-y-auto custom-scrollbar"></div>
+                                            <div class="flex flex-wrap gap-1 max-h-52 overflow-y-auto custom-scrollbar" id="emoji-container-main"></div>
                                         </div>
                                         <button type="button" onclick="addCommentLink('commentInput')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-solid fa-link"></i></button>
                                         <label class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer transition">
@@ -211,6 +238,114 @@
         </main>
     </div>
 
+    <!-- 💬 CHAT MODAL (FULL SCREEN) 💬 -->
+    <div id="chatModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[110] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 sm:p-4">
+        <!-- ขยายความกว้างและความสูงให้เกือบเต็มจอ -->
+        <div class="bg-white sm:rounded-2xl shadow-2xl w-full h-full sm:w-[95vw] sm:h-[95vh] flex flex-col sm:flex-row overflow-hidden transform scale-95 transition-transform duration-300" id="chatModalBox">
+            
+            <!-- Left Sidebar (Contacts & Groups) - ปรับความกว้างให้แคบลงตามกรอบสีแดง -->
+            <div class="w-full sm:w-[280px] sm:min-w-[280px] bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-200 flex flex-col h-[40%] sm:h-full flex-shrink-0">
+                <div class="p-4 border-b border-slate-200 bg-white flex justify-between items-center shadow-sm z-10">
+                    <h3 class="font-bold text-slate-800"><i class="fa-regular fa-comments text-sky-500 mr-2"></i>แชท & พูดคุย</h3>
+                    <div class="flex space-x-2">
+                        <button onclick="openCreateGroupModal()" class="text-sky-500 hover:text-sky-600 bg-sky-50 hover:bg-sky-100 w-8 h-8 rounded-full flex items-center justify-center transition" title="สร้างกลุ่มแชทใหม่"><i class="fa-solid fa-plus"></i></button>
+                        <button onclick="closeChatModal()" class="sm:hidden text-slate-400 hover:text-slate-600 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-times text-lg"></i></button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1" id="chatContactList">
+                    <!-- Contacts loaded here -->
+                </div>
+            </div>
+            
+            <!-- Right Area (Chat Room) -->
+            <div class="flex-1 flex flex-col bg-white h-[60%] sm:h-full relative overflow-hidden">
+                <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-white shadow-sm z-10">
+                    <h3 class="font-bold text-slate-800 flex items-center" id="activeChatTitle">เลือกห้องแชท</h3>
+                    <div class="flex items-center space-x-3">
+                        <button id="deleteGroupBtn" onclick="promptDeleteGroupChat()" class="hidden text-rose-500 hover:text-rose-600 text-[11px] sm:text-xs font-semibold bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition"><i class="fa-solid fa-trash-alt mr-1"></i>ลบกลุ่ม</button>
+                        <button onclick="closeChatModal()" class="hidden sm:block text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-times text-xl"></i></button>
+                    </div>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/50 custom-scrollbar relative" id="chatMessagesArea">
+                    <div class="flex items-center justify-center h-full text-slate-400 text-sm">กรุณาเลือกผู้ติดต่อจากเมนูด้านซ้าย</div>
+                </div>
+
+                <!-- Chat Reaction Picker Popup -->
+                <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-3 py-1.5 flex space-x-2 z-50 transition-all duration-200 transform scale-95 opacity-0">
+                    <button type="button" onclick="addReaction('👍')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition">👍</button>
+                    <button type="button" onclick="addReaction('❤️')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition">❤️</button>
+                    <button type="button" onclick="addReaction('😂')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition">😂</button>
+                    <button type="button" onclick="addReaction('😮')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition">😮</button>
+                    <button type="button" onclick="addReaction('😢')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition">😢</button>
+                    <button type="button" onclick="addReaction('🙏')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition">🙏</button>
+                </div>
+                
+                <!-- Chat Input Form -->
+                <div class="p-3 sm:p-4 bg-white border-t border-slate-200 flex flex-col" id="chatFormContainer" style="display:none;">
+                    <!-- Chat Toolbar -->
+                    <div class="flex items-center space-x-2 mb-2 relative">
+                        <button type="button" onclick="toggleEmojiPicker('emojiPicker-chat')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition" title="ใส่อีโมจิ">
+                            <i class="fa-regular fa-face-smile text-sm sm:text-base"></i>
+                        </button>
+                        <div id="emojiPicker-chat" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-72 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50">
+                            <!-- เพิ่มขนาดความสูงเพื่อ Scroll ง่ายขึ้น -->
+                            <div class="flex flex-wrap gap-2 max-h-60 overflow-y-auto custom-scrollbar" id="emoji-container-chat"></div>
+                        </div>
+
+                        <button type="button" onclick="addCommentLink('chatMessageInput')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition" title="แทรกลิงก์">
+                            <i class="fa-solid fa-link text-sm sm:text-base"></i>
+                        </button>
+                        
+                        <label class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer transition" title="แทรกรูปภาพ">
+                            <i class="fa-regular fa-image text-sm sm:text-base"></i>
+                            <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'chatMessageInput')">
+                        </label>
+                    </div>
+
+                    <div class="flex space-x-3 items-end">
+                        <div id="chatMessageInput" class="chat-input-area flex-1 px-4 py-3 bg-slate-100 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-sky-500 transition overflow-y-auto max-h-[120px] custom-scrollbar" contenteditable="true" placeholder="พิมพ์ข้อความ... (คลิกวางรูปภาพได้)"></div>
+                        <button type="button" id="chatSendBtn" onclick="sendChatMessage()" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition shadow-sm flex-shrink-0 disabled:opacity-50 mb-0.5">
+                            <i class="fa-solid fa-paper-plane text-sm sm:text-base"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🖼️ Image Viewer Modal (Lightbox) 🖼️ -->
+    <div id="imageViewerModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[300] hidden flex items-center justify-center opacity-0 transition-opacity duration-300" onclick="closeImageViewer()">
+        <button class="absolute top-4 right-6 text-white hover:text-slate-300 text-4xl drop-shadow-md transition"><i class="fa-solid fa-times"></i></button>
+        <img id="imageViewerSrc" class="max-w-[95vw] max-h-[90vh] object-contain rounded-lg shadow-2xl" src="" alt="View Image" onclick="event.stopPropagation();">
+    </div>
+
+    <!-- ➕ Create Group Chat Modal ➕ -->
+    <div id="createGroupModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[130] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh]" id="createGroupModalBox">
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-users-viewfinder text-sky-500 mr-2"></i>สร้างกลุ่มแชทใหม่</h3>
+                <button onclick="closeCreateGroupModal()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white">
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อกลุ่ม <span class="text-rose-500">*</span></label>
+                    <input type="text" id="groupNameInput" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none" placeholder="ตั้งชื่อกลุ่ม...">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-2">เลือกสมาชิกที่จะเชิญเข้ากลุ่ม:</label>
+                    <div id="groupMembersList" class="border border-slate-200 rounded-lg p-3 max-h-48 overflow-y-auto custom-scrollbar bg-slate-50 space-y-2">
+                        <!-- Checkboxes injected here -->
+                    </div>
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex space-x-3">
+                <button onclick="closeCreateGroupModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold py-2.5 rounded-xl transition">ยกเลิก</button>
+                <button onclick="submitCreateGroup()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold py-2.5 rounded-xl transition shadow-md shadow-sky-200">สร้างกลุ่ม</button>
+            </div>
+        </div>
+    </div>
+
     <!-- 📊 Admin Dashboard Modal 📊 -->
     <div id="adminDashboardModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh]" id="adminDashboardBox">
@@ -220,7 +355,6 @@
             </div>
             
             <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white space-y-6">
-                <!-- Database Usage Status -->
                 <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
                     <h4 class="text-sm font-bold text-slate-700 mb-3"><i class="fa-solid fa-database text-sky-500 mr-1.5"></i>ประมาณการใช้พื้นที่จัดเก็บ (Storage)</h4>
                     <div class="w-full bg-slate-200 rounded-full h-3.5 mb-2 overflow-hidden border border-slate-300/50">
@@ -230,10 +364,8 @@
                         <span>ใช้ไปแล้ว: <strong id="adminStatStorageUsed" class="text-slate-700">0 MB</strong></span>
                         <span>โควตาฟรี: 1024 MB (1GB)</span>
                     </div>
-                    <p class="text-[10px] text-slate-400 mt-2 italic">* การคำนวณนี้เป็นเพียงการกะระยะจากขนาดตัวอักษรและ Base64 หากต้องการดูโควตาการอ่าน/เขียนที่แม่นยำ กรุณาดูใน Firebase Console</p>
                 </div>
 
-                <!-- Stats Grid -->
                 <div class="grid grid-cols-2 gap-4">
                     <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex flex-col items-center justify-center text-center">
                         <span class="text-3xl font-bold text-indigo-600 mb-1" id="adminStatPosts">0</span>
@@ -245,16 +377,13 @@
                     </div>
                 </div>
 
-                <!-- Members List -->
                 <div>
                     <h4 class="text-sm font-bold text-slate-700 mb-3 flex justify-between items-end">
                         <span><i class="fa-solid fa-users text-slate-400 mr-1.5"></i>รายชื่อสมาชิก</span>
                         <span class="text-xs font-medium text-sky-600 bg-sky-100 px-2 py-0.5 rounded-full">รวม <span id="totalMembersCount">0</span> คน</span>
                     </h4>
                     <div class="border border-slate-200 rounded-xl overflow-hidden">
-                        <div id="membersListContainer" class="divide-y divide-slate-100 max-h-48 overflow-y-auto custom-scrollbar bg-white">
-                            <!-- Members injected here -->
-                        </div>
+                        <div id="membersListContainer" class="divide-y divide-slate-100 max-h-48 overflow-y-auto custom-scrollbar bg-white"></div>
                     </div>
                 </div>
             </div>
@@ -269,7 +398,7 @@
     </div>
 
     <!-- Generic Confirm / Info Modal -->
-    <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-50 hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+    <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[150] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300" id="confirmModalBox">
             <div class="p-6 text-center">
                 <div id="confirmIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"></div>
@@ -284,7 +413,7 @@
     </div>
 
     <!-- 🔑 Authentication Modal 🔑 -->
-    <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+    <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
         <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col" id="authModalBox">
             <div class="flex border-b border-slate-200 bg-slate-50" id="authTabsContainer">
                 <button id="tabAuthLogin" onclick="switchAuthMode('login')" class="flex-1 py-4 text-sm font-bold text-sky-600 border-b-2 border-sky-500 transition-colors bg-white">เข้าสู่ระบบ</button>
@@ -353,8 +482,19 @@
         let confirmCallback = null;
         let currentAuthMode = 'login'; 
 
+        // Chat Variables
+        let chatUnsubscribe = null;
+        let activeChatRoomId = null;
+        let currentChatRoomType = 'private'; 
+        let currentChatRoomCreator = null; 
+        let activeReactionMsgId = null;
+
         const ADMIN_USERNAME = 'admin'; 
-        const emojiList = ["😀","😂","😅","🥰","😎","😭","😡","👍","🙏","❤️","🔥","✨","🎉","👏","👀","🤔","🙌","🤝","✅","❌","💡","💯","🚀","🌟","🍕","☕","🥳","😱","🥺","🥶","😷","😴","🤫","🧐","🤓","👻","👽","🤖","💩","🙊","💖","💔","💬","🔔","🎵","🎮","🏆","💸","📸"];
+        
+        // ชุดอิโมจิที่เพิ่มจำนวนให้เยอะขึ้น
+        const emojiList = [
+            "😀","😃","😄","😁","😆","😅","😂","🤣","🥲","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😢","😭","😮‍💨","😤","😠","😡","🤬","🤯","😳","ร้อน","🥶","😱","😨","😰","😥","😓","🤗","🤔","🫣","🤭","🫢","🫡","🤫","🫠","🤥","😶","🫥","😐","🫤","😑","😬","🙄","😯","😦","😧","😮","😲","🥱","😴","🤤","😪","😵","😵‍💫","🫨","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸","😹","😻","😼","😽","🙀","😿","😾","❤️","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❤️‍🔥","❤️‍🩹","❣️","💕","💞","💓","💗","💖","💘","💝","👍","👎","👊","✊","🤛","🤜","🤞","✌️","🫰","🤟","🤘","👌","🤌","🤏","🫳","🫴","👈","👉","👆","👇","☝️","✋","🤚","🖐","🖖","👋","🤙","🫲","🫱","💪","🦾","🖕","✍️","🙏","🫵","👀","🔥","✨","🌟","💫","💥","💢","💦","💧","💤","💨","👂","🦻","👃","🧠","🫀","🫁","🦷","👅","👄","🫦","👶","👧","🧒","👦","👩","🧑","👨","👩‍🦱","🧑‍🦱","👨‍🦱","👩‍🦰","🧑‍🦰","👨‍🦰","👱‍♀️","👱","👱‍♂️","👩‍🦳","🧑‍🦳","👨‍🦳","👩‍🦲","🧑‍🦲","👨‍🦲","🧔‍♀️","🧔","🧔‍♂️","👵","🧓","👴","👲","👳‍♀️","👳","👳‍♂️","🧕","👮‍♀️","👮","👮‍♂️","👷‍♀️","👷","👷‍♂️","💂‍♀️","💂","💂‍♂️","🕵️‍♀️","🕵️","🕵️‍♂️","👩‍⚕️","🧑‍⚕️","👨‍⚕️","👩‍🌾","🧑‍🌾","👨‍🌾","👩‍🍳","🧑‍🍳","👨‍🍳","👩‍🎓","🧑‍🎓","👨‍🎓","👩‍🎤","🧑‍🎤","👨‍🎤","👩‍🏫","🧑‍🏫","👨‍🏫","👩‍🏭","🧑‍🏭","👨‍🏭","👩‍💻","🧑‍💻","👨‍💻","👩‍💼","🧑‍💼","👨‍💼","👩‍🔧","🧑‍🔧","👨‍🔧","👩‍🔬","🧑‍🔬","👨‍🔬","👩‍🎨","🧑‍🎨","👨‍🎨","👩‍🚒","🧑‍🚒","👨‍🚒","👩‍✈️","🧑‍✈️","👨‍✈️","👩‍🚀","🧑‍🚀","👨‍🚀","👩‍⚖️","🧑‍⚖️","👨‍⚖️","👰‍♀️","👰","👰‍♂️","🤵‍♀️","🤵","🤵‍♂️","👸","🫅","🤴","🥷","🦸‍♀️","🦸","🦸‍♂️","🦹‍♀️","🦹","🦹‍♂️","🤶","🧑‍🎄","🎅","🧙‍♀️","🧙","🧙‍♂️","🧝‍♀️","🧝","🧝‍♂️","🧛‍♀️","🧛","🧛‍♂️","🧟‍♀️","🧟","🧟‍♂️","🧞‍♀️","🧞","🧞‍♂️","🧜‍♀️","🧜","🧜‍♂️","🧚‍♀️","🧚","🧚‍♂️","👼","🤰","🫄","🫃","🤱","👩‍🍼","🧑‍🍼","👨‍🍼","🙇‍♀️","🙇","🙇‍♂️","💁‍♀️","💁","💁‍♂️","🙅‍♀️","🙅","🙅‍♂️","🙆‍♀️","🙆","🙆‍♂️","🙋‍♀️","🙋","🙋‍♂️","🧏‍♀️","🧏","🧏‍♂️","🤦‍♀️","🤦","🤦‍♂️","🤷‍♀️","🤷","🤷‍♂️","🙎‍♀️","🙎","🙎‍♂️","🙍‍♀️","🙍","🙍‍♂️","💇‍♀️","💇","💇‍♂️","💆‍♀️","💆","💆‍♂️","🧖‍♀️","🧖","🧖‍♂️","💅","🤳","💃","🕺","👯‍♀️","👯","👯‍♂️","🕴","👩‍🦽","🧑‍🦽","👨‍🦽","👩‍🦼","🧑‍🦼","👨‍🦼","🚶‍♀️","🚶","🚶‍♂️","👩‍🦯","🧑‍🦯","👨‍🦯","🧎‍♀️","🧎","🧎‍♂️","🏃‍♀️","🏃","🏃‍♂️","🧍‍♀️","🧍","🧍‍♂️","👭","🧑‍🤝‍🧑","👬","👫","👩‍❤️‍👩","💑","👨‍❤️‍👨","👩‍❤️‍💋‍👩","💏","👨‍❤️‍💋‍👨","👨‍👩‍👦","👨‍👩‍👧","👨‍👩‍👧‍👦","👨‍👩‍👦‍👦","👨‍👩‍👧‍👧","👩‍👩‍👦","👩‍👩‍👧","👩‍👩‍👧‍👦","👩‍👩‍👦‍👦","👩‍👩‍👧‍👧","👨‍👨‍👦","👨‍👨‍👧","👨‍👨‍👧‍👦","👨‍👨‍👦‍👦","👨‍👨‍👧‍👧","👩‍👦","👩‍👧","👩‍👧‍👦","👩‍👦‍👦","👩‍👧‍👧","👨‍👦","👨‍👧","👨‍👧‍👦","👨‍👦‍👦","👨‍👧‍👧","🗣","👤","👥","🫂","🎒","🧳","🌂","☂️","🧵","🪡","🪢","🧶","👓","🕶","🥽","🥼","🦺","👔","👕","👖","🧣","🧤","🧥","🧦","👗","👘","🥻","🩱","🩲","🩳","👙","👚","👛","👜","👝","🎒","👞","👟","🥾","🥿","👠","👡","🩰","👢","👑","👒","🎩","🎓","🧢","🪖","⛑","💄","💍","💼"
+        ];
 
         function checkIsAdmin() {
             return currentUser && currentUser.toLowerCase() === ADMIN_USERNAME.toLowerCase();
@@ -367,6 +507,7 @@
                     currentUser = user.displayName || user.email.split('@')[0];
                 } else {
                     currentUser = null;
+                    if(activeChatRoomId) closeChatModal();
                 }
                 renderUserStatus();
                 if(currentPostId) selectPost(currentPostId);
@@ -386,15 +527,500 @@
             
             populateEmojiPicker('emojiPicker-main', 'commentInput');
 
+            // Auto close emoji pickers & reaction picker
             document.addEventListener('click', function(e) {
+                // Emoji pickers
                 document.querySelectorAll('.emoji-picker').forEach(picker => {
                     const toggleBtn = picker.previousElementSibling;
                     if (!picker.classList.contains('hidden') && !picker.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
                         picker.classList.add('hidden');
                     }
                 });
+
+                // Reaction picker
+                const reactionPicker = document.getElementById('reactionPicker');
+                if(!reactionPicker.classList.contains('hidden') && !reactionPicker.contains(e.target) && !e.target.closest('.reaction-trigger-btn')) {
+                    closeReactionPicker();
+                }
+            });
+
+            // Global Image Click Listener (Lightbox)
+            document.addEventListener('click', function(e) {
+                if(e.target.tagName === 'IMG' && (e.target.closest('.editor-content') || e.target.closest('.chat-message-content') || e.target.closest('.chat-input-area'))) {
+                    openImageViewer(e.target.src);
+                }
+            });
+
+            // Paste Image Support
+            document.getElementById('chatMessageInput').addEventListener('paste', handleImagePaste);
+            document.getElementById('commentInput').addEventListener('paste', handleImagePaste);
+        }
+
+        function handleImagePaste(e) {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            for (let index in items) {
+                const item = items[index];
+                if (item.kind === 'file' && item.type.includes('image/')) {
+                    const blob = item.getAsFile();
+                    const targetId = e.target.id;
+                    processAndCompressImage(blob, (dataUrl) => {
+                        document.getElementById(targetId).focus();
+                        document.execCommand('insertImage', false, dataUrl);
+                    });
+                    e.preventDefault();
+                }
+            }
+        }
+
+        // --- 🖼️ Image Lightbox Viewer 🖼️ ---
+        function openImageViewer(src) {
+            document.getElementById('imageViewerSrc').src = src;
+            const modal = document.getElementById('imageViewerModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeImageViewer() {
+            const modal = document.getElementById('imageViewerModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => { 
+                modal.classList.add('hidden'); 
+                document.getElementById('imageViewerSrc').src = ''; 
+            }, 300);
+        }
+
+        // --- 💬 CHAT SYSTEM 💬 ---
+        function openChatModal() {
+            if(!currentUser) { openAuthModal('login'); return; }
+            
+            const modal = document.getElementById('chatModal');
+            const box = document.getElementById('chatModalBox');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+            }, 10);
+            
+            loadChatContacts();
+        }
+
+        function closeChatModal() {
+            const modal = document.getElementById('chatModal');
+            const box = document.getElementById('chatModalBox');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            
+            if(chatUnsubscribe) chatUnsubscribe();
+            activeChatRoomId = null;
+            closeReactionPicker();
+        }
+
+        function loadChatContacts() {
+            const list = document.getElementById('chatContactList');
+            list.innerHTML = '<div class="text-center text-xs text-slate-400 py-4"><i class="fa-solid fa-spinner fa-spin mr-1"></i>กำลังโหลด...</div>';
+            
+            const usersPromise = db.collection("users").orderBy("username_lower").get();
+            const groupsPromise = db.collection("group_chats").where("members", "array-contains", currentUser).get();
+
+            Promise.all([usersPromise, groupsPromise]).then(([usersSnap, groupsSnap]) => {
+                let html = `
+                    <div onclick="selectChatRoom('global', 'ห้องพูดคุยรวม', 'global', null)" id="chat-tab-global" class="chat-tab-item p-3 rounded-xl cursor-pointer hover:bg-slate-200 flex items-center space-x-3 transition">
+                        <div class="w-10 h-10 rounded-full bg-sky-500 text-white flex items-center justify-center font-bold shadow-sm flex-shrink-0">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div class="flex-1 overflow-hidden">
+                            <h4 class="text-sm font-bold text-slate-800 truncate">ห้องพูดคุยรวม</h4>
+                            <p class="text-[10px] text-slate-500">พูดคุยกับทุกคนในระบบ</p>
+                        </div>
+                    </div>
+                `;
+                
+                // Group Chats
+                if(!groupsSnap.empty) {
+                    html += `<div class="my-2 border-t border-slate-200 w-full"></div><div class="px-3 pb-1 text-[10px] font-bold text-slate-400">แชทกลุ่มส่วนตัว</div>`;
+                    groupsSnap.forEach(doc => {
+                        const data = doc.data();
+                        html += `
+                            <div onclick="selectChatRoom('${doc.id}', '${data.name}', 'group', '${data.createdBy}')" id="chat-tab-${doc.id}" class="chat-tab-item p-3 rounded-xl cursor-pointer hover:bg-slate-200 flex items-center space-x-3 transition">
+                                <div class="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold shadow-sm flex-shrink-0">
+                                    <i class="fa-solid fa-users-viewfinder"></i>
+                                </div>
+                                <div class="flex-1 overflow-hidden">
+                                    <h4 class="text-sm font-bold text-slate-800 truncate">${data.name}</h4>
+                                    <p class="text-[10px] text-slate-500 truncate">${data.members.length} สมาชิก</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                // Private Chats
+                html += `<div class="my-2 border-t border-slate-200 w-full"></div><div class="px-3 pb-1 text-[10px] font-bold text-slate-400">สมาชิกคนอื่นๆ</div>`;
+                usersSnap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.username && data.username !== currentUser) {
+                        const roomId = [currentUser, data.username].sort().join('_');
+                        const initial = data.username.charAt(0).toUpperCase();
+                        html += `
+                            <div onclick="selectChatRoom('${roomId}', '${data.username}', 'private', null)" id="chat-tab-${roomId}" class="chat-tab-item p-3 rounded-xl cursor-pointer hover:bg-slate-200 flex items-center space-x-3 transition">
+                                <div class="w-10 h-10 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold shadow-sm border border-slate-300 flex-shrink-0">
+                                    ${initial}
+                                </div>
+                                <div class="flex-1 overflow-hidden">
+                                    <h4 class="text-sm font-bold text-slate-800 truncate">${data.username}</h4>
+                                    <p class="text-[10px] text-slate-500">แชทส่วนตัว</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                list.innerHTML = html;
+                
+                if(!activeChatRoomId) {
+                    selectChatRoom('global', 'ห้องพูดคุยรวม', 'global', null);
+                } else {
+                    highlightChatTab(activeChatRoomId);
+                }
+            }).catch(err => {
+                list.innerHTML = '<div class="text-center text-xs text-rose-400 py-4">โหลดข้อมูลล้มเหลว</div>';
             });
         }
+
+        function highlightChatTab(roomId) {
+            document.querySelectorAll('.chat-tab-item').forEach(el => {
+                el.classList.remove('bg-sky-100', 'border', 'border-sky-200');
+            });
+            const activeTab = document.getElementById(`chat-tab-${roomId}`);
+            if(activeTab) activeTab.classList.add('bg-sky-100', 'border', 'border-sky-200');
+        }
+
+        // Logic to determine if content is just an image or just a single emoji
+        function analyzeMessageContent(htmlContent) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent.replace(/<br\s*[\/]?>/gi, ''); // remove breaks
+            
+            const imgs = tempDiv.getElementsByTagName('img');
+            const text = tempDiv.textContent.trim();
+            
+            // Check if it's only one image and no text
+            if (imgs.length === 1 && text === '') {
+                return 'image';
+            }
+            
+            // Check if it's a single emoji (using basic length check for simplicity, emoji characters can be length 2-4 depending on surrogate pairs)
+            const emojiRegex = /^[\p{Emoji}\u200d]+$/u;
+            if (imgs.length === 0 && emojiRegex.test(text) && Array.from(text).length <= 3) {
+                return 'emoji';
+            }
+            
+            return 'text';
+        }
+
+        function selectChatRoom(roomId, titleName, type = 'private', creator = null) {
+            activeChatRoomId = roomId;
+            currentChatRoomType = type;
+            currentChatRoomCreator = creator;
+            closeReactionPicker();
+            
+            const delGroupBtn = document.getElementById('deleteGroupBtn');
+            if(type === 'group' && (checkIsAdmin() || currentUser === creator)) {
+                delGroupBtn.classList.remove('hidden');
+            } else {
+                delGroupBtn.classList.add('hidden');
+            }
+
+            let displayTitle = titleName;
+            if(type === 'private') {
+                displayTitle = `<span class="flex items-center"><div class="w-6 h-6 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center text-[10px] mr-2 flex-shrink-0 border border-slate-300">${titleName.charAt(0).toUpperCase()}</div> <span class="truncate">${titleName}</span></span>`;
+            } else if (type === 'group') {
+                displayTitle = `<span class="flex items-center"><i class="fa-solid fa-users-viewfinder text-indigo-500 mr-2 flex-shrink-0"></i> <span class="truncate">${titleName}</span></span>`;
+            } else {
+                displayTitle = `<span class="flex items-center"><i class="fa-solid fa-users text-sky-500 mr-2 flex-shrink-0"></i> <span class="truncate">${titleName}</span></span>`;
+            }
+            
+            document.getElementById('activeChatTitle').innerHTML = displayTitle;
+            highlightChatTab(roomId);
+            
+            document.getElementById('chatFormContainer').style.display = 'flex';
+            const btn = document.getElementById('chatSendBtn');
+            btn.disabled = false;
+
+            if(chatUnsubscribe) chatUnsubscribe(); 
+
+            const area = document.getElementById('chatMessagesArea');
+            area.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 text-sm"><i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังโหลดข้อความ...</div>';
+
+            chatUnsubscribe = db.collection("chats").doc(roomId).collection("messages")
+                .orderBy("timestamp", "asc")
+                .limit(150)
+                .onSnapshot(snap => {
+                    if(snap.empty) {
+                        area.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 text-sm">ยังไม่มีข้อความ เริ่มพูดคุยเลย!</div>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    snap.forEach(doc => {
+                        const msg = doc.data();
+                        const msgId = doc.id;
+                        const isMe = msg.sender === currentUser;
+                        const canEdit = isMe || checkIsAdmin() || (currentChatRoomType === 'group' && currentUser === currentChatRoomCreator);
+                        const contentType = analyzeMessageContent(msg.text);
+
+                        const timeStr = new Date(msg.timestamp).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+                        
+                        let actionBtns = '';
+                        // Reaction Trigger Btn
+                        actionBtns += `<button onclick="openReactionPicker(event, '${msgId}')" class="reaction-trigger-btn text-slate-400 hover:text-sky-500 mx-1 transition" title="React"><i class="fa-regular fa-face-smile"></i></button>`;
+
+                        if(canEdit) {
+                            if(contentType === 'text') {
+                                actionBtns += `<button onclick="promptEditChatMessage('${msgId}')" class="text-slate-400 hover:text-amber-500 mx-1 transition" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>`;
+                            }
+                            actionBtns += `<button onclick="promptDeleteChatMessage('${msgId}')" class="text-slate-400 hover:text-rose-500 mx-1 transition" title="ลบ"><i class="fa-solid fa-trash"></i></button>`;
+                        }
+
+                        // Determine Bubble Styling
+                        let bubbleClass = '';
+                        if (contentType === 'image') {
+                            bubbleClass = `rounded-2xl ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} text-sm chat-message-content image-only-bubble`;
+                        } else if (contentType === 'emoji') {
+                            bubbleClass = `rounded-2xl ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} chat-message-content emoji-only-bubble`;
+                        } else {
+                            bubbleClass = isMe 
+                                ? `bg-sky-500 text-white px-4 py-2 rounded-2xl rounded-tr-none shadow-sm text-sm break-words whitespace-pre-wrap chat-message-content`
+                                : `bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-2xl rounded-tl-none shadow-sm text-sm break-words whitespace-pre-wrap chat-message-content`;
+                        }
+
+                        // Reactions display logic
+                        let reactionHtml = '';
+                        if(msg.reactions && Object.keys(msg.reactions).length > 0) {
+                            const reactionCounts = {};
+                            Object.values(msg.reactions).forEach(emoji => {
+                                reactionCounts[emoji] = (reactionCounts[emoji] || 0) + 1;
+                            });
+                            
+                            Object.entries(reactionCounts).forEach(([emoji, count]) => {
+                                reactionHtml += `<div class="reaction-badge shadow-sm">${emoji} ${count > 1 ? `<span class="ml-1 text-[9px] text-slate-500 font-bold">${count}</span>` : ''}</div>`;
+                            });
+                        }
+
+                        if(isMe) {
+                            html += `
+                                <div class="flex justify-end mb-4 message-row relative">
+                                    <div class="flex flex-col items-end max-w-[85%] sm:max-w-[75%]">
+                                        <div class="${bubbleClass}">${msg.text}</div>
+                                        ${reactionHtml ? `<div class="flex flex-wrap justify-end gap-1 mt-0.5">${reactionHtml}</div>` : ''}
+                                        <div class="flex items-center mt-1">
+                                            <div class="reaction-btn-group flex">${actionBtns}</div>
+                                            <span class="text-[9px] text-slate-400 ml-1">${timeStr}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            const initial = msg.sender.charAt(0).toUpperCase();
+                            html += `
+                                <div class="flex justify-start mb-4 message-row relative">
+                                    <div class="w-8 h-8 rounded-full bg-slate-200 text-slate-600 flex items-center justify-center font-bold text-xs shadow-sm mr-2 flex-shrink-0 mt-1 border border-slate-300">
+                                        ${initial}
+                                    </div>
+                                    <div class="flex flex-col items-start max-w-[85%] sm:max-w-[75%]">
+                                        <span class="text-[10px] text-slate-500 ml-1 mb-0.5 font-medium">${msg.sender}</span>
+                                        <div class="${bubbleClass}">${msg.text}</div>
+                                        ${reactionHtml ? `<div class="flex flex-wrap justify-start gap-1 mt-0.5 ml-2">${reactionHtml}</div>` : ''}
+                                        <div class="flex items-center mt-1">
+                                            <span class="text-[9px] text-slate-400 mr-1 ml-1">${timeStr}</span>
+                                            <div class="reaction-btn-group flex">${actionBtns}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    area.innerHTML = html;
+                    area.scrollTop = area.scrollHeight; 
+                });
+                
+                setTimeout(() => {
+                    populateEmojiPicker('emojiPicker-chat', 'chatMessageInput');
+                }, 100);
+        }
+
+        // --- 💖 Reactions System 💖 ---
+        function openReactionPicker(event, msgId) {
+            const picker = document.getElementById('reactionPicker');
+            activeReactionMsgId = msgId;
+            
+            // Calculate Position relative to button clicked
+            const btnRect = event.currentTarget.getBoundingClientRect();
+            const areaRect = document.getElementById('chatMessagesArea').getBoundingClientRect();
+            
+            // Adjust position (place above the button if possible)
+            let topPos = btnRect.top - areaRect.top - 45;
+            let leftPos = btnRect.left - areaRect.left - 50; // Center approx
+            
+            if(topPos < 0) topPos = btnRect.bottom - areaRect.top + 5; // Show below if no space above
+            if(leftPos < 0) leftPos = 10;
+            
+            picker.style.top = `${topPos + document.getElementById('chatMessagesArea').scrollTop}px`;
+            picker.style.left = `${leftPos}px`;
+            
+            picker.classList.remove('hidden');
+            setTimeout(() => {
+                picker.classList.remove('opacity-0', 'scale-95');
+            }, 10);
+        }
+
+        function closeReactionPicker() {
+            const picker = document.getElementById('reactionPicker');
+            picker.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                picker.classList.add('hidden');
+                activeReactionMsgId = null;
+            }, 200);
+        }
+
+        function addReaction(emoji) {
+            if(!activeReactionMsgId || !activeChatRoomId || !currentUser) return;
+            
+            const msgRef = db.collection("chats").doc(activeChatRoomId).collection("messages").doc(activeReactionMsgId);
+            
+            // We use { username: emoji } format so a user can only have 1 reaction per message (overwrites if clicked again)
+            msgRef.set({
+                reactions: {
+                    [currentUser]: emoji
+                }
+            }, { merge: true }).then(() => {
+                closeReactionPicker();
+            });
+        }
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatMessageInput');
+            const text = input.innerHTML.trim();
+            if(!text || text === '<br>' || !activeChatRoomId || !currentUser) return;
+            
+            input.innerHTML = ''; 
+            
+            db.collection("chats").doc(activeChatRoomId).collection("messages").add({
+                sender: currentUser,
+                text: text,
+                timestamp: Date.now()
+            }).catch(e => {
+                console.error("Error sending message", e);
+                alert("ไม่สามารถส่งข้อความได้ กรุณาลองใหม่");
+            });
+        }
+
+        function promptDeleteChatMessage(msgId) {
+            showModal("ลบข้อความแชท?", "คุณต้องการลบข้อความนี้ใช่หรือไม่?", '<i class="fa-solid fa-trash text-3xl text-rose-600"></i>', 'bg-rose-100', "ลบ", "bg-rose-600 hover:bg-rose-700 shadow-rose-200", () => {
+                db.collection("chats").doc(activeChatRoomId).collection("messages").doc(msgId).delete().then(() => {
+                    closeConfirmModal();
+                });
+            });
+        }
+
+        function promptEditChatMessage(msgId) {
+            // ดึงข้อความต้นฉบับจาก Database ก่อนเพื่อความปลอดภัย (กันบั๊ก Base64 ยาวเกิน)
+            db.collection("chats").doc(activeChatRoomId).collection("messages").doc(msgId).get().then(doc => {
+                if(doc.exists) {
+                    const oldText = doc.data().text;
+                    const newText = prompt("แก้ไขข้อความ (รองรับ HTML):", oldText);
+                    if(newText !== null && newText.trim() !== "" && newText.trim() !== oldText) {
+                        db.collection("chats").doc(activeChatRoomId).collection("messages").doc(msgId).update({
+                            text: newText.trim()
+                        });
+                    }
+                }
+            });
+        }
+
+        // --- ➕ Create Custom Group Chat ➕ ---
+        function openCreateGroupModal() {
+            if(!currentUser) return;
+            
+            const modal = document.getElementById('createGroupModal');
+            const box = document.getElementById('createGroupModalBox');
+            
+            document.getElementById('groupNameInput').value = '';
+            const list = document.getElementById('groupMembersList');
+            list.innerHTML = '<div class="text-xs text-slate-400 text-center"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...</div>';
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+            }, 10);
+
+            db.collection("users").orderBy("username_lower").get().then(snap => {
+                let html = '';
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.username && data.username !== currentUser) {
+                        html += `
+                            <label class="flex items-center space-x-2 p-2 hover:bg-slate-100 rounded cursor-pointer transition">
+                                <input type="checkbox" value="${data.username}" class="group-member-cb w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500">
+                                <span class="text-sm font-medium text-slate-700">${data.username}</span>
+                            </label>
+                        `;
+                    }
+                });
+                list.innerHTML = html || '<div class="text-xs text-slate-400 text-center">ไม่มีสมาชิกอื่นๆ ในระบบ</div>';
+            });
+        }
+
+        function closeCreateGroupModal() {
+            const modal = document.getElementById('createGroupModal');
+            const box = document.getElementById('createGroupModalBox');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function submitCreateGroup() {
+            const name = document.getElementById('groupNameInput').value.trim();
+            if(!name) { alert("กรุณาตั้งชื่อกลุ่ม"); return; }
+            
+            const checkboxes = document.querySelectorAll('.group-member-cb:checked');
+            if(checkboxes.length === 0) { alert("กรุณาเลือกสมาชิกอย่างน้อย 1 คน"); return; }
+            
+            const members = Array.from(checkboxes).map(cb => cb.value);
+            members.push(currentUser); 
+
+            db.collection("group_chats").add({
+                name: name,
+                members: members,
+                createdBy: currentUser,
+                createdAt: Date.now()
+            }).then(() => {
+                closeCreateGroupModal();
+                loadChatContacts();
+            }).catch(e => {
+                alert("เกิดข้อผิดพลาดในการสร้างกลุ่ม");
+            });
+        }
+
+        function promptDeleteGroupChat() {
+            showModal("ยืนยันการลบกลุ่มแชท?", "คุณแน่ใจหรือไม่ว่าต้องการลบกลุ่มนี้? ข้อความทั้งหมดจะหายไปและไม่สามารถกู้คืนได้", '<i class="fa-solid fa-triangle-exclamation text-3xl text-rose-600"></i>', 'bg-rose-100', "ลบกลุ่มทิ้ง", "bg-rose-600 hover:bg-rose-700 shadow-rose-200", 
+                () => {
+                    const roomId = activeChatRoomId;
+                    db.collection("group_chats").doc(roomId).delete().then(() => {
+                        closeConfirmModal();
+                        activeChatRoomId = null;
+                        loadChatContacts();
+                        document.getElementById('chatMessagesArea').innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 text-sm">กรุณาเลือกผู้ติดต่อจากเมนูด้านซ้าย</div>';
+                        document.getElementById('activeChatTitle').innerText = 'เลือกห้องแชท';
+                        document.getElementById('deleteGroupBtn').classList.add('hidden');
+                        document.getElementById('chatFormContainer').style.display = 'none';
+                    });
+                }
+            );
+        }
+
 
         // --- 📊 Admin Dashboard (Smart Estimation) 📊 ---
         function openAdminDashboard() {
@@ -678,6 +1304,7 @@
             const commentAvatar = document.getElementById('commentUserAvatar');
             const changeCoverBtn = document.getElementById('changeCoverBtn');
             const viewMembersBtn = document.getElementById('viewMembersBtn');
+            const chatBtn = document.getElementById('chatBtn');
 
             if (currentUser) {
                 const initial = currentUser.charAt(0).toUpperCase();
@@ -691,6 +1318,8 @@
                     changeCoverBtn.classList.add('hidden'); changeCoverBtn.classList.remove('flex');
                     viewMembersBtn.classList.add('hidden'); viewMembersBtn.classList.remove('flex');
                 }
+                
+                chatBtn.classList.remove('hidden'); chatBtn.classList.add('flex');
 
                 area.innerHTML = `
                     <div class="flex items-center space-x-2 bg-slate-900/60 backdrop-blur px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-white/10 shadow-sm text-white">
@@ -710,10 +1339,11 @@
             } else {
                 changeCoverBtn.classList.add('hidden'); changeCoverBtn.classList.remove('flex');
                 viewMembersBtn.classList.add('hidden'); viewMembersBtn.classList.remove('flex');
+                chatBtn.classList.add('hidden'); chatBtn.classList.remove('flex');
 
                 area.innerHTML = `
                     <button onclick="openAuthModal('login')" class="bg-slate-800/60 hover:bg-slate-700/80 text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-xl border border-white/20 text-xs sm:text-sm font-semibold transition flex items-center backdrop-blur shadow">
-                        <i class="fa-solid fa-user mr-2"></i> เข้าสู่ระบบ
+                        <i class="fa-solid fa-user sm:mr-2"></i> <span class="hidden sm:inline">เข้าสู่ระบบ</span>
                     </button>
                 `;
                 if(commentFormArea) {
@@ -1011,8 +1641,8 @@
                                 <div class="bg-white border border-slate-300 rounded-xl overflow-visible focus-within:ring-2 focus-within:ring-sky-500 transition-all">
                                     <div class="bg-slate-50 border-b border-slate-200 px-2 py-1.5 flex items-center space-x-1 rounded-t-xl relative">
                                         <button type="button" onclick="toggleEmojiPicker('emojiPicker-reply-${c.id}')" class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center"><i class="fa-regular fa-face-smile text-xs sm:text-sm"></i></button>
-                                        <div id="emojiPicker-reply-${c.id}" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-2 z-50">
-                                            <div class="flex flex-wrap gap-1 max-h-52 overflow-y-auto custom-scrollbar" id="emoji-container-reply-${c.id}"></div>
+                                        <div id="emojiPicker-reply-${c.id}" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-72 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50">
+                                            <div class="flex flex-wrap gap-2 max-h-60 overflow-y-auto custom-scrollbar" id="emoji-container-reply-${c.id}"></div>
                                         </div>
                                         <button type="button" onclick="addCommentLink('reply-input-${c.id}')" class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center"><i class="fa-solid fa-link text-xs sm:text-sm"></i></button>
                                         <label class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer">
