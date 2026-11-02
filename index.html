@@ -2,14 +2,14 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>คลังข่าวสารและคอมมูนิตี้ออนไลน์</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
-    <!-- Google Fonts -->
+    <!-- Google Fonts: Load multiple fonts for editor -->
     <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600;700&family=Kanit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     
     <!-- Firebase SDK -->
@@ -24,11 +24,18 @@
           inlineMath: [['\\(', '\\)'], ['$', '$']],
           displayMath: [['\\[', '\\]'], ['$$', '$$']]
         },
-        svg: { fontCache: 'global' },
-        options: { ignoreHtmlClass: 'tex2jax_ignore', processHtmlClass: 'tex2jax_process' }
+        svg: {
+          fontCache: 'global'
+        },
+        options: {
+          ignoreHtmlClass: 'tex2jax_ignore',
+          processHtmlClass: 'tex2jax_process'
+        }
       };
     </script>
-    <script type="text/javascript" id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <script type="text/javascript" id="MathJax-script" async
+      src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js">
+    </script>
 
     <style>
         body { font-family: 'Prompt', sans-serif; background-color: #f8fafc; }
@@ -47,6 +54,7 @@
         .comment-input-area img { max-width: 200px; border-radius: 8px; margin-top: 8px; cursor: pointer;}
         .comment-input-area:empty:before { content: attr(placeholder); color: #94a3b8; pointer-events: none; display: block; }
         
+        /* Chat Specific Styles */
         .chat-input-area img { max-width: 180px; border-radius: 8px; margin-top: 4px; display: inline-block;}
         .chat-input-area:empty:before { content: attr(placeholder); color: #94a3b8; pointer-events: none; display: block; }
         
@@ -54,40 +62,68 @@
         .chat-message-content img:hover { opacity: 0.85; }
         .chat-message-content a { color: #bae6fd; text-decoration: underline; }
         
+        /* Image or Emoji Only Bubble */
         .image-only-bubble { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; }
         .image-only-bubble img { margin: 0 !important; border-radius: 12px; display: block; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);}
         .emoji-only-bubble { background: transparent !important; border: none !important; padding: 0 !important; box-shadow: none !important; font-size: 3rem; line-height: 1; }
 
+        /* Reaction & Message Row Styles */
         .message-row { transition: background-color 0.5s ease; border-radius: 16px; padding: 2px 8px; }
         .reaction-btn-group { opacity: 0; transition: opacity 0.2s ease; }
         .message-row:hover .reaction-btn-group { opacity: 1; }
         .reaction-badge { font-size: 0.75rem; background: #f1f5f9; border: 1px solid #e2e8f0; border-radius: 9999px; padding: 2px 6px; display: inline-flex; align-items: center; cursor: pointer; z-index: 10; position: relative; margin-top: -6px;}
         .reaction-badge:hover { background: #e2e8f0; }
+        
         .message-row .flex-col { gap: 2px; }
 
         #headerCover {
             background-size: cover;
             background-position: center;
-            min-height: 140px;
+            min-height: 150px;
             box-shadow: inset 0px 50px 100px -20px rgba(0,0,0,0.5), inset 0px -50px 100px -20px rgba(0,0,0,0.5);
             background-color: #1e293b;
         }
         .txt-shadow { text-shadow: 0px 2px 4px rgba(0,0,0,0.7); }
 
-        #toast-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display: flex; flex-direction: column; gap: 10px; }
-        .toast-notification {
-            background-color: #ffffff; border-left: 4px solid #0ea5e9;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            border-radius: 8px; padding: 12px 16px; display: flex; align-items: flex-start;
-            min-width: 250px; max-width: 320px; transform: translateX(120%);
-            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55); cursor: pointer;
+        /* Toast Notification Styles */
+        #toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
-        .toast-notification.show { transform: translateX(0); }
+        .toast-notification {
+            background-color: #ffffff;
+            border-left: 4px solid #0ea5e9;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: flex-start;
+            min-w-[250px];
+            max-width: 320px;
+            transform: translateX(120%);
+            transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            cursor: pointer;
+        }
+        .toast-notification.show {
+            transform: translateX(0);
+        }
+
         #reactionPicker { z-index: 500; }
         
+        /* MathJax adjustments */
         mjx-container[jax="SVG"][display="true"] {
-            margin: 1em 0; padding: 0.5em; background-color: #f8fafc;
-            border-radius: 0.5rem; border: 1px solid #e2e8f0; overflow-x: auto; overflow-y: hidden;
+            margin: 1em 0;
+            padding: 0.5em;
+            background-color: #f8fafc;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0;
+            overflow-x: auto;
+            overflow-y: hidden;
         }
     </style>
 </head>
@@ -95,98 +131,90 @@
 
     <!-- Header & Tabs -->
     <header id="headerCover" class="relative z-20 flex-shrink-0 transition-all duration-500 flex flex-col justify-between">
-        <div class="max-w-full mx-auto px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between w-full">
-            
-            <!-- โลโก้ และชื่อเว็บ คลิกเพื่อกลับหน้าแรก -->
-            <div class="flex items-center space-x-2 sm:space-x-3 text-white txt-shadow cursor-pointer hover:opacity-90 transition flex-shrink pr-2" onclick="setCategory('ทั้งหมด')">
-                <div class="p-1.5 sm:p-2 bg-sky-500/80 rounded-lg shadow-md flex-shrink-0">
-                    <i class="fa-solid fa-globe text-lg sm:text-xl text-white"></i>
+        <div class="max-w-full mx-auto px-6 py-4 flex items-center justify-between w-full">
+            <div class="flex items-center space-x-3 text-white txt-shadow">
+                <div class="p-2 bg-sky-500/80 rounded-lg shadow-md">
+                    <i class="fa-solid fa-globe text-xl text-white"></i>
                 </div>
-                <div class="min-w-0">
-                    <h1 class="text-[13px] sm:text-lg md:text-xl font-bold tracking-tight leading-none mb-0.5 sm:mb-1 truncate w-full">คลังข่าวสาร พูดคุยแลกเปลี่ยนความคิดเห็น</h1>
-                    <p class="text-[8px] sm:text-[10px] md:text-[11px] uppercase tracking-widest text-sky-100 truncate w-full">Community & Knowledge Base</p>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-bold tracking-tight leading-none mb-1">คลังข่าวสาร พูดคุยแลกเปลี่ยนความคิดเห็น</h1>
+                    <p class="text-[10px] sm:text-[11px] uppercase tracking-widest text-sky-100">Community & Knowledge Base</p>
                 </div>
             </div>
             
-            <div class="flex items-center space-x-1.5 sm:space-x-3 flex-shrink-0">
-                <button id="viewMembersBtn" onclick="openAdminDashboard()" class="hidden bg-indigo-500/80 hover:bg-indigo-600/90 text-white text-[11px] sm:text-xs px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg backdrop-blur-sm transition items-center shadow border border-indigo-400/50">
-                    <i class="fa-solid fa-chart-pie sm:mr-1.5"></i> <span class="hidden sm:inline">แดชบอร์ด</span>
+            <div class="flex items-center space-x-2 sm:space-x-3">
+                <button id="viewMembersBtn" onclick="openAdminDashboard()" class="hidden bg-indigo-500/80 hover:bg-indigo-600/90 text-white text-[11px] sm:text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition items-center shadow border border-indigo-400/50">
+                    <i class="fa-solid fa-chart-pie sm:mr-1.5"></i> <span class="hidden sm:inline">แดชบอร์ด Admin</span>
                 </button>
 
-                <label id="changeCoverBtn" class="hidden cursor-pointer bg-slate-800/60 hover:bg-slate-700/80 text-white text-[11px] sm:text-xs px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg backdrop-blur-sm transition items-center shadow border border-white/20">
+                <label id="changeCoverBtn" class="hidden cursor-pointer bg-slate-800/60 hover:bg-slate-700/80 text-white text-[11px] sm:text-xs px-3 py-2 rounded-lg backdrop-blur-sm transition items-center shadow border border-white/20">
                     <i class="fa-solid fa-image sm:mr-1.5"></i> <span class="hidden sm:inline">เปลี่ยนปก</span>
                     <input type="file" id="coverUpload" accept="image/*" class="hidden" onchange="changeCover(this)">
                 </label>
 
-                <button id="chatBtn" onclick="openChatModal()" class="hidden bg-sky-500 hover:bg-sky-600 text-white text-[11px] sm:text-sm font-semibold px-2.5 sm:px-3 py-1.5 sm:py-2 rounded-lg transition shadow-md items-center border border-sky-400">
+                <button id="chatBtn" onclick="openChatModal()" class="hidden bg-sky-500 hover:bg-sky-600 text-white text-xs sm:text-sm font-semibold px-3 py-2 rounded-lg transition shadow-md items-center border border-sky-400">
                     <i class="fa-solid fa-comments sm:mr-1.5"></i> <span class="hidden sm:inline">แชท</span>
                 </button>
 
-                <!-- ปุ่มสร้างโพสต์ (เห็นทุกคน ถ้าล็อกอินแล้วสร้างได้ ถ้ายังจะเด้งให้ล็อกอิน) -->
-                <button onclick="showCreatePost()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-[11px] sm:text-sm font-semibold px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-lg transition shadow-md flex items-center border border-emerald-400">
+                <button onclick="showCreatePost()" class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs sm:text-sm font-semibold px-4 py-2 rounded-lg transition shadow-md flex items-center border border-emerald-400">
                     <i class="fa-solid fa-pen-to-square sm:mr-1.5"></i> <span class="hidden sm:inline">สร้างโพสต์</span>
                 </button>
 
-                <div id="userStatusArea" class="flex items-center ml-1 sm:ml-0">
+                <div id="userStatusArea" class="flex items-center">
                     <span class="text-xs text-white/80">กำลังโหลด...</span>
                 </div>
             </div>
         </div>
 
-        <div class="px-3 sm:px-6 w-full flex items-end mt-auto">
-            <div class="flex space-x-3 sm:space-x-4 overflow-x-auto custom-scrollbar px-1 sm:px-2 w-full max-w-4xl pb-1">
-                <button onclick="setCategory('ทั้งหมด')" id="tab-ทั้งหมด" class="tab-btn pb-2 text-xs sm:text-sm font-bold text-white txt-shadow border-b-2 border-sky-400 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-house w-4 mr-1.5"></i> หน้าแรก</button>
-                <button onclick="setCategory('งาน')" id="tab-งาน" class="tab-btn pb-2 text-xs sm:text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-briefcase w-4 mr-1.5"></i> งาน</button>
-                <button onclick="setCategory('การเรียนรู้')" id="tab-การเรียนรู้" class="tab-btn pb-2 text-xs sm:text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-graduation-cap w-4 mr-1.5"></i> การเรียนรู้</button>
-                <button onclick="setCategory('ข่าวสาร')" id="tab-ข่าวสาร" class="tab-btn pb-2 text-xs sm:text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-user w-4 mr-1.5"></i> ข่าวสาร</button>
-                <button onclick="setCategory('ไอเดีย')" id="tab-ไอเดีย" class="tab-btn pb-2 text-xs sm:text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-lightbulb w-4 mr-1.5"></i> ไอเดีย</button>
-                <button onclick="setCategory('การเงิน')" id="tab-การเงิน" class="tab-btn pb-2 text-xs sm:text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-sack-dollar w-4 mr-1.5"></i> การเงิน</button>
-                <button onclick="setCategory('อื่นๆ')" id="tab-อื่นๆ" class="tab-btn pb-2 text-xs sm:text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-folder-open w-4 mr-1.5"></i> อื่นๆ</button>
+        <div class="px-6 w-full flex items-end mt-auto">
+            <div class="flex space-x-4 overflow-x-auto custom-scrollbar px-2 w-full max-w-4xl pb-1">
+                <button onclick="setCategory('ทั้งหมด')" id="tab-ทั้งหมด" class="tab-btn pb-2 text-sm font-bold text-white txt-shadow border-b-2 border-sky-400 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-house w-4 mr-1.5"></i> หน้าแรก</button>
+                <button onclick="setCategory('งาน')" id="tab-งาน" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-briefcase w-4 mr-1.5"></i> งาน</button>
+                <button onclick="setCategory('การเรียนรู้')" id="tab-การเรียนรู้" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-graduation-cap w-4 mr-1.5"></i> การเรียนรู้</button>
+                <button onclick="setCategory('ข่าวสาร')" id="tab-ข่าวสาร" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-user w-4 mr-1.5"></i> ข่าวสาร</button>
+                <button onclick="setCategory('ไอเดีย')" id="tab-ไอเดีย" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-lightbulb w-4 mr-1.5"></i> ไอเดีย</button>
+                <button onclick="setCategory('การเงิน')" id="tab-การเงิน" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-sack-dollar w-4 mr-1.5"></i> การเงิน</button>
+                <button onclick="setCategory('อื่นๆ')" id="tab-อื่นๆ" class="tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all"><i class="fa-solid fa-folder-open w-4 mr-1.5"></i> อื่นๆ</button>
             </div>
         </div>
     </header>
 
     <!-- Main Content Area -->
-    <div class="flex flex-1 overflow-hidden relative">
+    <div class="flex flex-1 overflow-hidden">
         
-        <!-- Sidebar Content: แถบรายการโพสต์ (แสดงในมือถือเมื่อยังไม่ได้เลือกบทความ) -->
-        <aside id="sidebarContent" class="w-full md:w-[280px] bg-white border-r border-slate-200 flex flex-col z-10 flex-shrink-0 shadow-sm md:flex transition-all">
+        <aside class="w-[280px] bg-white border-r border-slate-200 flex flex-col z-10 flex-shrink-0 shadow-sm">
             <div class="px-5 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                 <h2 class="text-sm font-bold text-slate-800">ฟีดบทความล่าสุด</h2>
                 <span id="postCount" class="bg-sky-100 text-sky-700 text-[11px] font-bold px-2 py-0.5 rounded-full">0</span>
             </div>
+            <!-- Modified Post List Container -->
             <div id="postList" class="flex-1 overflow-y-auto custom-scrollbar bg-white p-2 space-y-1"></div>
         </aside>
 
-        <!-- Main Area: พื้นที่เนื้อหาหลัก (แสดงในมือถือเมื่อเลือกบทความ) -->
-        <main id="mainArea" class="hidden md:flex flex-1 bg-slate-50/50 relative flex-col h-full w-full overflow-hidden transition-all">
-            <div id="mainContent" class="flex-1 overflow-y-auto custom-scrollbar p-3 sm:p-6 md:p-8">
+        <main class="flex-1 bg-slate-50/50 relative flex flex-col h-full">
+            <div id="mainContent" class="flex-1 overflow-y-auto custom-scrollbar p-6 sm:p-8">
                 
                 <div id="welcomeScreen" class="h-full flex flex-col items-center justify-center text-slate-400">
-                    <div class="w-20 h-20 sm:w-28 sm:h-28 bg-white rounded-full flex items-center justify-center mb-5 border border-slate-100 shadow-sm">
-                        <i class="fa-regular fa-newspaper text-3xl sm:text-5xl text-slate-300"></i>
+                    <div class="w-24 h-24 sm:w-28 sm:h-28 bg-white rounded-full flex items-center justify-center mb-5 border border-slate-100 shadow-sm">
+                        <i class="fa-regular fa-newspaper text-4xl sm:text-5xl text-slate-300"></i>
                     </div>
-                    <h2 class="text-lg sm:text-2xl font-bold text-slate-600 mb-2">ยินดีต้อนรับสู่คอมมูนิตี้</h2>
-                    <p class="text-[11px] sm:text-sm text-center px-4">เลือกบทความเพื่ออ่านข่าวสาร หรือกด "สร้างโพสต์" เพื่อแบ่งปันเรื่องราวของคุณ</p>
+                    <h2 class="text-xl sm:text-2xl font-bold text-slate-600 mb-2">ยินดีต้อนรับสู่คอมมูนิตี้</h2>
+                    <p class="text-xs sm:text-sm text-center px-4">เลือกบทความด้านซ้ายเพื่ออ่านข่าวสาร หรือกด "สร้างโพสต์" เพื่อแบ่งปันเรื่องราวของคุณ</p>
                 </div>
 
-                <div id="readScreen" class="hidden max-w-4xl mx-auto h-full flex flex-col bg-white p-4 sm:p-8 rounded-2xl shadow-sm border border-slate-100">
+                <div id="readScreen" class="hidden max-w-4xl mx-auto h-full flex flex-col bg-white p-8 rounded-2xl shadow-sm border border-slate-100">
                     <div class="flex-shrink-0">
-                        <div class="flex justify-between items-start mb-4 gap-3">
-                            <div class="flex items-start gap-2 sm:gap-3 flex-1">
-                                <!-- ปุ่มย้อนกลับ (เฉพาะมือถือ) -->
-                                <button onclick="showSidebarOnMobile()" class="md:hidden text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg flex-shrink-0 transition flex items-center justify-center mt-1"><i class="fa-solid fa-arrow-left"></i></button>
-                                <h2 id="readTitle" class="text-xl sm:text-2xl md:text-3xl font-bold text-slate-800 leading-tight"></h2>
-                            </div>
-                            <div id="postActions" class="flex space-x-2 hidden flex-shrink-0">
-                                <button onclick="editPost()" class="bg-amber-100 text-amber-700 hover:bg-amber-200 px-2 sm:px-3 py-1.5 rounded text-[11px] sm:text-sm font-semibold transition"><i class="fa-solid fa-pen sm:mr-1"></i> <span class="hidden sm:inline">แก้ไข</span></button>
-                                <button onclick="promptDeletePost()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 px-2 sm:px-3 py-1.5 rounded text-[11px] sm:text-sm font-semibold transition"><i class="fa-solid fa-trash sm:mr-1"></i> <span class="hidden sm:inline">ลบ</span></button>
+                        <div class="flex justify-between items-start mb-4">
+                            <h2 id="readTitle" class="text-2xl sm:text-3xl font-bold text-slate-800 leading-tight"></h2>
+                            <div id="postActions" class="flex space-x-2 hidden">
+                                <button onclick="editPost()" class="bg-amber-100 text-amber-700 hover:bg-amber-200 px-3 py-1.5 rounded text-xs sm:text-sm font-semibold transition"><i class="fa-solid fa-pen mr-1"></i> แก้ไข</button>
+                                <button onclick="promptDeletePost()" class="bg-rose-100 text-rose-700 hover:bg-rose-200 px-3 py-1.5 rounded text-xs sm:text-sm font-semibold transition"><i class="fa-solid fa-trash mr-1"></i> ลบ</button>
                             </div>
                         </div>
-                        <div class="flex flex-wrap items-center gap-2 sm:gap-4 text-[11px] sm:text-xs text-slate-500 mb-6 pb-4 border-b border-slate-100">
+                        <div class="flex items-center space-x-4 text-xs text-slate-500 mb-6 pb-4 border-b border-slate-100">
                             <span id="readAuthorContainer" class="flex items-center"></span>
                             <span class="flex items-center"><i class="fa-regular fa-clock mr-1.5 text-slate-400"></i> <span id="readDate"></span></span>
-                            <span id="readCategory" class="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-md font-medium border border-slate-200 mt-1 sm:mt-0"></span>
+                            <span id="readCategory" class="bg-slate-100 text-slate-600 px-2.5 py-0.5 rounded-md font-medium border border-slate-200"></span>
                         </div>
                     </div>
                     
@@ -197,47 +225,41 @@
                         
                         <div id="commentList" class="space-y-6 mb-6 flex-1 overflow-y-auto custom-scrollbar pr-2"></div>
 
-                        <!-- ฟอร์มแสดงความคิดเห็น (คนล็อกอินเห็น) -->
-                        <div id="commentFormArea" class="mt-auto bg-slate-50 p-3 sm:p-5 rounded-2xl border border-slate-200 flex-shrink-0 shadow-sm hidden">
-                            <div class="flex items-start space-x-2 sm:space-x-3">
+                        <div id="commentFormArea" class="mt-auto bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 flex-shrink-0 shadow-sm hidden">
+                            <div class="flex items-start space-x-3">
                                 <div id="commentUserAvatarContainer" class="flex-shrink-0"></div>
                                 <div class="flex-1 relative bg-white border border-slate-300 rounded-xl overflow-visible flex flex-col focus-within:ring-2 focus-within:ring-sky-500 focus-within:border-sky-500 transition-all">
-                                    <div class="bg-slate-50 border-b border-slate-200 px-2 sm:px-3 py-2 flex items-center space-x-1 sm:space-x-2 rounded-t-xl relative">
-                                        <button type="button" onclick="toggleEmojiPicker('emojiPicker-main')" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-regular fa-face-smile text-sm sm:text-lg"></i></button>
+                                    <div class="bg-slate-50 border-b border-slate-200 px-3 py-2 flex items-center space-x-2 rounded-t-xl relative">
+                                        <button type="button" onclick="toggleEmojiPicker('emojiPicker-main')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-regular fa-face-smile text-base sm:text-lg"></i></button>
                                         <div id="emojiPicker-main" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-64 bg-white border border-slate-200 rounded-xl shadow-xl p-2 z-50">
                                             <div class="flex flex-wrap gap-1 max-h-52 overflow-y-auto custom-scrollbar" id="emoji-container-main"></div>
                                         </div>
-                                        <button type="button" onclick="addCommentLink('commentInput')" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-solid fa-link text-sm sm:text-base"></i></button>
-                                        <label class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer transition">
-                                            <i class="fa-regular fa-image text-sm sm:text-base"></i>
+                                        <button type="button" onclick="addCommentLink('commentInput')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition"><i class="fa-solid fa-link"></i></button>
+                                        <label class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer transition">
+                                            <i class="fa-regular fa-image"></i>
                                             <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'commentInput')">
                                         </label>
                                     </div>
-                                    <div id="commentInput" class="comment-input-area p-3 text-sm text-slate-800 custom-scrollbar overflow-y-auto min-h-[60px] sm:min-h-[80px] outline-none tex2jax_process" contenteditable="true" placeholder="แสดงความคิดเห็นของคุณ..."></div>
-                                    <div class="px-3 py-2 bg-white rounded-b-xl flex flex-col sm:flex-row sm:justify-between items-end sm:items-center border-t border-slate-100 gap-2 sm:gap-0">
-                                        <span class="text-[10px] sm:text-xs text-slate-400 w-full sm:w-auto text-left">กรุณาสุภาพในการแสดงความคิดเห็น</span>
-                                        <button onclick="addComment()" class="w-full sm:w-auto bg-sky-600 hover:bg-sky-700 text-white px-4 sm:px-5 py-2 rounded-lg text-xs sm:text-sm font-bold transition shadow-sm">ส่งข้อความ</button>
+                                    <div id="commentInput" class="comment-input-area p-3 text-sm text-slate-800 custom-scrollbar overflow-y-auto min-h-[80px] outline-none tex2jax_process" contenteditable="true" placeholder="แสดงความคิดเห็นของคุณ... (วางรูปภาพ หรือลิงก์ได้เลย)"></div>
+                                    <div class="px-3 py-2 bg-white rounded-b-xl flex justify-between items-center border-t border-slate-100">
+                                        <span class="text-[10px] sm:text-xs text-slate-400">กรุณาสุภาพในการแสดงความคิดเห็น</span>
+                                        <button onclick="addComment()" class="bg-sky-600 hover:bg-sky-700 text-white px-4 sm:px-5 py-1.5 sm:py-2 rounded-lg text-xs sm:text-sm font-bold transition shadow-sm">ส่งข้อความ</button>
                                     </div>
                                 </div>
                             </div>
                         </div>
                         
-                        <!-- ข้อความเตือนให้ล็อกอินสำหรับคนไม่ได้ล็อกอิน (Guest View) -->
                         <div id="loginToCommentMsg" class="mt-auto bg-slate-50 p-6 rounded-2xl border border-slate-200 text-center shadow-sm">
                             <p class="text-sm font-medium text-slate-600 mb-3">กรุณาเข้าสู่ระบบเพื่อแสดงความคิดเห็น</p>
-                            <button onclick="openAuthModal('login')" class="bg-sky-100 hover:bg-sky-200 text-sky-700 px-6 py-2 rounded-lg text-sm font-bold transition border border-sky-200 shadow-sm"><i class="fa-solid fa-user mr-1.5"></i> เข้าสู่ระบบ / สมัครสมาชิก</button>
+                            <button onclick="openAuthModal('login')" class="bg-sky-100 hover:bg-sky-200 text-sky-700 px-6 py-2 rounded-lg text-sm font-bold transition border border-sky-200">เข้าสู่ระบบ / สมัครสมาชิก</button>
                         </div>
                     </div>
                 </div>
 
-                <div id="editorScreen" class="hidden max-w-4xl mx-auto pb-10 bg-white p-4 sm:p-8 rounded-2xl shadow-sm border border-slate-100">
-                    <div class="flex justify-between items-center mb-6 border-b border-slate-100 pb-4">
-                        <div class="flex items-center gap-3">
-                            <!-- ปุ่มย้อนกลับ (เฉพาะมือถือ) -->
-                            <button type="button" onclick="closeEditor()" class="md:hidden text-slate-500 hover:text-slate-700 bg-slate-100 hover:bg-slate-200 px-2.5 py-1.5 rounded-lg flex-shrink-0 transition flex items-center justify-center"><i class="fa-solid fa-arrow-left"></i></button>
-                            <h2 id="editorScreenTitle" class="text-lg sm:text-2xl font-bold text-slate-800">สร้างข่าวสาร/โพสต์ใหม่</h2>
-                        </div>
-                        <button onclick="closeEditor()" class="hidden md:block text-slate-400 hover:text-slate-600"><i class="fa-solid fa-times text-xl"></i></button>
+                <div id="editorScreen" class="hidden max-w-4xl mx-auto pb-10">
+                    <div class="flex justify-between items-center mb-6">
+                        <h2 id="editorScreenTitle" class="text-xl sm:text-2xl font-bold text-slate-800">สร้างข่าวสาร/โพสต์ใหม่</h2>
+                        <button onclick="closeEditor()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-times text-xl"></i></button>
                     </div>
                     
                     <div class="space-y-4">
@@ -261,9 +283,10 @@
                         
                         <!-- Rich Text Editor -->
                         <div class="border border-slate-300 rounded-xl overflow-hidden flex flex-col bg-white shadow-sm">
-                            <div class="bg-slate-50 border-b border-slate-200 px-2 sm:px-3 py-2 flex flex-wrap gap-1 items-center">
+                            <div class="bg-slate-50 border-b border-slate-200 px-3 py-2.5 flex flex-wrap gap-1.5 items-center">
                                 
-                                <select onchange="formatDoc('fontName', this.value); this.selectedIndex=0;" class="text-[10px] sm:text-xs border border-slate-300 rounded px-1 sm:px-2 py-1 sm:py-1.5 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer outline-none">
+                                <!-- Font Family -->
+                                <select onchange="formatDoc('fontName', this.value); this.selectedIndex=0;" class="text-xs border border-slate-300 rounded px-2 py-1.5 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer outline-none">
                                     <option value="">รูปแบบฟอนต์...</option>
                                     <option value="Prompt">Prompt</option>
                                     <option value="Sarabun">Sarabun</option>
@@ -272,7 +295,8 @@
                                     <option value="Tahoma">Tahoma</option>
                                 </select>
 
-                                <select onchange="formatDoc('fontSize', this.value); this.selectedIndex=0;" class="text-[10px] sm:text-xs border border-slate-300 rounded px-1 sm:px-2 py-1 sm:py-1.5 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer outline-none hidden sm:block">
+                                <!-- Font Size -->
+                                <select onchange="formatDoc('fontSize', this.value); this.selectedIndex=0;" class="text-xs border border-slate-300 rounded px-2 py-1.5 text-slate-700 bg-white hover:bg-slate-50 cursor-pointer outline-none">
                                     <option value="">ขนาด...</option>
                                     <option value="1">เล็กจิ๋ว</option>
                                     <option value="2">เล็ก</option>
@@ -283,46 +307,47 @@
                                     <option value="7">ใหญ่สุด</option>
                                 </select>
 
-                                <div class="relative flex items-center border border-slate-300 rounded bg-white px-1 sm:px-1.5 h-[26px] sm:h-[30px] hover:bg-slate-50">
-                                    <i class="fa-solid fa-palette text-[10px] sm:text-[11px] text-slate-500 mr-1 sm:mr-1.5"></i>
-                                    <input type="color" onchange="formatDoc('foreColor', this.value)" class="w-3 h-4 sm:w-4 sm:h-5 p-0 border-0 bg-transparent cursor-pointer" title="สีข้อความ">
+                                <!-- Text Color -->
+                                <div class="relative flex items-center border border-slate-300 rounded bg-white px-1.5 h-[30px] hover:bg-slate-50">
+                                    <i class="fa-solid fa-palette text-[11px] text-slate-500 mr-1.5"></i>
+                                    <input type="color" onchange="formatDoc('foreColor', this.value)" class="w-4 h-5 p-0 border-0 bg-transparent cursor-pointer" title="สีข้อความ">
                                 </div>
 
-                                <div class="w-px h-4 sm:h-5 bg-slate-300 mx-0.5 sm:mx-1"></div>
+                                <div class="w-px h-5 bg-slate-300 mx-1"></div>
 
-                                <button type="button" onclick="formatDoc('bold')" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center font-bold transition text-xs sm:text-base"><i class="fa-solid fa-bold"></i></button>
-                                <button type="button" onclick="formatDoc('italic')" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center italic transition text-xs sm:text-base"><i class="fa-solid fa-italic"></i></button>
-                                <button type="button" onclick="formatDoc('underline')" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center underline transition text-xs sm:text-base"><i class="fa-solid fa-underline"></i></button>
-                                <button type="button" onclick="formatDoc('strikeThrough')" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center line-through transition text-xs sm:text-base hidden sm:flex"><i class="fa-solid fa-strikethrough"></i></button>
+                                <button type="button" onclick="formatDoc('bold')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center font-bold transition" title="ตัวหนา"><i class="fa-solid fa-bold"></i></button>
+                                <button type="button" onclick="formatDoc('italic')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center italic transition" title="ตัวเอียง"><i class="fa-solid fa-italic"></i></button>
+                                <button type="button" onclick="formatDoc('underline')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center underline transition" title="ขีดเส้นใต้"><i class="fa-solid fa-underline"></i></button>
+                                <button type="button" onclick="formatDoc('strikeThrough')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center line-through transition" title="ขีดฆ่า"><i class="fa-solid fa-strikethrough"></i></button>
                                 
-                                <div class="w-px h-4 sm:h-5 bg-slate-300 mx-0.5 sm:mx-1"></div>
+                                <div class="w-px h-5 bg-slate-300 mx-1"></div>
 
-                                <button type="button" onclick="formatDoc('justifyLeft')" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center transition text-xs sm:text-base"><i class="fa-solid fa-align-left"></i></button>
-                                <button type="button" onclick="formatDoc('justifyCenter')" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center transition text-xs sm:text-base"><i class="fa-solid fa-align-center"></i></button>
-                                <button type="button" onclick="formatDoc('justifyRight')" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center transition text-xs sm:text-base hidden sm:flex"><i class="fa-solid fa-align-right"></i></button>
+                                <button type="button" onclick="formatDoc('justifyLeft')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center transition" title="ชิดซ้าย"><i class="fa-solid fa-align-left"></i></button>
+                                <button type="button" onclick="formatDoc('justifyCenter')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center transition" title="กึ่งกลาง"><i class="fa-solid fa-align-center"></i></button>
+                                <button type="button" onclick="formatDoc('justifyRight')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center transition" title="ชิดขวา"><i class="fa-solid fa-align-right"></i></button>
                                 
-                                <div class="w-px h-4 sm:h-5 bg-slate-300 mx-0.5 sm:mx-1 hidden sm:block"></div>
+                                <div class="w-px h-5 bg-slate-300 mx-1"></div>
 
-                                <button type="button" onclick="formatDoc('insertUnorderedList')" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center transition text-xs sm:text-base"><i class="fa-solid fa-list-ul"></i></button>
-                                <button type="button" onclick="formatDoc('insertOrderedList')" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center transition text-xs sm:text-base"><i class="fa-solid fa-list-ol"></i></button>
+                                <button type="button" onclick="formatDoc('insertUnorderedList')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center transition" title="รายการแบบจุด"><i class="fa-solid fa-list-ul"></i></button>
+                                <button type="button" onclick="formatDoc('insertOrderedList')" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center transition" title="รายการแบบตัวเลข"><i class="fa-solid fa-list-ol"></i></button>
 
-                                <div class="w-px h-4 sm:h-5 bg-slate-300 mx-0.5 sm:mx-1"></div>
+                                <div class="w-px h-5 bg-slate-300 mx-1"></div>
 
-                                <button type="button" onclick="addLink()" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center transition text-xs sm:text-base"><i class="fa-solid fa-link"></i></button>
-                                <label class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center cursor-pointer transition text-xs sm:text-base">
+                                <button type="button" onclick="addLink()" class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center transition" title="แทรกลิงก์"><i class="fa-solid fa-link"></i></button>
+                                <label class="w-8 h-8 rounded hover:bg-slate-200 text-slate-700 flex justify-center items-center cursor-pointer transition" title="แทรกรูปภาพ (ระบบจะบีบอัดให้อัตโนมัติ)">
                                     <i class="fa-regular fa-image"></i>
                                     <input type="file" accept="image/*" class="hidden" onchange="insertPostImage(this)">
                                 </label>
 
-                                <div class="w-px h-4 sm:h-5 bg-slate-300 mx-0.5 sm:mx-1 hidden sm:block"></div>
-                                <button type="button" onclick="formatDoc('removeFormat')" class="w-6 h-6 sm:w-8 sm:h-8 rounded hover:bg-rose-100 text-rose-500 hidden sm:flex justify-center items-center transition text-xs sm:text-base" title="ล้างการจัดรูปแบบ"><i class="fa-solid fa-eraser"></i></button>
+                                <div class="w-px h-5 bg-slate-300 mx-1"></div>
+                                <button type="button" onclick="formatDoc('removeFormat')" class="w-8 h-8 rounded hover:bg-rose-100 text-rose-500 flex justify-center items-center transition" title="ล้างการจัดรูปแบบ"><i class="fa-solid fa-eraser"></i></button>
                             </div>
-                            <div id="postContent" class="editor-content p-4 sm:p-6 text-sm sm:text-base text-slate-800 custom-scrollbar overflow-y-auto h-[250px] sm:h-[400px] tex2jax_process" contenteditable="true" placeholder="เขียนเนื้อหาบทความของคุณที่นี่... สามารถวางภาพ ลิงก์ หรือจัดรูปแบบได้ตามต้องการ&#10;&#10;เคล็ดลับ: สามารถพิมพ์สมการคณิตศาสตร์ด้วย LaTeX ได้ เช่น \( x^2 \) หรือ $$ a = b $$"></div>
+                            <div id="postContent" class="editor-content p-6 text-sm sm:text-base text-slate-800 custom-scrollbar overflow-y-auto h-[400px] tex2jax_process" contenteditable="true" placeholder="เขียนเนื้อหาบทความของคุณที่นี่... สามารถวางภาพ ลิงก์ หรือจัดรูปแบบได้ตามต้องการ&#10;&#10;เคล็ดลับ: สามารถพิมพ์สมการคณิตศาสตร์ด้วย LaTeX ได้ เช่น \( x^2 \) หรือ $$ a = b $$"></div>
                         </div>
 
                         <div class="flex justify-end pt-4 space-x-3">
-                            <button onclick="closeEditor()" class="px-4 sm:px-5 py-2 sm:py-2.5 rounded-lg text-xs sm:text-sm font-semibold text-slate-600 hover:bg-slate-200 transition">ยกเลิก</button>
-                            <button onclick="savePost()" class="px-5 sm:px-6 py-2 sm:py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-xs sm:text-sm font-bold shadow-md transition flex items-center"><i class="fa-solid fa-paper-plane mr-2"></i> โพสต์บทความ</button>
+                            <button onclick="closeEditor()" class="px-5 py-2.5 rounded-lg text-sm font-semibold text-slate-600 hover:bg-slate-200 transition">ยกเลิก</button>
+                            <button onclick="savePost()" class="px-6 py-2.5 bg-sky-600 hover:bg-sky-700 text-white rounded-lg text-sm font-bold shadow-md transition flex items-center"><i class="fa-solid fa-paper-plane mr-2"></i> โพสต์บทความ</button>
                         </div>
                     </div>
                 </div>
@@ -330,56 +355,202 @@
         </main>
     </div>
 
-    <!-- ส่วนของ Modals ต่างๆ (Chat, Auth, Admin, Editor) ยังคงเดิม เพียงแค่ปรับ z-index และการแสดงผลให้ครอบคลุมมือถือ -->
-    
-    <!-- 🖼️ Image Viewer Modal (Lightbox) 🖼️ -->
-    <div id="imageViewerModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[300] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 p-4" onclick="closeImageViewer()">
-        <button class="absolute top-4 right-4 sm:right-6 text-white hover:text-slate-300 text-3xl sm:text-4xl drop-shadow-md transition"><i class="fa-solid fa-times"></i></button>
-        <img id="imageViewerSrc" class="max-w-full max-h-full object-contain rounded-lg shadow-2xl" src="" alt="View Image" onclick="event.stopPropagation();">
+    <!-- 💬 CHAT MODAL (FULL SCREEN) 💬 -->
+    <div id="chatModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[110] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 sm:p-4">
+        <div class="bg-white sm:rounded-2xl shadow-2xl w-full h-full sm:w-[95vw] sm:h-[95vh] flex flex-col sm:flex-row overflow-hidden transform scale-95 transition-transform duration-300" id="chatModalBox">
+            
+            <!-- Left Sidebar -->
+            <div class="w-full sm:w-[280px] sm:min-w-[280px] bg-slate-50 border-b sm:border-b-0 sm:border-r border-slate-200 flex flex-col h-[40%] sm:h-full flex-shrink-0">
+                <div class="p-4 border-b border-slate-200 bg-white flex justify-between items-center shadow-sm z-10">
+                    <h3 class="font-bold text-slate-800"><i class="fa-regular fa-comments text-sky-500 mr-2"></i>แชท & พูดคุย</h3>
+                    <div class="flex space-x-2">
+                        <button onclick="openCreateGroupModal()" class="text-sky-500 hover:text-sky-600 bg-sky-50 hover:bg-sky-100 w-8 h-8 rounded-full flex items-center justify-center transition" title="สร้างกลุ่มแชทใหม่"><i class="fa-solid fa-plus"></i></button>
+                        <button onclick="closeChatModal()" class="sm:hidden text-slate-400 hover:text-slate-600 w-8 h-8 flex items-center justify-center"><i class="fa-solid fa-times text-lg"></i></button>
+                    </div>
+                </div>
+                <div class="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1" id="chatContactList">
+                    <!-- Contacts loaded here -->
+                </div>
+            </div>
+            
+            <!-- Right Area (Chat Room) -->
+            <div class="flex-1 flex flex-col bg-white h-[60%] sm:h-full relative overflow-hidden">
+                <div class="p-4 border-b border-slate-200 flex justify-between items-center bg-white shadow-sm z-10">
+                    <h3 class="font-bold text-slate-800 flex items-center" id="activeChatTitle">เลือกห้องแชท</h3>
+                    <div class="flex items-center space-x-3">
+                        <button id="deleteGroupBtn" onclick="promptDeleteGroupChat()" class="hidden text-rose-500 hover:text-rose-600 text-[11px] sm:text-xs font-semibold bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition"><i class="fa-solid fa-trash-alt mr-1"></i>ลบกลุ่ม</button>
+                        <button onclick="closeChatModal()" class="hidden sm:block text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-times text-xl"></i></button>
+                    </div>
+                </div>
+                
+                <div class="flex-1 overflow-y-auto p-4 sm:p-6 bg-slate-50/50 custom-scrollbar relative" id="chatMessagesArea">
+                    <div class="flex items-center justify-center h-full text-slate-400 text-sm">กรุณาเลือกผู้ติดต่อจากเมนูด้านซ้าย</div>
+                </div>
+
+                <!-- Chat Reaction Picker Popup -->
+                <div id="reactionPicker" class="hidden absolute bg-white border border-slate-200 shadow-xl rounded-full px-2 py-1.5 flex items-center z-50 transition-all duration-200 transform scale-95 opacity-0 overflow-hidden w-72">
+                    <div id="reactionEmojiList" class="flex space-x-1 overflow-x-auto custom-scrollbar pb-1 px-1">
+                        <!-- Emoji list generated via JS -->
+                    </div>
+                </div>
+                
+                <!-- Chat Input Form -->
+                <div class="p-3 sm:p-4 bg-white border-t border-slate-200 flex flex-col relative" id="chatFormContainer" style="display:none;">
+                    
+                    <!-- Reply Preview Area -->
+                    <div id="chatReplyPreview" class="hidden mb-2 bg-slate-50 border-l-4 border-sky-500 p-2 rounded-lg flex justify-between items-center text-xs shadow-sm">
+                        <div class="truncate text-slate-600 pr-4">
+                            <i class="fa-solid fa-reply mr-1.5 text-sky-500"></i> ตอบกลับ <span class="font-bold text-sky-700" id="replyPreviewSender"></span>: 
+                            <span id="replyPreviewText" class="text-slate-500 ml-1"></span>
+                        </div>
+                        <button type="button" onclick="cancelReply()" class="text-slate-400 hover:text-rose-500 transition px-1"><i class="fa-solid fa-times text-sm"></i></button>
+                    </div>
+
+                    <div class="flex items-center space-x-2 mb-2 relative">
+                        <button type="button" onclick="toggleEmojiPicker('emojiPicker-chat')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition" title="ใส่อีโมจิ">
+                            <i class="fa-regular fa-face-smile text-sm sm:text-base"></i>
+                        </button>
+                        <div id="emojiPicker-chat" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-72 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50">
+                            <div class="flex flex-wrap gap-2 max-h-60 overflow-y-auto custom-scrollbar" id="emoji-container-chat"></div>
+                        </div>
+
+                        <button type="button" onclick="addCommentLink('chatMessageInput')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center transition" title="แทรกลิงก์">
+                            <i class="fa-solid fa-link text-sm sm:text-base"></i>
+                        </button>
+                        
+                        <label class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer transition" title="แทรกรูปภาพ">
+                            <i class="fa-regular fa-image text-sm sm:text-base"></i>
+                            <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'chatMessageInput')">
+                        </label>
+                        
+                        <span class="text-[10px] text-slate-400 ml-auto hidden sm:block">กด <b>Enter</b> เพื่อส่ง / <b>Shift+Enter</b> ขึ้นบรรทัดใหม่</span>
+                    </div>
+
+                    <div class="flex space-x-3 items-end">
+                        <div id="chatMessageInput" class="chat-input-area flex-1 px-4 py-3 bg-slate-100 border border-slate-200 rounded-2xl text-sm outline-none focus:ring-2 focus:ring-sky-500 transition overflow-y-auto max-h-[120px] custom-scrollbar tex2jax_process" contenteditable="true" placeholder="พิมพ์ข้อความ... (คลิกวางรูปภาพได้)"></div>
+                        <button type="button" id="chatSendBtn" onclick="sendChatMessage()" class="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-sky-500 hover:bg-sky-600 text-white flex items-center justify-center transition shadow-sm flex-shrink-0 disabled:opacity-50 mb-0.5">
+                            <i class="fa-solid fa-paper-plane text-sm sm:text-base"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <!-- 🔑 Authentication Modal 🔑 -->
-    <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[90vh]" id="authModalBox">
-            <div class="flex border-b border-slate-200 bg-slate-50 flex-shrink-0" id="authTabsContainer">
-                <button id="tabAuthLogin" onclick="switchAuthMode('login')" class="flex-1 py-3 sm:py-4 text-xs sm:text-sm font-bold text-sky-600 border-b-2 border-sky-500 transition-colors bg-white">เข้าสู่ระบบ</button>
-                <button id="tabAuthRegister" onclick="switchAuthMode('register')" class="flex-1 py-3 sm:py-4 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition-colors bg-slate-50 cursor-pointer">สมัครสมาชิกใหม่</button>
+    <!-- 🖼️ Image Viewer Modal (Lightbox) 🖼️ -->
+    <div id="imageViewerModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-sm z-[300] hidden flex items-center justify-center opacity-0 transition-opacity duration-300" onclick="closeImageViewer()">
+        <button class="absolute top-4 right-6 text-white hover:text-slate-300 text-4xl drop-shadow-md transition"><i class="fa-solid fa-times"></i></button>
+        <img id="imageViewerSrc" class="max-w-[95vw] max-h-[90vh] object-contain rounded-lg shadow-2xl" src="" alt="View Image" onclick="event.stopPropagation();">
+    </div>
+
+    <!-- ➕ Create Group Chat Modal ➕ -->
+    <div id="createGroupModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[130] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh]" id="createGroupModalBox">
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-users-viewfinder text-sky-500 mr-2"></i>สร้างกลุ่มแชทใหม่</h3>
+                <button onclick="closeCreateGroupModal()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-times text-xl"></i></button>
             </div>
-            <div class="p-5 sm:p-8 overflow-y-auto custom-scrollbar flex-1">
-                <div class="mb-4 sm:mb-6 text-center">
-                    <div id="authIconContainer" class="w-12 h-12 sm:w-16 sm:h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-inner">
-                        <i class="fa-solid fa-right-to-bracket text-2xl sm:text-3xl text-sky-600" id="authIcon"></i>
-                    </div>
-                    <h3 id="authTitleText" class="text-lg sm:text-xl font-bold text-slate-800">เข้าสู่ระบบ</h3>
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white">
+                <div class="mb-4">
+                    <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อกลุ่ม <span class="text-rose-500">*</span></label>
+                    <input type="text" id="groupNameInput" class="w-full px-4 py-2 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none" placeholder="ตั้งชื่อกลุ่ม...">
                 </div>
-                <form id="authForm" onsubmit="event.preventDefault(); submitAuth();" class="space-y-3 sm:space-y-4">
-                    <div id="authLoginIdGroup">
-                        <label class="block text-[11px] sm:text-xs font-semibold text-slate-600 mb-1">อีเมล หรือ ชื่อผู้ใช้งาน <span class="text-rose-500">*</span></label>
-                        <input type="text" id="authLoginId" class="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="your@email.com หรือ username">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-600 mb-2">เลือกสมาชิกที่จะเชิญเข้ากลุ่ม:</label>
+                    <div id="groupMembersList" class="border border-slate-200 rounded-lg p-3 max-h-48 overflow-y-auto custom-scrollbar bg-slate-50 space-y-2">
+                        <!-- Checkboxes injected here -->
                     </div>
-                    <div id="authEmailGroup" class="hidden">
-                        <label class="block text-[11px] sm:text-xs font-semibold text-slate-600 mb-1">อีเมล <span class="text-rose-500">*</span></label>
-                        <input type="email" id="authEmail" class="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="your@email.com">
+                </div>
+            </div>
+            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex space-x-3">
+                <button onclick="closeCreateGroupModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold py-2.5 rounded-xl transition">ยกเลิก</button>
+                <button onclick="submitCreateGroup()" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold py-2.5 rounded-xl transition shadow-md shadow-sky-200">สร้างกลุ่ม</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 📊 Admin Dashboard Modal 📊 -->
+    <div id="adminDashboardModal" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col max-h-[85vh]" id="adminDashboardBox">
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-chart-pie text-indigo-500 mr-2"></i>แดชบอร์ดผู้ดูแลระบบ</h3>
+                <button onclick="closeAdminDashboard()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            
+            <div class="p-6 overflow-y-auto custom-scrollbar flex-1 bg-white space-y-6">
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-5">
+                    <h4 class="text-sm font-bold text-slate-700 mb-3"><i class="fa-solid fa-database text-sky-500 mr-1.5"></i>ประมาณการใช้พื้นที่จัดเก็บ (Storage)</h4>
+                    <div class="w-full bg-slate-200 rounded-full h-3.5 mb-2 overflow-hidden border border-slate-300/50">
+                        <div id="adminStorageBar" class="bg-sky-500 h-3.5 rounded-full transition-all duration-700" style="width: 0%"></div>
                     </div>
-                    <div id="authUsernameGroup" class="hidden">
-                        <label class="block text-[11px] sm:text-xs font-semibold text-slate-600 mb-1">ชื่อผู้ใช้งาน (แสดงในเว็บ) <span class="text-rose-500">*</span></label>
-                        <input type="text" id="authUsername" class="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="ตั้งชื่อโปรไฟล์ของคุณ">
+                    <div class="flex justify-between text-xs font-medium text-slate-500 mb-2">
+                        <span>ใช้ไปแล้ว: <strong id="adminStatStorageUsed" class="text-slate-700">0 MB</strong></span>
+                        <span>โควตาฟรี: 1024 MB (1GB)</span>
                     </div>
-                    <div id="authPasswordGroup">
-                        <div class="flex justify-between items-center mb-1">
-                            <label class="block text-[11px] sm:text-xs font-semibold text-slate-600">รหัสผ่าน <span class="text-rose-500">*</span></label>
-                            <a href="#" id="forgotPasswordLink" onclick="switchAuthMode('forgot')" class="text-[10px] sm:text-[11px] font-semibold text-sky-600 hover:text-sky-800 transition">ลืมรหัสผ่าน?</a>
-                        </div>
-                        <input type="password" id="authPassword" class="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="••••••••">
+                </div>
+
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="bg-indigo-50 border border-indigo-100 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span class="text-3xl font-bold text-indigo-600 mb-1" id="adminStatPosts">0</span>
+                        <span class="text-xs font-bold text-indigo-500 uppercase tracking-wide">โพสต์ทั้งหมด</span>
                     </div>
-                    <div id="authConfirmPasswordGroup" class="hidden">
-                        <label class="block text-[11px] sm:text-xs font-semibold text-slate-600 mb-1">ยืนยันรหัสผ่าน <span class="text-rose-500">*</span></label>
-                        <input type="password" id="authConfirmPassword" class="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="••••••••">
+                    <div class="bg-emerald-50 border border-emerald-100 rounded-xl p-4 flex flex-col items-center justify-center text-center">
+                        <span class="text-3xl font-bold text-emerald-600 mb-1" id="adminStatComments">0</span>
+                        <span class="text-xs font-bold text-emerald-500 uppercase tracking-wide">คอมเมนต์ทั้งหมด</span>
                     </div>
-                    <div id="authErrorMsg" class="text-rose-500 text-[11px] sm:text-xs font-semibold text-center hidden bg-rose-50 p-2 rounded border border-rose-200"></div>
-                    <div class="flex space-x-2 sm:space-x-3 mt-4 sm:mt-6 pt-2">
-                        <button type="button" id="authCancelBtn" onclick="closeAuthModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold py-3 rounded-xl transition">ยกเลิก</button>
-                        <button type="submit" id="authSubmitBtn" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-xs sm:text-sm font-bold py-3 rounded-xl transition shadow-md shadow-sky-200">เข้าสู่ระบบ</button>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-bold text-slate-700 mb-3 flex justify-between items-end">
+                        <span><i class="fa-solid fa-users text-slate-400 mr-1.5"></i>รายชื่อสมาชิก</span>
+                        <span class="text-xs font-medium text-sky-600 bg-sky-100 px-2 py-0.5 rounded-full">รวม <span id="totalMembersCount">0</span> คน</span>
+                    </h4>
+                    <div class="border border-slate-200 rounded-xl overflow-hidden">
+                        <div id="membersListContainer" class="divide-y divide-slate-100 max-h-48 overflow-y-auto custom-scrollbar bg-white"></div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
+                <a href="https://console.firebase.google.com/" target="_blank" class="text-xs font-bold text-sky-600 hover:text-sky-800 transition flex items-center">
+                    เปิด Firebase Console <i class="fa-solid fa-arrow-up-right-from-square ml-1.5"></i>
+                </a>
+                <button onclick="closeAdminDashboard()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-sm font-semibold px-5 py-2.5 rounded-xl transition">ปิดหน้าต่าง</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🛠️ Edit Profile Modal 🛠️ -->
+    <div id="editProfileModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[150] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col" id="editProfileModalBox">
+            <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex justify-between items-center">
+                <h3 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-user-pen text-sky-500 mr-2"></i>ตั้งค่าโปรไฟล์</h3>
+                <button onclick="closeEditProfileModal()" class="text-slate-400 hover:text-slate-600 transition"><i class="fa-solid fa-times text-xl"></i></button>
+            </div>
+            <div class="p-6 sm:p-8">
+                <form id="editProfileForm" onsubmit="event.preventDefault(); submitEditProfile();" class="space-y-4">
+                    
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">เปลี่ยนชื่อผู้ใช้งาน (Username) <span class="text-rose-500">*</span></label>
+                        <input type="text" id="editProfileName" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all">
+                        <p class="text-[10px] text-slate-400 mt-1">ชื่อใหม่จะถูกอัปเดตในโพสต์และแชทเก่าของคุณด้วยอัตโนมัติ</p>
+                    </div>
+
+                    <div class="pt-2 border-t border-slate-100">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">เปลี่ยนรหัสผ่านใหม่ <span class="text-slate-400 font-normal">(เว้นว่างไว้ถ้าไม่ต้องการเปลี่ยน)</span></label>
+                        <input type="password" id="editProfilePassword" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="••••••••">
+                    </div>
+
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ยืนยันรหัสผ่านใหม่</label>
+                        <input type="password" id="editProfileConfirmPassword" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="••••••••">
+                    </div>
+
+                    <div id="editProfileErrorMsg" class="text-rose-500 text-xs font-semibold text-center hidden bg-rose-50 p-2 rounded border border-rose-200"></div>
+
+                    <div class="flex space-x-3 mt-6 pt-2">
+                        <button type="button" onclick="closeEditProfileModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold py-3 rounded-xl transition">ยกเลิก</button>
+                        <button type="submit" id="editProfileSubmitBtn" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold py-3 rounded-xl transition shadow-md shadow-sky-200">บันทึกการเปลี่ยนแปลง</button>
                     </div>
                 </form>
             </div>
@@ -390,13 +561,61 @@
     <div id="confirmModal" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-[250] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm overflow-hidden transform scale-95 transition-transform duration-300" id="confirmModalBox">
             <div class="p-6 text-center">
-                <div id="confirmIcon" class="w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"></div>
-                <h3 id="confirmTitle" class="text-lg sm:text-xl font-bold text-slate-800 mb-2"></h3>
-                <p id="confirmMsg" class="text-xs sm:text-sm text-slate-500 mb-6 font-medium whitespace-pre-wrap"></p>
+                <div id="confirmIcon" class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner"></div>
+                <h3 id="confirmTitle" class="text-xl font-bold text-slate-800 mb-2"></h3>
+                <p id="confirmMsg" class="text-sm text-slate-500 mb-6 font-medium"></p>
                 <div class="flex space-x-3">
-                    <button id="confirmCancelBtn" onclick="closeConfirmModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold py-2.5 rounded-xl transition">ยกเลิก</button>
-                    <button id="confirmSubmitBtn" class="flex-1 text-white text-xs sm:text-sm font-bold py-2.5 rounded-xl transition shadow-md"></button>
+                    <button id="confirmCancelBtn" onclick="closeConfirmModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold py-2.5 rounded-xl transition">ยกเลิก</button>
+                    <button id="confirmSubmitBtn" class="flex-1 text-white text-sm font-bold py-2.5 rounded-xl transition shadow-md"></button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔑 Authentication Modal 🔑 -->
+    <div id="authModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[200] hidden flex items-center justify-center opacity-0 transition-opacity duration-300 px-4">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden transform scale-95 transition-transform duration-300 flex flex-col" id="authModalBox">
+            <div class="flex border-b border-slate-200 bg-slate-50" id="authTabsContainer">
+                <button id="tabAuthLogin" onclick="switchAuthMode('login')" class="flex-1 py-4 text-sm font-bold text-sky-600 border-b-2 border-sky-500 transition-colors bg-white">เข้าสู่ระบบ</button>
+                <button id="tabAuthRegister" onclick="switchAuthMode('register')" class="flex-1 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition-colors bg-slate-50 cursor-pointer">สมัครสมาชิกใหม่</button>
+            </div>
+            <div class="p-6 sm:p-8">
+                <div class="mb-6 text-center">
+                    <div id="authIconContainer" class="w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner">
+                        <i class="fa-solid fa-right-to-bracket text-3xl text-sky-600" id="authIcon"></i>
+                    </div>
+                    <h3 id="authTitleText" class="text-xl font-bold text-slate-800">เข้าสู่ระบบ</h3>
+                </div>
+                <form id="authForm" onsubmit="event.preventDefault(); submitAuth();" class="space-y-4">
+                    <div id="authLoginIdGroup">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">อีเมล หรือ ชื่อผู้ใช้งาน <span class="text-rose-500">*</span></label>
+                        <input type="text" id="authLoginId" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="your@email.com หรือ username">
+                    </div>
+                    <div id="authEmailGroup" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">อีเมล <span class="text-rose-500">*</span></label>
+                        <input type="email" id="authEmail" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="your@email.com">
+                    </div>
+                    <div id="authUsernameGroup" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ชื่อผู้ใช้งาน (แสดงในเว็บ) <span class="text-rose-500">*</span></label>
+                        <input type="text" id="authUsername" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="ตั้งชื่อโปรไฟล์ของคุณ">
+                    </div>
+                    <div id="authPasswordGroup">
+                        <div class="flex justify-between items-center mb-1">
+                            <label class="block text-xs font-semibold text-slate-600">รหัสผ่าน <span class="text-rose-500">*</span></label>
+                            <a href="#" id="forgotPasswordLink" onclick="switchAuthMode('forgot')" class="text-[11px] font-semibold text-sky-600 hover:text-sky-800 transition">ลืมรหัสผ่าน?</a>
+                        </div>
+                        <input type="password" id="authPassword" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="••••••••">
+                    </div>
+                    <div id="authConfirmPasswordGroup" class="hidden">
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">ยืนยันรหัสผ่าน <span class="text-rose-500">*</span></label>
+                        <input type="password" id="authConfirmPassword" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-300 rounded-lg text-sm focus:ring-2 focus:ring-sky-500 outline-none transition-all" placeholder="••••••••">
+                    </div>
+                    <div id="authErrorMsg" class="text-rose-500 text-xs font-semibold text-center hidden bg-rose-50 p-2 rounded border border-rose-200"></div>
+                    <div class="flex space-x-3 mt-6 pt-2">
+                        <button type="button" id="authCancelBtn" onclick="closeAuthModal()" class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold py-3 rounded-xl transition">ยกเลิก</button>
+                        <button type="submit" id="authSubmitBtn" class="flex-1 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold py-3 rounded-xl transition shadow-md shadow-sky-200">เข้าสู่ระบบ</button>
+                    </div>
+                </form>
             </div>
         </div>
     </div>
@@ -428,46 +647,50 @@
         // Chat Variables
         let chatUnsubscribe = null;
         let activeChatRoomId = null;
+        let currentChatRoomTitle = '';
+        let currentChatRoomType = 'private'; 
+        let currentChatRoomCreator = null; 
+        let activeReactionMsgId = null;
         let isChatModalOpen = false;
+        let chatReplyTo = null; 
 
         const ADMIN_USERNAME = 'admin'; 
         
-        const emojiList = [ "👍","❤️","😂","😮","😢","🙏","😀","😃","😄","😁","😆","😅","🤣","🥲","☺️","😊","😎","🤩","🥳" ]; // ตัดให้สั้นลงตัวอย่าง
+        const emojiList = [
+            "👍","❤️","😂","😮","😢","🙏","😀","😃","😄","😁","😆","😅","🤣","🥲","☺️","😊","😇","🙂","🙃","😉","😌","😍","🥰","😘","😗","😙","😚","😋","😛","😝","😜","🤪","🤨","🧐","🤓","😎","🥸","🤩","🥳","😏","😒","😞","😔","😟","😕","🙁","☹️","😣","😖","😫","😩","🥺","😭","😮‍💨","😤","😠","😡","🤬","🤯","😳","ร้อน","🥶","😱","😨","😰","😥","😓","🤗","🤔","🫣","🤭","🫢","🫡","🤫","🫠","🤥","😶","🫥","😐","🫤","😑","😬","🙄","😯","😦","😧","😲","🥱","😴","🤤","😪","😵","😵‍💫","🫨","🤐","🥴","🤢","🤮","🤧","😷","🤒","🤕","🤑","🤠","😈","👿","👹","👺","🤡","💩","👻","💀","☠️","👽","👾","🤖","🎃","😺","😸","😹","😻","😼","😽","🙀","😿","😾","🧡","💛","💚","💙","💜","🖤","🤍","🤎","💔","❤️‍🔥","❤️‍🩹","❣️","💕","💞","💓","💗","💖","💘","💝","👎","👊","✊","🤛","🤜","🤞","✌️","🫰","🤟","🤘","👌","🤌","🤏","🫳","🫴","👈","👉","👆","👇","☝️","✋","🤚","🖐","🖖","👋","🤙","🫲","🫱","💪","🦾","🖕","✍️","🫵","👀","🔥","✨","🌟","💫","💥","💢","💦","💧","💤","💨","👂","🦻","👃","🧠","🫀","🫁","🦷","👅","👄","🫦","👶","👧","🧒","👦","👩","🧑","👨","👩‍🦱","🧑‍🦱","👨‍🦱","👩‍🦰","🧑‍🦰","👨‍🦰","👱‍♀️","👱","👱‍♂️","👩‍🦳","🧑‍🦳","👨‍🦳","👩‍🦲","🧑‍🦲","👨‍🦲","🧔‍♀️","🧔","🧔‍♂️","👵","🧓","👴","👲","👳‍♀️","👳","👳‍♂️","🧕","👮‍♀️","👮","👮‍♂️","👷‍♀️","👷","👷‍♂️","💂‍♀️","💂","💂‍♂️","🕵️‍♀️","🕵️","🕵️‍♂️","👩‍⚕️","🧑‍⚕️","👨‍⚕️","👩‍🌾","🧑‍🌾","👨‍🌾","👩‍🍳","🧑‍🍳","👨‍🍳","👩‍🎓","🧑‍🎓","👨‍🎓","👩‍🎤","🧑‍🎤","👨‍🎤","👩‍🏫","🧑‍🏫","👨‍🏫","👩‍🏭","🧑‍🏭","👨‍🏭","👩‍💻","🧑‍💻","👨‍💻","👩‍💼","🧑‍💼","👨‍💼","👩‍🔧","🧑‍🔧","👨‍🔧","👩‍🔬","🧑‍🔬","👨‍🔬","👩‍🎨","🧑‍🎨","👨‍🎨","👩‍🚒","🧑‍🚒","👨‍🚒","👩‍✈️","🧑‍✈️","👨‍✈️","👩‍🚀","🧑‍🚀","👨‍🚀","👩‍⚖️","🧑‍⚖️","👨‍⚖️","👰‍♀️","👰","👰‍♂️","🤵‍♀️","🤵","🤵‍♂️","👸","🫅","🤴","🥷","🦸‍♀️","🦸","🦸‍♂️","🦹‍♀️","🦹","🦹‍♂️","🤶","🧑‍🎄","🎅","🧙‍♀️","🧙","🧙‍♂️","🧝‍♀️","🧝","🧝‍♂️","🧛‍♀️","🧛","🧛‍♂️","🧟‍♀️","🧟","🧟‍♂️","🧞‍♀️","🧞","🧞‍♂️","🧜‍♀️","🧜","🧜‍♂️","🧚‍♀️","🧚","🧚‍♂️","👼","🤰","🫄","🫃","🤱","👩‍🍼","🧑‍🍼","👨‍🍼","🙇‍♀️","🙇","🙇‍♂️","💁‍♀️","💁","💁‍♂️","🙅‍♀️","🙅","🙅‍♂️","🙆‍♀️","🙆","🙆‍♂️","🙋‍♀️","🙋","🙋‍♂️","🧏‍♀️","🧏","🧏‍♂️","🤦‍♀️","🤦","🤦‍♂️","🤷‍♀️","🤷","🤷‍♂️","🙎‍♀️","🙎","🙎‍♂️","🙍‍♀️","🙍","🙍‍♂️","💇‍♀️","💇","💇‍♂️","💆‍♀️","💆","💆‍♂️","🧖‍♀️","🧖","🧖‍♂️","💅","🤳","💃","🕺","👯‍♀️","👯","👯‍♂️","🕴","👩‍🦽","🧑‍🦽","👨‍🦽","👩‍🦼","🧑‍🦼","👨‍🦼","🚶‍♀️","🚶","🚶‍♂️","👩‍🦯","🧑‍🦯","👨‍🦯","🧎‍♀️","🧎","🧎‍♂️","🏃‍♀️","🏃","🏃‍♂️","🧍‍♀️","🧍","🧍‍♂️","👭","🧑‍🤝‍🧑","👬","👫","👩‍❤️‍👩","💑","👨‍❤️‍👨","👩‍❤️‍💋‍👩","💏","👨‍❤️‍💋‍👨","👨‍👩‍👦","👨‍👩‍👧","👨‍👩‍👧‍👦","👨‍👩‍👦‍👦","👨‍👩‍👧‍👧","👩‍👩‍👦","👩‍👩‍👧","👩‍👩‍👧‍👦","👩‍👩‍👦‍👦","👩‍👩‍👧‍👧","👨‍👨‍👦","👨‍👨‍👧","👨‍👨‍👧‍👦","👨‍👨‍👦‍👦","👨‍👨‍👧‍👧","👩‍👦","👩‍👧","👩‍👧‍👦","👩‍👦‍👦","👩‍👧‍👧","👨‍👦","👨‍👧","👨‍👧‍👦","👨‍👦‍👦","👨‍👧‍👧","🗣","👤","👥","🫂","🎒","🧳","🌂","☂️","🧵","🪡","🪢","🧶","👓","🕶","🥽","🥼","🦺","👔","👕","👖","🧣","🧤","🧥","🧦","👗","👘","🥻","🩱","🩲","🩳","👙","👚","👛","👜","👝","🎒","👞","👟","🥾","🥿","👠","👡","🩰","👢","👑","👒","🎩","🎓","🧢","🪖","⛑","💄","💍","💼"
+        ];
 
-        function checkIsAdmin() { return currentUser && currentUser.toLowerCase() === ADMIN_USERNAME.toLowerCase(); }
-
-        // --- Responsive Mobile Helper Functions ---
-        function showMainOnMobile() {
-            document.getElementById('sidebarContent').classList.remove('flex');
-            document.getElementById('sidebarContent').classList.add('hidden', 'md:flex');
-            document.getElementById('mainArea').classList.remove('hidden');
-            document.getElementById('mainArea').classList.add('flex');
+        function checkIsAdmin() {
+            return currentUser && currentUser.toLowerCase() === ADMIN_USERNAME.toLowerCase();
         }
 
-        function showSidebarOnMobile() {
-            document.getElementById('sidebarContent').classList.remove('hidden');
-            document.getElementById('sidebarContent').classList.add('flex');
-            document.getElementById('mainArea').classList.remove('flex');
-            document.getElementById('mainArea').classList.add('hidden', 'md:flex');
-        }
-
+        // --- 🧑‍💻 Avatar Helper 🧑‍💻 ---
         function getAvatarHtml(username, containerClasses = "w-8 h-8", textClasses = "text-xs") {
             if(!username) return '';
             const initial = username.charAt(0).toUpperCase();
+            
             let userKey = Object.keys(usersMap).find(k => k.toLowerCase() === username.toLowerCase());
+            
             if(userKey && usersMap[userKey].avatar) {
                 return `<img src="${usersMap[userKey].avatar}" class="${containerClasses} rounded-full object-cover shadow-sm border border-slate-200 flex-shrink-0" alt="${username}">`;
             }
+
             let bgColor = (username === currentUser) ? "bg-sky-500" : "bg-slate-200";
             let textColor = (username === currentUser) ? "text-white" : "text-slate-600";
+
             return `<div class="${containerClasses} rounded-full ${bgColor} ${textColor} flex items-center justify-center font-bold ${textClasses} shadow-sm border border-slate-200 flex-shrink-0">${initial}</div>`;
         }
 
         function changeProfileImage(input) {
             if (!currentUserUid || !input.files[0]) return;
+            
             processAndCompressImage(input.files[0], (dataUrl) => {
-                db.collection("users").doc(currentUserUid).update({ avatar: dataUrl })
-                  .catch(err => { alert("ไม่สามารถเปลี่ยนรูปโปรไฟล์ได้ พื้นที่อาจจะเต็ม"); });
+                db.collection("users").doc(currentUserUid).update({
+                    avatar: dataUrl
+                }).catch(err => {
+                    console.error(err);
+                    alert("ไม่สามารถเปลี่ยนรูปโปรไฟล์ได้ พื้นที่อาจจะเต็ม");
+                });
             });
             input.value = '';
         }
@@ -478,6 +701,7 @@
                 if(user) {
                     currentUser = user.displayName || user.email.split('@')[0];
                     currentUserUid = user.uid;
+                    setupGlobalMessageListener(); 
                 } else {
                     currentUser = null;
                     currentUserUid = null;
@@ -488,16 +712,34 @@
 
             db.collection("users").onSnapshot(snap => {
                 usersMap = {};
-                snap.forEach(doc => { if(doc.data().username) usersMap[doc.data().username] = doc.data(); });
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.username) {
+                        usersMap[data.username] = data;
+                    }
+                });
+                
                 renderUserStatus();
                 if(currentPostId) selectPost(currentPostId, false);
+                if(isChatModalOpen) {
+                    loadChatContacts();
+                }
+                if(!document.getElementById('adminDashboardModal').classList.contains('hidden')) {
+                    openAdminDashboard();
+                }
             });
 
-            // ดึงข้อมูลโพสต์ (Guest ก็ดึงได้ถ้า Firebase Rules อนุญาต)
+            db.collection("settings").doc("general").onSnapshot(doc => {
+                if(doc.exists && doc.data().blog_cover) {
+                    document.getElementById('headerCover').style.backgroundImage = `url(${doc.data().blog_cover})`;
+                }
+            });
+
             db.collection("posts").orderBy("timestamp", "desc").onSnapshot(snap => {
                 posts = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
                 renderPostList();
                 
+                // --- 🔗 URL Setup ---
                 const urlParams = new URLSearchParams(window.location.search);
                 const postIdFromUrl = urlParams.get('post');
                 
@@ -508,6 +750,7 @@
                 }
             });
             
+            // --- 🔙 History Back Button Setup ---
             window.addEventListener('popstate', (event) => {
                 const urlParams = new URLSearchParams(window.location.search);
                 const postIdFromUrl = urlParams.get('post');
@@ -520,7 +763,23 @@
                     document.getElementById('welcomeScreen').classList.remove('hidden');
                     renderPostList();
                     document.title = "คลังข่าวสารและคอมมูนิตี้ออนไลน์";
-                    showSidebarOnMobile();
+                }
+            });
+            
+            populateEmojiPicker('emojiPicker-main', 'commentInput');
+            populateReactionPicker();
+
+            document.addEventListener('click', function(e) {
+                document.querySelectorAll('.emoji-picker').forEach(picker => {
+                    const toggleBtn = picker.previousElementSibling;
+                    if (!picker.classList.contains('hidden') && !picker.contains(e.target) && e.target !== toggleBtn && !toggleBtn.contains(e.target)) {
+                        picker.classList.add('hidden');
+                    }
+                });
+
+                const reactionPicker = document.getElementById('reactionPicker');
+                if(!reactionPicker.classList.contains('hidden') && !reactionPicker.contains(e.target) && !e.target.closest('.reaction-trigger-btn')) {
+                    closeReactionPicker();
                 }
             });
 
@@ -529,19 +788,1178 @@
                     openImageViewer(e.target.src);
                 }
             });
+
+            document.getElementById('postContent').addEventListener('paste', function(e) {
+                handleImagePaste(e);
+                setTimeout(() => {
+                    if(window.MathJax) {
+                        MathJax.typesetPromise([document.getElementById('postContent')]).catch(err => console.log(err));
+                    }
+                }, 1000);
+            });
+            
+            let typingTimer;
+            document.getElementById('postContent').addEventListener('keyup', function() {
+                clearTimeout(typingTimer);
+                typingTimer = setTimeout(() => {
+                    if(window.MathJax) {
+                        MathJax.typesetPromise([document.getElementById('postContent')]).catch(err => console.log(err));
+                    }
+                }, 1500);
+            });
+
+            document.getElementById('chatMessageInput').addEventListener('paste', handleImagePaste);
+            document.getElementById('commentInput').addEventListener('paste', handleImagePaste);
+            
+            document.getElementById('chatMessageInput').addEventListener('keydown', function(e) {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault(); 
+                    sendChatMessage();
+                }
+            });
+        }
+
+        function handleImagePaste(e) {
+            const items = (e.clipboardData || e.originalEvent.clipboardData).items;
+            let hasImage = false;
+            for (let index in items) {
+                const item = items[index];
+                if (item.kind === 'file' && item.type.includes('image/')) {
+                    const blob = item.getAsFile();
+                    const targetId = e.target.id;
+                    processAndCompressImage(blob, (dataUrl) => {
+                        document.getElementById(targetId).focus();
+                        document.execCommand('insertImage', false, dataUrl);
+                    });
+                    hasImage = true;
+                }
+            }
+            if(hasImage) e.preventDefault(); 
+        }
+
+        // --- ⚙️ Edit Profile Modal ⚙️ ---
+        function openEditProfileModal() {
+            if(!currentUser) return;
+            document.getElementById('editProfileName').value = currentUser;
+            document.getElementById('editProfilePassword').value = '';
+            document.getElementById('editProfileConfirmPassword').value = '';
+            document.getElementById('editProfileErrorMsg').classList.add('hidden');
+
+            const modal = document.getElementById('editProfileModal');
+            const box = document.getElementById('editProfileModalBox');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                document.getElementById('editProfileName').focus();
+            }, 10);
+        }
+
+        function closeEditProfileModal() {
+            const modal = document.getElementById('editProfileModal');
+            const box = document.getElementById('editProfileModalBox');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        async function submitEditProfile() {
+            const newName = document.getElementById('editProfileName').value.trim();
+            const newPass = document.getElementById('editProfilePassword').value;
+            const confirmPass = document.getElementById('editProfileConfirmPassword').value;
+            const errorEl = document.getElementById('editProfileErrorMsg');
+            const submitBtn = document.getElementById('editProfileSubmitBtn');
+            
+            const user = auth.currentUser;
+            if(!user || !newName) return;
+
+            errorEl.classList.add('hidden');
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> รอสักครู่...';
+            submitBtn.disabled = true;
+
+            try {
+                if (newName !== currentUser) {
+                    const snap = await db.collection("users").where("username_lower", "==", newName.toLowerCase()).get();
+                    if (!snap.empty) {
+                        throw new Error("ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาตั้งใหม่");
+                    }
+                    
+                    const oldName = currentUser;
+                    
+                    await user.updateProfile({ displayName: newName });
+                    
+                    await db.collection("users").doc(user.uid).update({
+                        username: newName,
+                        username_lower: newName.toLowerCase()
+                    });
+                    
+                    const groupsSnap = await db.collection("group_chats").where("members", "array-contains", oldName).get();
+                    const batch = db.batch();
+                    groupsSnap.forEach(doc => {
+                        let members = doc.data().members;
+                        let index = members.indexOf(oldName);
+                        if (index !== -1) {
+                            members[index] = newName;
+                            batch.update(doc.ref, { members: members });
+                        }
+                        if (doc.data().createdBy === oldName) {
+                            batch.update(doc.ref, { createdBy: newName });
+                        }
+                    });
+
+                    const postsSnap = await db.collection("posts").where("author", "==", oldName).get();
+                    postsSnap.forEach(doc => {
+                        batch.update(doc.ref, { author: newName });
+                    });
+
+                    await batch.commit();
+                    currentUser = newName;
+                }
+
+                if (newPass) {
+                    if (newPass !== confirmPass) throw new Error("รหัสผ่านใหม่ไม่ตรงกัน");
+                    if (newPass.length < 6) throw new Error("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+                    await user.updatePassword(newPass);
+                }
+
+                closeEditProfileModal();
+                showModal("สำเร็จ!", "อัปเดตข้อมูลโปรไฟล์ของคุณเรียบร้อยแล้ว", '<i class="fa-solid fa-circle-check text-4xl text-emerald-600"></i>', 'bg-emerald-100', "ตกลง", "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200", () => {});
+                renderUserStatus();
+
+            } catch (error) {
+                let msg = error.message;
+                if (error.code === 'auth/requires-recent-login') {
+                    msg = "เพื่อความปลอดภัย กรุณาออกจากระบบและเข้าสู่ระบบใหม่อีกครั้งก่อนเปลี่ยนรหัสผ่าน";
+                }
+                errorEl.innerText = msg;
+                errorEl.classList.remove('hidden');
+            } finally {
+                submitBtn.innerText = 'บันทึกการเปลี่ยนแปลง';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // --- 🔔 Global Notification System 🔔 ---
+        let globalChatListeners = [];
+        let initialLoadComplete = false;
+
+        function setupGlobalMessageListener() {
+            if(!currentUser) return;
+            
+            globalChatListeners.forEach(unsub => unsub());
+            globalChatListeners = [];
+            initialLoadComplete = false;
+
+            const now = Date.now();
+
+            db.collection("users").get().then(snap => {
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.username && data.username !== currentUser) {
+                        const roomId = [currentUser, data.username].sort().join('_');
+                        const unsub = db.collection("chats").doc(roomId).collection("messages")
+                            .where("timestamp", ">=", now)
+                            .onSnapshot(msgSnap => {
+                                handleIncomingNotification(msgSnap, data.username, roomId);
+                            });
+                        globalChatListeners.push(unsub);
+                    }
+                });
+            });
+
+            const unsubGlobal = db.collection("chats").doc('global').collection("messages")
+                .where("timestamp", ">=", now)
+                .onSnapshot(msgSnap => {
+                    handleIncomingNotification(msgSnap, 'ห้องพูดคุยรวม', 'global');
+                });
+            globalChatListeners.push(unsubGlobal);
+
+            db.collection("group_chats").where("members", "array-contains", currentUser).get().then(snap => {
+                snap.forEach(doc => {
+                    const roomId = doc.id;
+                    const groupName = doc.data().name;
+                    const unsubGroup = db.collection("chats").doc(roomId).collection("messages")
+                        .where("timestamp", ">=", now)
+                        .onSnapshot(msgSnap => {
+                            handleIncomingNotification(msgSnap, groupName, roomId);
+                        });
+                    globalChatListeners.push(unsubGroup);
+                });
+            });
+
+            setTimeout(() => { initialLoadComplete = true; }, 3000);
+        }
+
+        function handleIncomingNotification(snapshot, roomName, roomId) {
+            if(!initialLoadComplete) return; 
+            
+            snapshot.docChanges().forEach(change => {
+                if (change.type === "added") {
+                    const msg = change.doc.data();
+                    if(msg.sender !== currentUser) {
+                        if(!isChatModalOpen || activeChatRoomId !== roomId) {
+                            showToastNotification(msg.sender, roomName, msg.text, roomId);
+                            playNotificationSound();
+                        }
+                    }
+                }
+            });
+        }
+
+        function playNotificationSound() {
+            notificationSound.currentTime = 0;
+            notificationSound.play().catch(e => console.log("Audio play prevented by browser", e));
+        }
+
+        function showToastNotification(sender, roomName, htmlContent, roomId) {
+            const container = document.getElementById('toast-container');
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            let previewText = tempDiv.textContent.trim();
+            if(tempDiv.getElementsByTagName('img').length > 0 && previewText === '') {
+                previewText = "ส่งรูปภาพ";
+            } else {
+                previewText = previewText.substring(0, 40) + (previewText.length > 40 ? '...' : '');
+            }
+
+            const toast = document.createElement('div');
+            toast.className = 'toast-notification flex items-start space-x-3 mb-2';
+            toast.onclick = () => {
+                openChatModal();
+                setTimeout(() => {
+                    const safeRoomId = roomId.replace(/"/g, '&quot;');
+                    document.getElementById(`chat-tab-${safeRoomId}`)?.click();
+                }, 500);
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            };
+
+            const avatarHtml = getAvatarHtml(sender, "w-8 h-8 mt-1", "text-xs");
+
+            toast.innerHTML = `
+                ${avatarHtml}
+                <div class="flex-1 overflow-hidden">
+                    <h4 class="text-sm font-bold text-slate-800 truncate">${sender} <span class="text-[10px] text-slate-400 font-normal">(${roomName})</span></h4>
+                    <p class="text-xs text-slate-600 truncate">${previewText}</p>
+                </div>
+            `;
+
+            container.appendChild(toast);
+            
+            setTimeout(() => toast.classList.add('show'), 10);
+
+            setTimeout(() => {
+                toast.classList.remove('show');
+                setTimeout(() => toast.remove(), 300);
+            }, 5000);
+        }
+
+        // --- 🖼️ Image Lightbox Viewer 🖼️ ---
+        function openImageViewer(src) {
+            document.getElementById('imageViewerSrc').src = src;
+            const modal = document.getElementById('imageViewerModal');
+            modal.classList.remove('hidden');
+            setTimeout(() => modal.classList.remove('opacity-0'), 10);
+        }
+
+        function closeImageViewer() {
+            const modal = document.getElementById('imageViewerModal');
+            modal.classList.add('opacity-0');
+            setTimeout(() => { 
+                modal.classList.add('hidden'); 
+                document.getElementById('imageViewerSrc').src = ''; 
+            }, 300);
+        }
+
+        // --- 💬 CHAT SYSTEM 💬 ---
+        function openChatModal() {
+            if(!currentUser) { openAuthModal('login'); return; }
+            
+            isChatModalOpen = true;
+            const modal = document.getElementById('chatModal');
+            const box = document.getElementById('chatModalBox');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+            }, 10);
+            
+            loadChatContacts();
+        }
+
+        function closeChatModal() {
+            isChatModalOpen = false;
+            const modal = document.getElementById('chatModal');
+            const box = document.getElementById('chatModalBox');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+            
+            if(chatUnsubscribe) chatUnsubscribe();
+            activeChatRoomId = null;
+            cancelReply();
+            closeReactionPicker();
+        }
+
+        function loadChatContacts() {
+            const list = document.getElementById('chatContactList');
+            list.innerHTML = '<div class="text-center text-xs text-slate-400 py-4"><i class="fa-solid fa-spinner fa-spin mr-1"></i>กำลังโหลด...</div>';
+            
+            const usersPromise = db.collection("users").orderBy("username_lower").get();
+            const groupsPromise = db.collection("group_chats").where("members", "array-contains", currentUser).get();
+
+            Promise.all([usersPromise, groupsPromise]).then(([usersSnap, groupsSnap]) => {
+                let html = `
+                    <div onclick="selectChatRoom('global', 'ห้องพูดคุยรวม', 'global', null)" id="chat-tab-global" class="chat-tab-item p-3 rounded-xl cursor-pointer hover:bg-slate-200 flex items-center space-x-3 transition">
+                        <div class="w-10 h-10 rounded-full bg-sky-500 text-white flex items-center justify-center font-bold shadow-sm flex-shrink-0">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div class="flex-1 overflow-hidden">
+                            <h4 class="text-sm font-bold text-slate-800 truncate">ห้องพูดคุยรวม</h4>
+                            <p class="text-[10px] text-slate-500">พูดคุยกับทุกคนในระบบ</p>
+                        </div>
+                    </div>
+                `;
+                
+                if(!groupsSnap.empty) {
+                    html += `<div class="my-2 border-t border-slate-200 w-full"></div><div class="px-3 pb-1 text-[10px] font-bold text-slate-400">แชทกลุ่มส่วนตัว</div>`;
+                    groupsSnap.forEach(doc => {
+                        const data = doc.data();
+                        const safeGroupName = data.name ? data.name.replace(/'/g, "\\'").replace(/"/g, "&quot;") : '';
+                        html += `
+                            <div onclick="selectChatRoom('${doc.id}', '${safeGroupName}', 'group', '${data.createdBy}')" id="chat-tab-${doc.id}" class="chat-tab-item p-3 rounded-xl cursor-pointer hover:bg-slate-200 flex items-center space-x-3 transition">
+                                <div class="w-10 h-10 rounded-full bg-indigo-500 text-white flex items-center justify-center font-bold shadow-sm flex-shrink-0">
+                                    <i class="fa-solid fa-users-viewfinder"></i>
+                                </div>
+                                <div class="flex-1 overflow-hidden">
+                                    <h4 class="text-sm font-bold text-slate-800 truncate">${data.name}</h4>
+                                    <p class="text-[10px] text-slate-500 truncate">${data.members.length} สมาชิก</p>
+                                </div>
+                            </div>
+                        `;
+                    });
+                }
+
+                html += `<div class="my-2 border-t border-slate-200 w-full"></div><div class="px-3 pb-1 text-[10px] font-bold text-slate-400">สมาชิกคนอื่นๆ</div>`;
+                usersSnap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.username && data.username !== currentUser) {
+                        const roomId = [currentUser, data.username].sort().join('_');
+                        
+                        const safeUsername = data.username.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                        const safeRoomId = roomId.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                        const htmlRoomId = roomId.replace(/"/g, "&quot;");
+                        
+                        const avatarHtml = getAvatarHtml(data.username, "w-10 h-10", "text-lg");
+                        html += `
+                            <div onclick="selectChatRoom('${safeRoomId}', '${safeUsername}', 'private', null)" id="chat-tab-${htmlRoomId}" class="chat-tab-item p-3 rounded-xl cursor-pointer hover:bg-slate-200 flex items-center space-x-3 transition">
+                                ${avatarHtml}
+                                <div class="flex-1 overflow-hidden">
+                                    <h4 class="text-sm font-bold text-slate-800 truncate">${data.username}</h4>
+                                    <p class="text-[10px] text-slate-500">แชทส่วนตัว</p>
+                                </div>
+                            </div>
+                        `;
+                    }
+                });
+                
+                list.innerHTML = html;
+                
+                if(!activeChatRoomId) {
+                    selectChatRoom('global', 'ห้องพูดคุยรวม', 'global', null);
+                } else {
+                    highlightChatTab(activeChatRoomId);
+                }
+            }).catch(err => {
+                list.innerHTML = '<div class="text-center text-xs text-rose-400 py-4">โหลดข้อมูลล้มเหลว</div>';
+            });
+        }
+
+        function highlightChatTab(roomId) {
+            document.querySelectorAll('.chat-tab-item').forEach(el => {
+                el.classList.remove('bg-sky-100', 'border', 'border-sky-200');
+            });
+            const htmlRoomId = roomId.replace(/"/g, "&quot;");
+            const activeTab = document.getElementById(`chat-tab-${htmlRoomId}`);
+            if(activeTab) activeTab.classList.add('bg-sky-100', 'border', 'border-sky-200');
+        }
+
+        function analyzeMessageContent(htmlContent) {
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent.replace(/<br\s*[\/]?>/gi, ''); 
+            
+            const imgs = tempDiv.getElementsByTagName('img');
+            const text = tempDiv.textContent.trim();
+            
+            if (imgs.length === 1 && text === '') return 'image';
+            
+            const emojiRegex = /^[\p{Emoji}\u200d]+$/u;
+            if (imgs.length === 0 && emojiRegex.test(text) && Array.from(text).length <= 3) return 'emoji';
+            
+            return 'text';
+        }
+
+        function getShortPreviewText(htmlContent) {
+            const type = analyzeMessageContent(htmlContent);
+            if(type === 'image') return "📷 ส่งรูปภาพ";
+            if(type === 'emoji') {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                return tempDiv.textContent.trim();
+            }
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            const text = tempDiv.textContent.trim();
+            return text.substring(0, 40) + (text.length > 40 ? '...' : '');
+        }
+
+        function selectChatRoom(roomId, titleName, type = 'private', creator = null) {
+            activeChatRoomId = roomId;
+            currentChatRoomTitle = titleName;
+            currentChatRoomType = type;
+            currentChatRoomCreator = creator;
+            closeReactionPicker();
+            cancelReply(); 
+            
+            const delGroupBtn = document.getElementById('deleteGroupBtn');
+            if(type === 'group' && (checkIsAdmin() || currentUser === creator)) {
+                delGroupBtn.classList.remove('hidden');
+            } else {
+                delGroupBtn.classList.add('hidden');
+            }
+
+            let displayTitle = titleName;
+            if(type === 'private') {
+                const avatarHtml = getAvatarHtml(titleName, "w-6 h-6", "text-[10px]");
+                displayTitle = `<span class="flex items-center">${avatarHtml} <span class="truncate ml-2">${titleName}</span></span>`;
+            } else if (type === 'group') {
+                displayTitle = `<span class="flex items-center"><i class="fa-solid fa-users-viewfinder text-indigo-500 mr-2 flex-shrink-0"></i> <span class="truncate">${titleName}</span></span>`;
+            } else {
+                displayTitle = `<span class="flex items-center"><i class="fa-solid fa-users text-sky-500 mr-2 flex-shrink-0"></i> <span class="truncate">${titleName}</span></span>`;
+            }
+            
+            document.getElementById('activeChatTitle').innerHTML = displayTitle;
+            highlightChatTab(roomId);
+            
+            document.getElementById('chatFormContainer').style.display = 'flex';
+            const btn = document.getElementById('chatSendBtn');
+            btn.disabled = false;
+
+            if(chatUnsubscribe) chatUnsubscribe(); 
+
+            const area = document.getElementById('chatMessagesArea');
+            area.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 text-sm"><i class="fa-solid fa-spinner fa-spin mr-2"></i> กำลังโหลดข้อความ...</div>';
+
+            chatUnsubscribe = db.collection("chats").doc(roomId).collection("messages")
+                .orderBy("timestamp", "asc")
+                .limit(150)
+                .onSnapshot(snap => {
+                    if(snap.empty) {
+                        area.innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 text-sm">ยังไม่มีข้อความ เริ่มพูดคุยเลย!</div>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    snap.forEach(doc => {
+                        const msg = doc.data();
+                        const msgId = doc.id;
+                        const isMe = msg.sender === currentUser;
+                        const canEdit = isMe || checkIsAdmin() || (currentChatRoomType === 'group' && currentUser === currentChatRoomCreator);
+                        const contentType = analyzeMessageContent(msg.text);
+
+                        const timeStr = new Date(msg.timestamp).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
+                        const safeText = msg.text.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                        
+                        let actionBtns = '';
+                        actionBtns += `<button onclick="openReactionPicker(event, '${msgId}')" class="reaction-trigger-btn text-slate-400 hover:text-sky-500 mx-1 transition" title="React"><i class="fa-regular fa-face-smile"></i></button>`;
+                        actionBtns += `<button onclick="startReplyChatMessage('${msgId}', '${msg.sender.replace(/'/g, "\\'")}', '${safeText}')" class="text-slate-400 hover:text-sky-500 mx-1 transition" title="ตอบกลับ"><i class="fa-solid fa-reply"></i></button>`;
+
+                        if(canEdit) {
+                            if(contentType === 'text') {
+                                actionBtns += `<button onclick="promptEditChatMessage('${msgId}')" class="text-slate-400 hover:text-amber-500 mx-1 transition" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>`;
+                            }
+                            actionBtns += `<button onclick="promptDeleteChatMessage('${msgId}')" class="text-slate-400 hover:text-rose-500 mx-1 transition" title="ลบ"><i class="fa-solid fa-trash"></i></button>`;
+                        }
+
+                        let bubbleClass = '';
+                        if (contentType === 'image') {
+                            bubbleClass = `rounded-2xl ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} text-sm chat-message-content image-only-bubble`;
+                        } else if (contentType === 'emoji') {
+                            bubbleClass = `rounded-2xl ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} chat-message-content emoji-only-bubble`;
+                        } else {
+                            bubbleClass = isMe 
+                                ? `bg-sky-500 text-white px-4 py-2 rounded-2xl rounded-tr-none shadow-sm text-sm break-words whitespace-pre-wrap chat-message-content`
+                                : `bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-2xl rounded-tl-none shadow-sm text-sm break-words whitespace-pre-wrap chat-message-content`;
+                        }
+
+                        let replyBlockHtml = '';
+                        if (msg.replyTo) {
+                            if (isMe) {
+                                replyBlockHtml = `
+                                    <div class="bg-sky-700/40 border-l-2 border-sky-200 px-2 py-1 rounded text-[10px] mb-1.5 text-sky-100 truncate max-w-[200px] cursor-pointer" onclick="scrollToMessage('${msg.replyTo.id}')" title="คลิกเพื่อไปยังข้อความต้นฉบับ">
+                                        <span class="font-bold">${msg.replyTo.sender}</span><br>${msg.replyTo.text}
+                                    </div>
+                                `;
+                            } else {
+                                replyBlockHtml = `
+                                    <div class="bg-slate-100 border-l-2 border-slate-400 px-2 py-1 rounded text-[10px] mb-1.5 text-slate-500 truncate max-w-[200px] cursor-pointer" onclick="scrollToMessage('${msg.replyTo.id}')" title="คลิกเพื่อไปยังข้อความต้นฉบับ">
+                                        <span class="font-bold text-slate-700">${msg.replyTo.sender}</span><br>${msg.replyTo.text}
+                                    </div>
+                                `;
+                            }
+                        }
+
+                        let reactionHtml = '';
+                        if(msg.reactions && Object.keys(msg.reactions).length > 0) {
+                            const reactionCounts = {};
+                            Object.values(msg.reactions).forEach(emoji => {
+                                reactionCounts[emoji] = (reactionCounts[emoji] || 0) + 1;
+                            });
+                            
+                            Object.entries(reactionCounts).forEach(([emoji, count]) => {
+                                reactionHtml += `<div class="reaction-badge shadow-sm" onclick="addReaction('${emoji}', '${msgId}')">${emoji} ${count > 1 ? `<span class="ml-1 text-[9px] text-slate-500 font-bold">${count}</span>` : ''}</div>`;
+                            });
+                        }
+
+                        if(isMe) {
+                            html += `
+                                <div class="flex justify-end mb-4 message-row relative" id="msg-${msgId}">
+                                    <div class="flex flex-col items-end max-w-[85%] sm:max-w-[75%]">
+                                        <div class="${bubbleClass} tex2jax_process">${replyBlockHtml}${msg.text}</div>
+                                        ${reactionHtml ? `<div class="flex flex-wrap justify-end gap-1 mt-0.5">${reactionHtml}</div>` : ''}
+                                        <div class="flex items-center mt-1">
+                                            <div class="reaction-btn-group flex">${actionBtns}</div>
+                                            <span class="text-[9px] text-slate-400 ml-1">${timeStr}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        } else {
+                            const avatarHtml = getAvatarHtml(msg.sender, "w-8 h-8 mt-1", "text-xs");
+                            html += `
+                                <div class="flex justify-start mb-4 message-row relative" id="msg-${msgId}">
+                                    <div class="mr-2 flex-shrink-0 mt-1">
+                                        ${avatarHtml}
+                                    </div>
+                                    <div class="flex flex-col items-start max-w-[85%] sm:max-w-[75%]">
+                                        <span class="text-[10px] text-slate-500 ml-1 mb-0.5 font-medium">${msg.sender}</span>
+                                        <div class="${bubbleClass} tex2jax_process">${replyBlockHtml}${msg.text}</div>
+                                        ${reactionHtml ? `<div class="flex flex-wrap justify-start gap-1 mt-0.5 ml-2">${reactionHtml}</div>` : ''}
+                                        <div class="flex items-center mt-1">
+                                            <span class="text-[9px] text-slate-400 mr-1 ml-1">${timeStr}</span>
+                                            <div class="reaction-btn-group flex">${actionBtns}</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    area.innerHTML = html;
+                    area.scrollTop = area.scrollHeight; 
+                    
+                    if(window.MathJax) {
+                        MathJax.typesetPromise([document.getElementById('chatMessagesArea')]).catch(err => console.log(err));
+                    }
+                });
+                
+                setTimeout(() => {
+                    populateEmojiPicker('emojiPicker-chat', 'chatMessageInput');
+                }, 100);
+        }
+
+        // --- 💬 Chat Reply Logic 💬 ---
+        function startReplyChatMessage(msgId, sender, htmlContent) {
+            const previewText = getShortPreviewText(htmlContent);
+            
+            chatReplyTo = {
+                id: msgId,
+                sender: sender,
+                text: previewText
+            };
+
+            document.getElementById('replyPreviewSender').innerText = sender;
+            document.getElementById('replyPreviewText').innerText = previewText;
+            document.getElementById('chatReplyPreview').classList.remove('hidden');
+            document.getElementById('chatReplyPreview').classList.add('flex');
+            
+            document.getElementById('chatMessageInput').focus();
+        }
+
+        function cancelReply() {
+            chatReplyTo = null;
+            document.getElementById('chatReplyPreview').classList.add('hidden');
+            document.getElementById('chatReplyPreview').classList.remove('flex');
+        }
+
+        function scrollToMessage(msgId) {
+            const el = document.getElementById(`msg-${msgId}`);
+            if(el) {
+                el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                const bubble = el.querySelector('.chat-message-content');
+                if(bubble) {
+                    const oldBg = bubble.style.backgroundColor;
+                    bubble.style.transition = "background-color 0.5s ease";
+                    bubble.style.backgroundColor = "#fef08a"; 
+                    setTimeout(() => {
+                        bubble.style.backgroundColor = oldBg;
+                    }, 1500);
+                }
+            }
+        }
+
+        // --- 💖 Reactions System (Upgraded Picker) 💖 ---
+        function populateReactionPicker() {
+            const container = document.getElementById('reactionEmojiList');
+            container.innerHTML = emojiList.map(e => `<button type="button" onclick="addReaction('${e}')" class="hover:bg-slate-100 p-1.5 rounded-full text-lg transition flex-shrink-0">${e}</button>`).join('');
+        }
+
+        function openReactionPicker(event, msgId) {
+            const picker = document.getElementById('reactionPicker');
+            activeReactionMsgId = msgId;
+            
+            const btnRect = event.currentTarget.getBoundingClientRect();
+            
+            let topPos = btnRect.top - 50;
+            let leftPos = btnRect.left - 130; 
+            
+            if(topPos < 10) topPos = btnRect.bottom + 5; 
+            if(leftPos < 10) leftPos = 10;
+            if(leftPos + 288 > window.innerWidth) leftPos = window.innerWidth - 300;
+            
+            picker.style.top = `${topPos}px`;
+            picker.style.left = `${leftPos}px`;
+            
+            picker.classList.remove('hidden');
+            setTimeout(() => {
+                picker.classList.remove('opacity-0', 'scale-95');
+            }, 10);
+        }
+
+        function closeReactionPicker() {
+            const picker = document.getElementById('reactionPicker');
+            picker.classList.add('opacity-0', 'scale-95');
+            setTimeout(() => {
+                picker.classList.add('hidden');
+                activeReactionMsgId = null;
+            }, 200);
+        }
+
+        function addReaction(emoji, overrideMsgId = null) {
+            const targetMsgId = overrideMsgId || activeReactionMsgId;
+            if(!targetMsgId || !activeChatRoomId || !currentUser) return;
+            
+            const msgRef = db.collection("chats").doc(activeChatRoomId).collection("messages").doc(targetMsgId);
+            
+            msgRef.set({
+                reactions: {
+                    [currentUser]: emoji
+                }
+            }, { merge: true }).then(() => {
+                closeReactionPicker();
+            });
+        }
+
+        // --- Core Message Sending ---
+        function sendChatMessage() {
+            const input = document.getElementById('chatMessageInput');
+            let text = input.innerHTML.trim();
+            
+            while(text.endsWith('<br>')) { text = text.slice(0, -4).trim(); }
+            
+            if(!text || !activeChatRoomId || !currentUser) return;
+            
+            const payload = {
+                sender: currentUser,
+                text: text,
+                timestamp: Date.now()
+            };
+
+            if (chatReplyTo) {
+                payload.replyTo = chatReplyTo;
+            }
+            
+            input.innerHTML = ''; 
+            cancelReply(); 
+            
+            db.collection("chats").doc(activeChatRoomId).collection("messages").add(payload).catch(e => {
+                console.error("Error sending message", e);
+                alert("ไม่สามารถส่งข้อความได้ กรุณาลองใหม่");
+            });
+        }
+
+        function promptDeleteChatMessage(msgId) {
+            showModal("ลบข้อความแชท?", "คุณต้องการลบข้อความนี้ใช่หรือไม่?", '<i class="fa-solid fa-trash text-3xl text-rose-600"></i>', 'bg-rose-100', "ลบ", "bg-rose-600 hover:bg-rose-700 shadow-rose-200", () => {
+                db.collection("chats").doc(activeChatRoomId).collection("messages").doc(msgId).delete().then(() => {
+                    closeConfirmModal();
+                });
+            });
+        }
+
+        function promptEditChatMessage(msgId) {
+            db.collection("chats").doc(activeChatRoomId).collection("messages").doc(msgId).get().then(doc => {
+                if(doc.exists) {
+                    const oldText = doc.data().text;
+                    const newText = prompt("แก้ไขข้อความ (รองรับ HTML):", oldText);
+                    if(newText !== null && newText.trim() !== "" && newText.trim() !== oldText) {
+                        db.collection("chats").doc(activeChatRoomId).collection("messages").doc(msgId).update({
+                            text: newText.trim()
+                        });
+                    }
+                }
+            });
+        }
+
+        // --- ➕ Create Custom Group Chat ➕ ---
+        function openCreateGroupModal() {
+            if(!currentUser) return;
+            
+            const modal = document.getElementById('createGroupModal');
+            const box = document.getElementById('createGroupModalBox');
+            
+            document.getElementById('groupNameInput').value = '';
+            const list = document.getElementById('groupMembersList');
+            list.innerHTML = '<div class="text-xs text-slate-400 text-center"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...</div>';
+
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+            }, 10);
+
+            db.collection("users").orderBy("username_lower").get().then(snap => {
+                let html = '';
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    if(data.username && data.username !== currentUser) {
+                        const safeUsername = data.username.replace(/"/g, "&quot;");
+                        const avatarHtml = getAvatarHtml(data.username, "w-6 h-6", "text-[10px]");
+                        html += `
+                            <label class="flex items-center space-x-2 p-2 hover:bg-slate-100 rounded cursor-pointer transition">
+                                <input type="checkbox" value="${safeUsername}" class="group-member-cb w-4 h-4 text-sky-600 rounded border-slate-300 focus:ring-sky-500">
+                                ${avatarHtml}
+                                <span class="text-sm font-medium text-slate-700">${data.username}</span>
+                            </label>
+                        `;
+                    }
+                });
+                list.innerHTML = html || '<div class="text-xs text-slate-400 text-center">ไม่มีสมาชิกอื่นๆ ในระบบ</div>';
+            });
+        }
+
+        function closeCreateGroupModal() {
+            const modal = document.getElementById('createGroupModal');
+            const box = document.getElementById('createGroupModalBox');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function submitCreateGroup() {
+            const name = document.getElementById('groupNameInput').value.trim();
+            if(!name) { alert("กรุณาตั้งชื่อกลุ่ม"); return; }
+            
+            const checkboxes = document.querySelectorAll('.group-member-cb:checked');
+            if(checkboxes.length === 0) { alert("กรุณาเลือกสมาชิกอย่างน้อย 1 คน"); return; }
+            
+            const members = Array.from(checkboxes).map(cb => cb.value.replace(/&quot;/g, '"'));
+            members.push(currentUser); 
+
+            db.collection("group_chats").add({
+                name: name,
+                members: members,
+                createdBy: currentUser,
+                createdAt: Date.now()
+            }).then(() => {
+                closeCreateGroupModal();
+                loadChatContacts();
+            }).catch(e => {
+                alert("เกิดข้อผิดพลาดในการสร้างกลุ่ม");
+            });
+        }
+
+        function promptDeleteGroupChat() {
+            showModal("ยืนยันการลบกลุ่มแชท?", "คุณแน่ใจหรือไม่ว่าต้องการลบกลุ่มนี้? ข้อความทั้งหมดจะหายไปและไม่สามารถกู้คืนได้", '<i class="fa-solid fa-triangle-exclamation text-3xl text-rose-600"></i>', 'bg-rose-100', "ลบกลุ่มทิ้ง", "bg-rose-600 hover:bg-rose-700 shadow-rose-200", 
+                () => {
+                    const roomId = activeChatRoomId;
+                    db.collection("group_chats").doc(roomId).delete().then(() => {
+                        closeConfirmModal();
+                        activeChatRoomId = null;
+                        loadChatContacts();
+                        document.getElementById('chatMessagesArea').innerHTML = '<div class="flex items-center justify-center h-full text-slate-400 text-sm">กรุณาเลือกผู้ติดต่อจากเมนูด้านซ้าย</div>';
+                        document.getElementById('activeChatTitle').innerText = 'เลือกห้องแชท';
+                        document.getElementById('deleteGroupBtn').classList.add('hidden');
+                        document.getElementById('chatFormContainer').style.display = 'none';
+                    });
+                }
+            );
+        }
+
+        // --- 📊 Admin Dashboard 📊 ---
+        function openAdminDashboard() {
+            if(!checkIsAdmin()) return;
+            
+            const modal = document.getElementById('adminDashboardModal');
+            const box = document.getElementById('adminDashboardBox');
+            const listContainer = document.getElementById('membersListContainer');
+            const countLabel = document.getElementById('totalMembersCount');
+            
+            listContainer.innerHTML = '<div class="p-6 text-center text-slate-400"><i class="fa-solid fa-spinner fa-spin text-2xl mb-2 text-indigo-400"></i><br><span class="text-xs">กำลังโหลดข้อมูล...</span></div>';
+            
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+            }, 10);
+
+            let totalComments = 0;
+            posts.forEach(p => {
+                totalComments += (p.comments || []).length;
+                (p.comments || []).forEach(c => {
+                    totalComments += (c.replies || []).length;
+                });
+            });
+
+            const storageBytes = new Blob([JSON.stringify(posts)]).size;
+            const storageMB = (storageBytes / (1024 * 1024)).toFixed(3);
+            const maxMB = 1024; // 1GB
+            const percent = Math.min(((storageMB / maxMB) * 100), 100).toFixed(4);
+            const displayPercent = percent > 0 && percent < 1 ? 1 : percent;
+
+            document.getElementById('adminStatPosts').innerText = posts.length;
+            document.getElementById('adminStatComments').innerText = totalComments;
+            document.getElementById('adminStatStorageUsed').innerText = `${storageMB} MB`;
+            
+            const bar = document.getElementById('adminStorageBar');
+            bar.style.width = `${displayPercent}%`;
+            if (percent > 90) bar.className = "bg-rose-500 h-3.5 rounded-full transition-all duration-700";
+            else if (percent > 70) bar.className = "bg-amber-500 h-3.5 rounded-full transition-all duration-700";
+            else bar.className = "bg-sky-500 h-3.5 rounded-full transition-all duration-700";
+
+            db.collection("users").orderBy("username_lower").get().then(snap => {
+                countLabel.innerText = snap.size;
+                if(snap.empty) {
+                    listContainer.innerHTML = '<div class="p-6 text-center text-slate-400 text-xs">ยังไม่มีสมาชิกในระบบ</div>';
+                    return;
+                }
+                
+                let html = '';
+                snap.forEach(doc => {
+                    const data = doc.data();
+                    const docId = doc.id;
+                    const avatarHtml = getAvatarHtml(data.username, "w-8 h-8", "text-xs");
+                    
+                    const isSelfAdmin = data.username.toLowerCase() === ADMIN_USERNAME.toLowerCase();
+                    const deleteBtn = isSelfAdmin ? '' : `<button onclick="promptDeleteUser('${docId}', '${data.username.replace(/'/g, "\\'")}')" class="text-rose-400 hover:text-rose-600 transition p-1"><i class="fa-solid fa-trash-alt"></i></button>`;
+
+                    html += `
+                        <div class="px-4 py-3 flex items-center justify-between hover:bg-slate-50 transition">
+                            <div class="flex items-center space-x-3">
+                                ${avatarHtml}
+                                <div>
+                                    <h4 class="text-sm font-bold text-slate-800 leading-tight">${data.username || 'No Name'}</h4>
+                                    <p class="text-[10px] text-slate-500 font-medium">${data.email || 'No Email'}</p>
+                                </div>
+                            </div>
+                            <div>${deleteBtn}</div>
+                        </div>
+                    `;
+                });
+                listContainer.innerHTML = html;
+            }).catch(err => {
+                listContainer.innerHTML = '<div class="p-6 text-center text-rose-500 text-xs font-medium">เกิดข้อผิดพลาดในการดึงข้อมูลสมาชิก</div>';
+                console.error(err);
+            });
+        }
+
+        function promptDeleteUser(userDocId, username) {
+            showModal("ลบสมาชิก?", `คุณต้องการลบบัญชีผู้ใช้ "${username}" ออกจากระบบใช่หรือไม่?\n\n(การลบนี้จะลบแค่ข้อมูลโปรไฟล์ แต่โพสต์เก่าของเขาจะยังคงอยู่)`, '<i class="fa-solid fa-user-xmark text-3xl text-rose-600"></i>', 'bg-rose-100', "ลบสมาชิก", "bg-rose-600 hover:bg-rose-700 shadow-rose-200", () => {
+                db.collection("users").doc(userDocId).delete().then(() => {
+                    closeConfirmModal();
+                    setTimeout(() => openAdminDashboard(), 300);
+                }).catch(err => {
+                    alert("เกิดข้อผิดพลาดในการลบสมาชิก");
+                });
+            });
+        }
+
+        function closeAdminDashboard() {
+            const modal = document.getElementById('adminDashboardModal');
+            const box = document.getElementById('adminDashboardBox');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        // --- 🔑 Authentication System 🔑 ---
+        function openAuthModal(mode = 'login') {
+            switchAuthMode(mode);
+            document.getElementById('authLoginId').value = '';
+            document.getElementById('authEmail').value = '';
+            document.getElementById('authPassword').value = '';
+            document.getElementById('authUsername').value = '';
+            document.getElementById('authConfirmPassword').value = '';
+            document.getElementById('authErrorMsg').classList.add('hidden');
+
+            const modal = document.getElementById('authModal');
+            const box = document.getElementById('authModalBox');
+            modal.classList.remove('hidden');
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+                if (mode === 'login') document.getElementById('authLoginId').focus();
+                else document.getElementById('authEmail').focus();
+            }, 10);
+        }
+
+        function closeAuthModal() {
+            const modal = document.getElementById('authModal');
+            const box = document.getElementById('authModalBox');
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => { modal.classList.add('hidden'); }, 300);
+        }
+
+        function switchAuthMode(mode) {
+            currentAuthMode = mode;
+            const tabLogin = document.getElementById('tabAuthLogin');
+            const tabReg = document.getElementById('tabAuthRegister');
+            
+            const loginIdGroup = document.getElementById('authLoginIdGroup');
+            const emailGroup = document.getElementById('authEmailGroup');
+            const userGroup = document.getElementById('authUsernameGroup');
+            const passGroup = document.getElementById('authPasswordGroup');
+            const confirmGroup = document.getElementById('authConfirmPasswordGroup');
+            
+            const iconContainer = document.getElementById('authIconContainer');
+            const title = document.getElementById('authTitleText');
+            const icon = document.getElementById('authIcon');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            const cancelBtn = document.getElementById('authCancelBtn');
+            const forgotLink = document.getElementById('forgotPasswordLink');
+            
+            document.getElementById('authErrorMsg').classList.add('hidden'); 
+            ['authLoginId', 'authEmail', 'authUsername', 'authPassword', 'authConfirmPassword'].forEach(id => {
+                document.getElementById(id).removeAttribute('required');
+            });
+
+            if (mode === 'login') {
+                tabLogin.className = 'flex-1 py-4 text-sm font-bold text-sky-600 border-b-2 border-sky-500 transition-colors bg-white';
+                tabReg.className = 'flex-1 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition-colors bg-slate-50 cursor-pointer';
+                
+                loginIdGroup.classList.remove('hidden'); document.getElementById('authLoginId').setAttribute('required', 'true');
+                emailGroup.classList.add('hidden'); userGroup.classList.add('hidden');
+                passGroup.classList.remove('hidden'); document.getElementById('authPassword').setAttribute('required', 'true');
+                confirmGroup.classList.add('hidden'); forgotLink.classList.remove('hidden');
+
+                iconContainer.className = 'w-16 h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner';
+                title.innerText = 'เข้าสู่ระบบ'; icon.className = 'fa-solid fa-right-to-bracket text-3xl text-sky-600';
+                submitBtn.innerText = 'เข้าสู่ระบบ';
+                submitBtn.className = 'flex-1 bg-sky-600 hover:bg-sky-700 text-white text-sm font-bold py-3 rounded-xl transition shadow-md shadow-sky-200';
+                cancelBtn.innerText = 'ยกเลิก'; cancelBtn.onclick = closeAuthModal;
+
+            } else if (mode === 'register') {
+                tabReg.className = 'flex-1 py-4 text-sm font-bold text-emerald-600 border-b-2 border-emerald-500 transition-colors bg-white';
+                tabLogin.className = 'flex-1 py-4 text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition-colors bg-slate-50 cursor-pointer';
+                
+                loginIdGroup.classList.add('hidden');
+                emailGroup.classList.remove('hidden'); document.getElementById('authEmail').setAttribute('required', 'true');
+                userGroup.classList.remove('hidden'); document.getElementById('authUsername').setAttribute('required', 'true');
+                passGroup.classList.remove('hidden'); document.getElementById('authPassword').setAttribute('required', 'true');
+                confirmGroup.classList.remove('hidden'); document.getElementById('authConfirmPassword').setAttribute('required', 'true');
+                forgotLink.classList.add('hidden');
+
+                iconContainer.className = 'w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner';
+                title.innerText = 'สมัครสมาชิกใหม่'; icon.className = 'fa-solid fa-user-plus text-3xl text-emerald-600';
+                submitBtn.innerText = 'ลงทะเบียน';
+                submitBtn.className = 'flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold py-3 rounded-xl transition shadow-md shadow-emerald-200';
+                cancelBtn.innerText = 'ยกเลิก'; cancelBtn.onclick = closeAuthModal;
+
+            } else if (mode === 'forgot') {
+                tabLogin.className = 'flex-1 py-4 text-sm font-medium text-slate-400 border-b-2 border-transparent bg-slate-50 cursor-pointer hover:text-slate-600';
+                tabReg.className = 'flex-1 py-4 text-sm font-medium text-slate-400 border-b-2 border-transparent bg-slate-50 cursor-pointer hover:text-slate-600';
+                
+                loginIdGroup.classList.add('hidden'); userGroup.classList.add('hidden'); passGroup.classList.add('hidden'); confirmGroup.classList.add('hidden');
+                emailGroup.classList.remove('hidden'); document.getElementById('authEmail').setAttribute('required', 'true');
+
+                iconContainer.className = 'w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-3 shadow-inner';
+                title.innerText = 'รีเซ็ตรหัสผ่าน'; icon.className = 'fa-solid fa-key text-3xl text-amber-500';
+                submitBtn.innerText = 'ส่งลิงก์ไปยังอีเมล';
+                submitBtn.className = 'flex-1 bg-amber-500 hover:bg-amber-600 text-white text-sm font-bold py-3 rounded-xl transition shadow-md shadow-amber-200';
+                cancelBtn.innerText = 'ย้อนกลับ'; cancelBtn.onclick = () => switchAuthMode('login');
+            }
+        }
+
+        function getFirebaseErrorMsg(code) {
+            switch(code) {
+                case 'auth/invalid-email': return 'รูปแบบอีเมลไม่ถูกต้อง';
+                case 'auth/user-not-found': return 'ไม่พบบัญชีอีเมลนี้ในระบบ';
+                case 'auth/wrong-password': return 'รหัสผ่านไม่ถูกต้อง';
+                case 'auth/email-already-in-use': return 'อีเมลนี้มีผู้ใช้งานแล้ว';
+                case 'auth/weak-password': return 'รหัสผ่านอ่อนเกินไป (ต้อง 6 ตัวอักษรขึ้นไป)';
+                case 'auth/too-many-requests': return 'คุณพยายามบ่อยเกินไป กรุณารอสักครู่แล้วลองใหม่';
+                default: return 'เกิดข้อผิดพลาด: ' + code;
+            }
+        }
+
+        function submitAuth() {
+            document.getElementById('authErrorMsg').classList.add('hidden');
+            const submitBtn = document.getElementById('authSubmitBtn');
+            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> รอสักครู่...';
+            submitBtn.disabled = true;
+
+            const resetBtn = () => {
+                if(currentAuthMode === 'login') submitBtn.innerText = 'เข้าสู่ระบบ';
+                else if(currentAuthMode === 'register') submitBtn.innerText = 'ลงทะเบียน';
+                else submitBtn.innerText = 'ส่งลิงก์ไปยังอีเมล';
+                submitBtn.disabled = false;
+            };
+
+            if(currentAuthMode === 'register') {
+                const email = document.getElementById('authEmail').value.trim();
+                const username = document.getElementById('authUsername').value.trim();
+                const password = document.getElementById('authPassword').value;
+                const confirmPass = document.getElementById('authConfirmPassword').value;
+
+                if(password !== confirmPass) { showAuthError('รหัสผ่านไม่ตรงกัน'); resetBtn(); return; }
+
+                db.collection("users").where("username_lower", "==", username.toLowerCase()).get().then(snap => {
+                    if(!snap.empty) { showAuthError('ชื่อผู้ใช้นี้ถูกใช้งานแล้ว กรุณาตั้งใหม่'); resetBtn(); return; }
+                    
+                    auth.createUserWithEmailAndPassword(email, password).then(cred => {
+                        return cred.user.updateProfile({ displayName: username }).then(() => {
+                            return db.collection("users").doc(cred.user.uid).set({
+                                email: email, username: username, username_lower: username.toLowerCase(), avatar: ""
+                            });
+                        });
+                    }).then(() => {
+                        closeAuthModal(); resetBtn();
+                    }).catch(e => { showAuthError(getFirebaseErrorMsg(e.code)); resetBtn(); });
+                }).catch(e => { showAuthError("เชื่อมต่อฐานข้อมูลล้มเหลว"); resetBtn(); });
+
+            } else if (currentAuthMode === 'login') {
+                const loginId = document.getElementById('authLoginId').value.trim();
+                const password = document.getElementById('authPassword').value;
+
+                if(loginId.includes('@')) {
+                    auth.signInWithEmailAndPassword(loginId, password)
+                    .then(() => { closeAuthModal(); resetBtn(); })
+                    .catch(e => { showAuthError(getFirebaseErrorMsg(e.code)); resetBtn(); });
+                } else {
+                    db.collection("users").where("username_lower", "==", loginId.toLowerCase()).get().then(snap => {
+                        if(snap.empty) { showAuthError('ไม่พบบัญชีชื่อผู้ใช้งานนี้'); resetBtn(); return; }
+                        const email = snap.docs[0].data().email;
+                        auth.signInWithEmailAndPassword(email, password)
+                        .then(() => { closeAuthModal(); resetBtn(); })
+                        .catch(e => { showAuthError(getFirebaseErrorMsg(e.code)); resetBtn(); });
+                    }).catch(e => { showAuthError("เชื่อมต่อฐานข้อมูลล้มเหลว"); resetBtn(); });
+                }
+
+            } else if (currentAuthMode === 'forgot') {
+                const email = document.getElementById('authEmail').value.trim();
+                auth.sendPasswordResetEmail(email)
+                .then(() => {
+                    closeAuthModal(); resetBtn();
+                    showModal("ส่งลิงก์สำเร็จ!", `ส่งลิงก์รีเซ็ตรหัสผ่านไปที่ ${email} เรียบร้อยแล้ว กรุณาเช็คในกล่องจดหมายของคุณ`, '<i class="fa-solid fa-envelope-circle-check text-4xl text-emerald-600"></i>', 'bg-emerald-100', "ตกลง", "bg-emerald-600 hover:bg-emerald-700 shadow-emerald-200", () => {});
+                })
+                .catch(e => { showAuthError(getFirebaseErrorMsg(e.code)); resetBtn(); });
+            }
+        }
+
+        function showAuthError(msg) {
+            const errorEl = document.getElementById('authErrorMsg');
+            errorEl.innerText = msg;
+            errorEl.classList.remove('hidden');
+        }
+
+        function handleLogout() {
+            showModal(
+                "ออกจากระบบ", "คุณต้องการออกจากระบบใช่หรือไม่?", 
+                '<i class="fa-solid fa-arrow-right-from-bracket text-3xl text-amber-600"></i>', 'bg-amber-100', 
+                "ออกจากระบบ", "bg-amber-600 hover:bg-amber-700 shadow-amber-200", 
+                () => {
+                    auth.signOut().then(() => { closeConfirmModal(); });
+                }
+            );
+        }
+
+        function renderUserStatus() {
+            const area = document.getElementById('userStatusArea');
+            const commentFormArea = document.getElementById('commentFormArea');
+            const loginToCommentMsg = document.getElementById('loginToCommentMsg');
+            
+            const changeCoverBtn = document.getElementById('changeCoverBtn');
+            const viewMembersBtn = document.getElementById('viewMembersBtn');
+            const chatBtn = document.getElementById('chatBtn');
+
+            if (currentUser) {
+                const isAdmin = checkIsAdmin();
+                const badge = isAdmin ? `<span class="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded shadow-sm ml-1.5 font-bold">ADMIN</span>` : '';
+                
+                const avatarHtml = getAvatarHtml(currentUser, "w-6 h-6 sm:w-7 sm:h-7", "text-[10px] sm:text-xs");
+
+                if (isAdmin) {
+                    changeCoverBtn.classList.remove('hidden'); changeCoverBtn.classList.add('flex');
+                    viewMembersBtn.classList.remove('hidden'); viewMembersBtn.classList.add('flex');
+                } else {
+                    changeCoverBtn.classList.add('hidden'); changeCoverBtn.classList.remove('flex');
+                    viewMembersBtn.classList.add('hidden'); viewMembersBtn.classList.remove('flex');
+                }
+                
+                chatBtn.classList.remove('hidden'); chatBtn.classList.add('flex');
+
+                area.innerHTML = `
+                    <div class="flex items-center space-x-2 bg-slate-900/60 backdrop-blur px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-white/10 shadow-sm text-white">
+                        <label class="cursor-pointer relative group flex-shrink-0" title="เปลี่ยนรูปโปรไฟล์">
+                            ${avatarHtml}
+                            <div class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                                <i class="fa-solid fa-camera text-[10px] text-white"></i>
+                            </div>
+                            <input type="file" accept="image/*" class="hidden" onchange="changeProfileImage(this)">
+                        </label>
+                        <span onclick="openEditProfileModal()" class="cursor-pointer hover:text-sky-300 transition text-xs sm:text-sm font-medium flex items-center drop-shadow-md" title="แก้ไขโปรไฟล์">
+                            <span class="truncate max-w-[80px] sm:max-w-[120px]">${currentUser}</span>
+                            ${badge}
+                        </span>
+                        <button onclick="handleLogout()" class="text-slate-300 hover:text-rose-400 ml-2 sm:ml-3 transition" title="ออกจากระบบ"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                    </div>
+                `;
+                
+                if(commentFormArea) {
+                    commentFormArea.classList.remove('hidden');
+                    loginToCommentMsg.classList.add('hidden');
+                    document.getElementById('commentUserAvatarContainer').innerHTML = getAvatarHtml(currentUser, "w-8 h-8 sm:w-10 sm:h-10", "text-base sm:text-lg");
+                }
+            } else {
+                changeCoverBtn.classList.add('hidden'); changeCoverBtn.classList.remove('flex');
+                viewMembersBtn.classList.add('hidden'); viewMembersBtn.classList.remove('flex');
+                chatBtn.classList.add('hidden'); chatBtn.classList.remove('flex');
+
+                area.innerHTML = `
+                    <button onclick="openAuthModal('login')" class="bg-slate-800/60 hover:bg-slate-700/80 text-white px-4 py-1.5 sm:px-5 sm:py-2 rounded-xl border border-white/20 text-xs sm:text-sm font-semibold transition flex items-center backdrop-blur shadow">
+                        <i class="fa-solid fa-user sm:mr-2"></i> <span class="hidden sm:inline">เข้าสู่ระบบ</span>
+                    </button>
+                `;
+                if(commentFormArea) {
+                    commentFormArea.classList.add('hidden');
+                    loginToCommentMsg.classList.remove('hidden');
+                }
+            }
         }
 
         // --- Modals ---
         function showModal(title, msg, iconHtml, iconBg, btnText, btnColor, callback) {
             document.getElementById('confirmTitle').innerText = title;
             document.getElementById('confirmMsg').innerText = msg;
+            
             const iconDiv = document.getElementById('confirmIcon');
-            iconDiv.className = `w-12 h-12 sm:w-16 sm:h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner ${iconBg}`;
+            iconDiv.className = `w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 shadow-inner ${iconBg}`;
             iconDiv.innerHTML = iconHtml;
 
             const submitBtn = document.getElementById('confirmSubmitBtn');
             submitBtn.innerText = btnText;
-            submitBtn.className = `flex-1 text-white text-xs sm:text-sm font-bold py-2 sm:py-2.5 rounded-xl transition shadow-md ${btnColor}`;
+            submitBtn.className = `flex-1 text-white text-sm font-bold py-2.5 rounded-xl transition shadow-md ${btnColor}`;
             
             const cancelBtn = document.getElementById('confirmCancelBtn');
             if(btnColor.includes('rose') || btnColor.includes('amber')) { cancelBtn.classList.remove('hidden'); } 
@@ -552,14 +1970,21 @@
             const modal = document.getElementById('confirmModal');
             const box = document.getElementById('confirmModalBox');
             modal.classList.remove('hidden');
-            setTimeout(() => { modal.classList.remove('opacity-0'); box.classList.remove('scale-95'); }, 10);
+            setTimeout(() => {
+                modal.classList.remove('opacity-0');
+                box.classList.remove('scale-95');
+            }, 10);
         }
 
         function closeConfirmModal() {
             const modal = document.getElementById('confirmModal');
             const box = document.getElementById('confirmModalBox');
-            modal.classList.add('opacity-0'); box.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); confirmCallback = null; }, 300);
+            modal.classList.add('opacity-0');
+            box.classList.add('scale-95');
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                confirmCallback = null;
+            }, 300);
         }
 
         document.getElementById('confirmSubmitBtn').addEventListener('click', () => {
@@ -571,10 +1996,10 @@
         function setCategory(cat, pushHistory = true) {
             currentCategory = cat;
             document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.className = 'tab-btn pb-2 text-xs sm:text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all';
+                btn.className = 'tab-btn pb-2 text-sm font-medium text-slate-200 hover:text-white txt-shadow border-b-2 border-transparent hover:border-white/50 whitespace-nowrap flex items-center cursor-pointer transition-all';
             });
             const activeTab = document.getElementById(`tab-${cat}`);
-            if(activeTab) activeTab.className = 'tab-btn pb-2 text-xs sm:text-sm font-bold text-white txt-shadow border-b-2 border-sky-400 whitespace-nowrap flex items-center cursor-pointer transition-all';
+            if(activeTab) activeTab.className = 'tab-btn pb-2 text-sm font-bold text-white txt-shadow border-b-2 border-sky-400 whitespace-nowrap flex items-center cursor-pointer transition-all';
             
             if(cat === 'ทั้งหมด') {
                 currentPostId = null;
@@ -589,7 +2014,6 @@
                     document.title = "คลังข่าวสารและคอมมูนิตี้ออนไลน์";
                 }
             }
-            showSidebarOnMobile();
             renderPostList();
         }
 
@@ -648,16 +2072,40 @@
                 
                 const item = document.createElement('a');
                 item.href = `?post=${post.id}`;
-                item.className = `block px-3 py-2 cursor-pointer rounded-lg mb-1 transition-all duration-200 flex items-center justify-between w-full border ${isActive ? 'bg-sky-50 border-sky-200 shadow-sm' : 'bg-transparent border-transparent hover:bg-slate-100 hover:border-slate-200'}`;
-                item.onclick = (e) => { e.preventDefault(); selectPost(post.id); };
+                item.className = `block px-3 py-1.5 cursor-pointer rounded-lg mb-1 transition-all duration-200 flex items-center justify-between w-full border ${isActive ? 'bg-sky-50 border-sky-200 shadow-sm' : 'bg-transparent border-transparent hover:bg-slate-100 hover:border-slate-200'}`;
+                item.onclick = (e) => {
+                    e.preventDefault();
+                    selectPost(post.id);
+                };
                 item.innerHTML = `
-                    <h3 class="font-medium text-[12px] sm:text-sm ${isActive ? 'text-sky-900 font-bold' : 'text-slate-700'} line-clamp-2 leading-tight flex-1 pr-3 select-none pointer-events-none">${post.title}</h3>
+                    <h3 class="font-medium text-[12px] ${isActive ? 'text-sky-900 font-bold' : 'text-slate-700'} line-clamp-2 leading-tight flex-1 pr-3 select-none pointer-events-none">${post.title}</h3>
                     <div class="text-[11px] font-bold text-slate-400 flex items-center justify-center space-x-1 flex-shrink-0 select-none pointer-events-none min-w-[24px]" title="จำนวนความคิดเห็น">
                         <i class="fa-regular fa-comment text-slate-300"></i> <span class="${isActive ? 'text-sky-600' : ''}">${commentCount}</span>
                     </div>
                 `;
                 listContainer.appendChild(item);
             });
+        }
+
+        // --- Post System (Firestore Sync) ---
+        function promptDeletePost() {
+            showModal("ยืนยันการลบโพสต์?", "คุณแน่ใจหรือไม่ว่าต้องการลบโพสต์นี้? การกระทำนี้ไม่สามารถกู้คืนได้", '<i class="fa-solid fa-triangle-exclamation text-3xl text-rose-600"></i>', 'bg-rose-100', "ลบทิ้งถาวร", "bg-rose-600 hover:bg-rose-700 shadow-rose-200", 
+                () => {
+                    const post = posts.find(p => p.id === currentPostId);
+                    db.collection("posts").doc(post.docId).delete().then(() => {
+                        currentPostId = null;
+                        document.getElementById('readScreen').classList.add('hidden');
+                        document.getElementById('welcomeScreen').classList.remove('hidden');
+                        
+                        const url = new URL(window.location);
+                        url.searchParams.delete('post');
+                        window.history.pushState({}, '', url);
+                        document.title = "คลังข่าวสารและคอมมูนิตี้ออนไลน์";
+
+                        closeConfirmModal();
+                    });
+                }
+            );
         }
 
         function selectPost(id, pushHistory = true) {
@@ -670,7 +2118,6 @@
                 url.searchParams.delete('post');
                 window.history.replaceState({}, '', url);
                 document.title = "คลังข่าวสารและคอมมูนิตี้ออนไลน์";
-                showSidebarOnMobile();
                 return;
             }
 
@@ -679,19 +2126,27 @@
             document.getElementById('readScreen').classList.remove('hidden');
 
             document.getElementById('readTitle').innerText = post.title;
-            const avatarHtml = getAvatarHtml(post.author, "w-4 h-4 sm:w-5 sm:h-5", "text-[8px] sm:text-[9px]");
-            document.getElementById('readAuthorContainer').innerHTML = `${avatarHtml} <span class="font-medium text-slate-700 ml-1.5">${post.author}</span>`;
+            
+            const avatarHtml = getAvatarHtml(post.author, "w-5 h-5 mr-1.5", "text-[9px]");
+            document.getElementById('readAuthorContainer').innerHTML = `${avatarHtml} <span class="font-medium text-slate-700">${post.author}</span>`;
+            
             document.getElementById('readDate').innerText = post.date;
             document.getElementById('readCategory').innerHTML = `${getCategoryIcon(post.category)} ${post.category}`;
             document.getElementById('readBody').innerHTML = post.content;
             
             if(window.MathJax) {
-                MathJax.typesetPromise([document.getElementById('readBody')]).catch(err => console.log('MathJax error: ', err.message));
+                MathJax.typesetPromise([document.getElementById('readBody')]).catch(function (err) {
+                    console.log('MathJax error: ', err.message);
+                });
             }
 
             const actions = document.getElementById('postActions');
-            if (currentUser && (currentUser === post.author || checkIsAdmin())) { actions.classList.remove('hidden'); } 
-            else { actions.classList.add('hidden'); }
+            const isAdmin = checkIsAdmin();
+            if (currentUser && (currentUser === post.author || isAdmin)) {
+                actions.classList.remove('hidden');
+            } else {
+                actions.classList.add('hidden');
+            }
 
             if (pushHistory) {
                 const url = new URL(window.location);
@@ -700,7 +2155,6 @@
             }
             document.title = post.title + " - คลังข่าวสารและคอมมูนิตี้ออนไลน์";
 
-            showMainOnMobile();
             renderComments(post);
         }
 
@@ -715,216 +2169,393 @@
             document.getElementById('postTitle').value = '';
             document.getElementById('postCategory').value = 'อื่นๆ';
             document.getElementById('postContent').innerHTML = '';
-            showMainOnMobile();
         }
 
-        // --- Render UI based on Login Status ---
-        function renderUserStatus() {
-            const area = document.getElementById('userStatusArea');
-            const commentFormArea = document.getElementById('commentFormArea');
-            const loginToCommentMsg = document.getElementById('loginToCommentMsg');
-            const chatBtn = document.getElementById('chatBtn');
+        function editPost() {
+            const post = posts.find(p => p.id === currentPostId);
+            if (!post || (!checkIsAdmin() && currentUser !== post.author)) return;
 
-            if (currentUser) {
-                const isAdmin = checkIsAdmin();
-                const badge = isAdmin ? `<span class="bg-amber-500 text-white text-[9px] px-1.5 py-0.5 rounded shadow-sm ml-1.5 font-bold">ADMIN</span>` : '';
-                const avatarHtml = getAvatarHtml(currentUser, "w-6 h-6 sm:w-7 sm:h-7", "text-[10px] sm:text-xs");
+            document.getElementById('readScreen').classList.add('hidden');
+            document.getElementById('editorScreen').classList.remove('hidden');
+            
+            document.getElementById('editorScreenTitle').innerText = 'แก้ไขโพสต์';
+            document.getElementById('postTitle').value = post.title;
+            document.getElementById('postCategory').value = post.category || 'อื่นๆ';
+            document.getElementById('postContent').innerHTML = post.content;
+        }
+
+        function savePost() {
+            const title = document.getElementById('postTitle').value.trim();
+            const category = document.getElementById('postCategory').value;
+            const content = document.getElementById('postContent').innerHTML;
+
+            if (!title) { alert('กรุณากรอกหัวข้อโพสต์'); return; }
+
+            if (currentPostId) {
+                const post = posts.find(p => p.id === currentPostId);
+                db.collection("posts").doc(post.docId).update({
+                    title: title, category: category, content: content
+                }).then(() => { closeEditor(); });
+            } else {
+                const newId = Date.now().toString();
+                db.collection("posts").add({
+                    id: newId,
+                    timestamp: Date.now(),
+                    title: title,
+                    category: category,
+                    content: content,
+                    author: currentUser,
+                    date: getCurrentTimeStr(),
+                    comments: []
+                }).then(() => {
+                    currentPostId = newId;
+                    if(currentCategory !== 'ทั้งหมด' && currentCategory !== category) setCategory(category, false);
+                    document.getElementById('editorScreen').classList.add('hidden');
+                    selectPost(newId, true);
+                });
+            }
+        }
+
+        function closeEditor() {
+            document.getElementById('editorScreen').classList.add('hidden');
+            if (currentPostId) {
+                selectPost(currentPostId, false);
+            } else {
+                document.getElementById('welcomeScreen').classList.remove('hidden');
+                const url = new URL(window.location);
+                url.searchParams.delete('post');
+                window.history.pushState({}, '', url);
+                document.title = "คลังข่าวสารและคอมมูนิตี้ออนไลน์";
+            }
+        }
+
+        // --- Comments System (Firestore Sync) ---
+        function renderComments(post) {
+            const list = document.getElementById('commentList');
+            const countLabel = document.getElementById('commentCount');
+            const comments = post.comments || [];
+            
+            let totalCount = comments.length;
+            comments.forEach(c => { totalCount += (c.replies || []).length; });
+            
+            countLabel.innerText = totalCount;
+            list.innerHTML = '';
+
+            if(comments.length === 0) {
+                list.innerHTML = `<p class="text-sm text-slate-400 text-center py-6 italic border border-dashed border-slate-200 rounded-xl">ยังไม่มีความคิดเห็น เป็นคนแรกที่แสดงความคิดเห็นสิ!</p>`;
+                return;
+            }
+
+            const isAdmin = checkIsAdmin();
+
+            comments.forEach(c => {
+                if(!c.id) c.id = Date.now().toString() + Math.random().toString().substr(2,5); 
+                if(!c.replies) c.replies = [];
+
+                const isMe = (c.author === currentUser);
+                const canEdit = isMe || isAdmin;
+
+                const bubble = document.createElement('div');
+                bubble.className = `flex flex-col space-y-2`;
                 
-                chatBtn.classList.remove('hidden'); chatBtn.classList.add('flex');
+                const avatarHtml = getAvatarHtml(c.author, "w-8 h-8 sm:w-10 sm:h-10", "text-xs sm:text-sm");
 
-                area.innerHTML = `
-                    <div class="flex items-center space-x-1.5 sm:space-x-2 bg-slate-900/60 backdrop-blur px-2 py-1.5 sm:px-4 sm:py-2 rounded-xl border border-white/10 shadow-sm text-white">
-                        <label class="cursor-pointer relative group flex-shrink-0" title="เปลี่ยนรูปโปรไฟล์">
-                            ${avatarHtml}
-                            <div class="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
-                                <i class="fa-solid fa-camera text-[8px] sm:text-[10px] text-white"></i>
+                let html = `
+                    <div class="flex items-start space-x-3">
+                        ${avatarHtml}
+                        <div class="w-full">
+                            <div class="bg-slate-50 border border-slate-100 px-3 py-2 sm:px-4 sm:py-3 rounded-2xl rounded-tl-none inline-block min-w-[200px] max-w-[95%] shadow-sm">
+                                <div class="flex items-center space-x-2 mb-1.5">
+                                    <span class="text-xs sm:text-sm font-bold ${isMe ? 'text-sky-700' : 'text-slate-700'}">${c.author}</span>
+                                    <span class="text-[9px] sm:text-[10px] text-slate-400 font-medium">${c.time}</span>
+                                </div>
+                                <div id="comment-text-${c.id}" class="text-xs sm:text-sm text-slate-700 leading-relaxed editor-content min-h-0 tex2jax_process">${c.text}</div>
                             </div>
-                            <input type="file" accept="image/*" class="hidden" onchange="changeProfileImage(this)">
-                        </label>
-                        <span onclick="openEditProfileModal()" class="cursor-pointer hover:text-sky-300 transition text-[11px] sm:text-sm font-medium flex items-center drop-shadow-md" title="แก้ไขโปรไฟล์">
-                            <span class="truncate max-w-[80px] sm:max-w-[120px]">${currentUser}</span>
-                            ${badge}
-                        </span>
-                        <button onclick="handleLogout()" class="text-slate-300 hover:text-rose-400 ml-1 sm:ml-3 transition text-[11px] sm:text-base" title="ออกจากระบบ"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+                            
+                            <div class="flex items-center space-x-3 mt-1.5 ml-2 text-[10px] sm:text-[11px] font-semibold text-slate-500">
+                                <button onclick="toggleReplyBox('${c.id}')" class="hover:text-sky-600 transition">ตอบกลับ</button>
+                                ${canEdit ? `
+                                    <button onclick="startEditComment('${c.id}', false)" class="hover:text-amber-600 transition">แก้ไข</button>
+                                    <button onclick="promptDeleteComment('${c.id}', false)" class="hover:text-rose-600 transition">ลบ</button>
+                                ` : ''}
+                            </div>
+
+                            <div id="reply-box-${c.id}" class="hidden mt-3 max-w-[95%]">
+                                <div class="bg-white border border-slate-300 rounded-xl overflow-visible focus-within:ring-2 focus-within:ring-sky-500 transition-all">
+                                    <div class="bg-slate-50 border-b border-slate-200 px-2 py-1.5 flex items-center space-x-1 rounded-t-xl relative">
+                                        <button type="button" onclick="toggleEmojiPicker('emojiPicker-reply-${c.id}')" class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center"><i class="fa-regular fa-face-smile text-xs sm:text-sm"></i></button>
+                                        <div id="emojiPicker-reply-${c.id}" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-72 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50">
+                                            <div class="flex flex-wrap gap-2 max-h-60 overflow-y-auto custom-scrollbar" id="emoji-container-reply-${c.id}"></div>
+                                        </div>
+                                        <button type="button" onclick="addCommentLink('reply-input-${c.id}')" class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center"><i class="fa-solid fa-link text-xs sm:text-sm"></i></button>
+                                        <label class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer">
+                                            <i class="fa-regular fa-image text-xs sm:text-sm"></i>
+                                            <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'reply-input-${c.id}')">
+                                        </label>
+                                    </div>
+                                    <div id="reply-input-${c.id}" class="comment-input-area p-2.5 text-xs sm:text-sm text-slate-800 custom-scrollbar overflow-y-auto min-h-[60px] outline-none tex2jax_process" contenteditable="true" placeholder="เขียนการตอบกลับ..."></div>
+                                    <div class="px-2 py-1.5 bg-slate-50 rounded-b-xl flex justify-end border-t border-slate-100">
+                                        <button onclick="submitReply('${c.id}')" class="bg-sky-600 hover:bg-sky-700 text-white px-3 sm:px-4 py-1.5 rounded-lg text-[10px] sm:text-xs font-bold transition">ตอบกลับ</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="mt-3 pl-6 sm:pl-8 space-y-4 border-l-2 border-slate-100 ml-3 sm:ml-4">
+                                ${renderRepliesHTML(c.replies, c.id, isAdmin)}
+                            </div>
+                        </div>
                     </div>
                 `;
-                
-                if(commentFormArea) {
-                    commentFormArea.classList.remove('hidden');
-                    loginToCommentMsg.classList.add('hidden');
-                    document.getElementById('commentUserAvatarContainer').innerHTML = getAvatarHtml(currentUser, "w-8 h-8 sm:w-10 sm:h-10", "text-sm sm:text-lg");
-                }
-            } else {
-                chatBtn.classList.add('hidden'); chatBtn.classList.remove('flex');
-                
-                // ปุ่มล็อกอินแบบแก้ไขใหม่ ชัดเจนทั้งมือถือและคอมพิวเตอร์
-                area.innerHTML = `
-                    <button onclick="openAuthModal('login')" class="bg-sky-500 hover:bg-sky-600 text-white px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl border border-sky-400 text-xs sm:text-sm font-bold transition flex items-center shadow-md shadow-sky-500/20">
-                        <i class="fa-solid fa-user mr-1.5 sm:mr-2 text-[10px] sm:text-sm"></i> <span>เข้าสู่ระบบ</span>
-                    </button>
-                `;
-                if(commentFormArea) {
-                    commentFormArea.classList.add('hidden');
-                    loginToCommentMsg.classList.remove('hidden');
-                }
-            }
-        }
+                bubble.innerHTML = html;
+                list.appendChild(bubble);
 
-        // --- 🔑 Authentication System 🔑 ---
-        function openAuthModal(mode = 'login') {
-            switchAuthMode(mode);
-            document.getElementById('authLoginId').value = '';
-            document.getElementById('authEmail').value = '';
-            document.getElementById('authPassword').value = '';
-            document.getElementById('authUsername').value = '';
-            document.getElementById('authConfirmPassword').value = '';
-            document.getElementById('authErrorMsg').classList.add('hidden');
-
-            const modal = document.getElementById('authModal');
-            const box = document.getElementById('authModalBox');
-            modal.classList.remove('hidden');
-            setTimeout(() => {
-                modal.classList.remove('opacity-0');
-                box.classList.remove('scale-95');
-            }, 10);
-        }
-
-        function closeAuthModal() {
-            const modal = document.getElementById('authModal');
-            const box = document.getElementById('authModalBox');
-            modal.classList.add('opacity-0');
-            box.classList.add('scale-95');
-            setTimeout(() => { modal.classList.add('hidden'); }, 300);
-        }
-
-        function switchAuthMode(mode) {
-            currentAuthMode = mode;
-            const tabLogin = document.getElementById('tabAuthLogin');
-            const tabReg = document.getElementById('tabAuthRegister');
-            
-            const loginIdGroup = document.getElementById('authLoginIdGroup');
-            const emailGroup = document.getElementById('authEmailGroup');
-            const userGroup = document.getElementById('authUsernameGroup');
-            const passGroup = document.getElementById('authPasswordGroup');
-            const confirmGroup = document.getElementById('authConfirmPasswordGroup');
-            
-            const iconContainer = document.getElementById('authIconContainer');
-            const title = document.getElementById('authTitleText');
-            const icon = document.getElementById('authIcon');
-            const submitBtn = document.getElementById('authSubmitBtn');
-            const cancelBtn = document.getElementById('authCancelBtn');
-            const forgotLink = document.getElementById('forgotPasswordLink');
-            
-            document.getElementById('authErrorMsg').classList.add('hidden'); 
-            ['authLoginId', 'authEmail', 'authUsername', 'authPassword', 'authConfirmPassword'].forEach(id => {
-                document.getElementById(id).removeAttribute('required');
+                setTimeout(() => {
+                    populateEmojiPicker(`emojiPicker-reply-${c.id}`, `reply-input-${c.id}`);
+                }, 0);
             });
-
-            if (mode === 'login') {
-                tabLogin.className = 'flex-1 py-3 sm:py-4 text-xs sm:text-sm font-bold text-sky-600 border-b-2 border-sky-500 transition-colors bg-white';
-                tabReg.className = 'flex-1 py-3 sm:py-4 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition-colors bg-slate-50 cursor-pointer';
-                
-                loginIdGroup.classList.remove('hidden'); document.getElementById('authLoginId').setAttribute('required', 'true');
-                emailGroup.classList.add('hidden'); userGroup.classList.add('hidden');
-                passGroup.classList.remove('hidden'); document.getElementById('authPassword').setAttribute('required', 'true');
-                confirmGroup.classList.add('hidden'); forgotLink.classList.remove('hidden');
-
-                iconContainer.className = 'w-12 h-12 sm:w-16 sm:h-16 bg-sky-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-inner';
-                title.innerText = 'เข้าสู่ระบบ'; icon.className = 'fa-solid fa-right-to-bracket text-2xl sm:text-3xl text-sky-600';
-                submitBtn.innerText = 'เข้าสู่ระบบ';
-                submitBtn.className = 'flex-1 bg-sky-600 hover:bg-sky-700 text-white text-xs sm:text-sm font-bold py-2.5 sm:py-3 rounded-xl transition shadow-md shadow-sky-200';
-                cancelBtn.innerText = 'ยกเลิก'; cancelBtn.onclick = closeAuthModal;
-
-            } else if (mode === 'register') {
-                tabReg.className = 'flex-1 py-3 sm:py-4 text-xs sm:text-sm font-bold text-emerald-600 border-b-2 border-emerald-500 transition-colors bg-white';
-                tabLogin.className = 'flex-1 py-3 sm:py-4 text-xs sm:text-sm font-medium text-slate-500 hover:text-slate-700 border-b-2 border-transparent transition-colors bg-slate-50 cursor-pointer';
-                
-                loginIdGroup.classList.add('hidden');
-                emailGroup.classList.remove('hidden'); document.getElementById('authEmail').setAttribute('required', 'true');
-                userGroup.classList.remove('hidden'); document.getElementById('authUsername').setAttribute('required', 'true');
-                passGroup.classList.remove('hidden'); document.getElementById('authPassword').setAttribute('required', 'true');
-                confirmGroup.classList.remove('hidden'); document.getElementById('authConfirmPassword').setAttribute('required', 'true');
-                forgotLink.classList.add('hidden');
-
-                iconContainer.className = 'w-12 h-12 sm:w-16 sm:h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-2 sm:mb-3 shadow-inner';
-                title.innerText = 'สมัครสมาชิกใหม่'; icon.className = 'fa-solid fa-user-plus text-2xl sm:text-3xl text-emerald-600';
-                submitBtn.innerText = 'ลงทะเบียน';
-                submitBtn.className = 'flex-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs sm:text-sm font-bold py-2.5 sm:py-3 rounded-xl transition shadow-md shadow-emerald-200';
-                cancelBtn.innerText = 'ยกเลิก'; cancelBtn.onclick = closeAuthModal;
-            }
-        }
-
-        function getFirebaseErrorMsg(code) {
-            switch(code) {
-                case 'auth/invalid-email': return 'รูปแบบอีเมลไม่ถูกต้อง';
-                case 'auth/user-not-found': return 'ไม่พบบัญชีอีเมลนี้ในระบบ';
-                case 'auth/wrong-password': return 'รหัสผ่านไม่ถูกต้อง';
-                case 'auth/email-already-in-use': return 'อีเมลนี้มีผู้ใช้งานแล้ว';
-                case 'auth/weak-password': return 'รหัสผ่านอ่อนเกินไป (ต้อง 6 ตัวอักษรขึ้นไป)';
-                default: return 'เกิดข้อผิดพลาด: ' + code;
-            }
-        }
-
-        function submitAuth() {
-            document.getElementById('authErrorMsg').classList.add('hidden');
-            const submitBtn = document.getElementById('authSubmitBtn');
-            submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> รอสักครู่...';
-            submitBtn.disabled = true;
-
-            const resetBtn = () => {
-                if(currentAuthMode === 'login') submitBtn.innerText = 'เข้าสู่ระบบ';
-                else if(currentAuthMode === 'register') submitBtn.innerText = 'ลงทะเบียน';
-                submitBtn.disabled = false;
-            };
-
-            if(currentAuthMode === 'register') {
-                const email = document.getElementById('authEmail').value.trim();
-                const username = document.getElementById('authUsername').value.trim();
-                const password = document.getElementById('authPassword').value;
-                const confirmPass = document.getElementById('authConfirmPassword').value;
-
-                if(password !== confirmPass) { showAuthError('รหัสผ่านไม่ตรงกัน'); resetBtn(); return; }
-
-                db.collection("users").where("username_lower", "==", username.toLowerCase()).get().then(snap => {
-                    if(!snap.empty) { showAuthError('ชื่อผู้ใช้นี้ถูกใช้งานแล้ว'); resetBtn(); return; }
-                    auth.createUserWithEmailAndPassword(email, password).then(cred => {
-                        return cred.user.updateProfile({ displayName: username }).then(() => {
-                            return db.collection("users").doc(cred.user.uid).set({ email, username, username_lower: username.toLowerCase(), avatar: "" });
-                        });
-                    }).then(() => { closeAuthModal(); resetBtn(); }).catch(e => { showAuthError(getFirebaseErrorMsg(e.code)); resetBtn(); });
+            
+            if(window.MathJax) {
+                MathJax.typesetPromise([document.getElementById('commentList')]).catch(function (err) {
+                    console.log('MathJax error: ', err.message);
                 });
-            } else if (currentAuthMode === 'login') {
-                const loginId = document.getElementById('authLoginId').value.trim();
-                const password = document.getElementById('authPassword').value;
-
-                if(loginId.includes('@')) {
-                    auth.signInWithEmailAndPassword(loginId, password).then(() => { closeAuthModal(); resetBtn(); })
-                    .catch(e => { showAuthError(getFirebaseErrorMsg(e.code)); resetBtn(); });
-                } else {
-                    db.collection("users").where("username_lower", "==", loginId.toLowerCase()).get().then(snap => {
-                        if(snap.empty) { showAuthError('ไม่พบบัญชีชื่อผู้ใช้งานนี้'); resetBtn(); return; }
-                        const email = snap.docs[0].data().email;
-                        auth.signInWithEmailAndPassword(email, password).then(() => { closeAuthModal(); resetBtn(); })
-                        .catch(e => { showAuthError(getFirebaseErrorMsg(e.code)); resetBtn(); });
-                    });
-                }
             }
         }
 
-        function showAuthError(msg) {
-            const errorEl = document.getElementById('authErrorMsg');
-            errorEl.innerText = msg;
-            errorEl.classList.remove('hidden');
+        function renderRepliesHTML(replies, parentId, isAdmin) {
+            if (!replies || replies.length === 0) return '';
+            let html = '';
+            replies.forEach(r => {
+                if(!r.id) r.id = Date.now().toString() + Math.random().toString().substr(2,5);
+                const isMe = (r.author === currentUser);
+                const canEdit = isMe || isAdmin;
+                const avatarHtml = getAvatarHtml(r.author, "w-6 h-6 sm:w-8 sm:h-8", "text-[10px] sm:text-xs");
+
+                html += `
+                    <div class="flex items-start space-x-2 sm:space-x-3">
+                        ${avatarHtml}
+                        <div class="w-full">
+                            <div class="bg-white border border-slate-200 px-3 py-2 rounded-2xl rounded-tl-none inline-block min-w-[150px] max-w-full shadow-sm">
+                                <div class="flex items-center space-x-2 mb-1">
+                                    <span class="text-xs font-bold ${isMe ? 'text-indigo-700' : 'text-slate-700'}">${r.author}</span>
+                                    <span class="text-[8px] sm:text-[9px] text-slate-400 font-medium">${r.time}</span>
+                                </div>
+                                <div id="reply-text-${r.id}" class="text-xs sm:text-sm text-slate-700 leading-relaxed editor-content min-h-0 tex2jax_process">${r.text}</div>
+                            </div>
+                            
+                            ${canEdit ? `
+                            <div class="flex items-center space-x-3 mt-1 ml-2 text-[9px] sm:text-[10px] font-semibold text-slate-500">
+                                <button onclick="startEditComment('${r.id}', true, '${parentId}')" class="hover:text-amber-600 transition">แก้ไข</button>
+                                <button onclick="promptDeleteComment('${r.id}', true, '${parentId}')" class="hover:text-rose-600 transition">ลบ</button>
+                            </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            return html;
         }
 
-        function handleLogout() {
-            showModal("ออกจากระบบ", "คุณต้องการออกจากระบบใช่หรือไม่?", '<i class="fa-solid fa-arrow-right-from-bracket text-3xl text-amber-600"></i>', 'bg-amber-100', "ออกจากระบบ", "bg-amber-600 hover:bg-amber-700 shadow-amber-200", () => {
-                auth.signOut().then(() => { closeConfirmModal(); });
+        function updateFirestoreComments(inputEl) {
+            const post = posts.find(p => p.id === currentPostId);
+            db.collection("posts").doc(post.docId).update({ comments: post.comments }).then(() => {
+                if(inputEl) inputEl.innerHTML = '';
             });
+        }
+
+        function addComment() {
+            if(!currentUser) { openAuthModal('login'); return; }
+            const input = document.getElementById('commentInput');
+            const textHTML = input.innerHTML.trim();
+            if(!textHTML || textHTML === '<br>' || !currentPostId) return;
+
+            const post = posts.find(p => p.id === currentPostId);
+            if(!post) return;
+            if(!post.comments) post.comments = [];
+
+            post.comments.push({ id: Date.now().toString(), author: currentUser, text: textHTML, time: getCurrentTimeStr(), replies: [] });
+            updateFirestoreComments(input);
+        }
+
+        function submitReply(parentId) {
+            if(!currentUser) { openAuthModal('login'); return; }
+            const input = document.getElementById(`reply-input-${parentId}`);
+            const textHTML = input.innerHTML.trim();
+            if(!textHTML || textHTML === '<br>') return;
+
+            const post = posts.find(p => p.id === currentPostId);
+            const parent = post.comments.find(c => c.id == parentId);
+            if(!parent.replies) parent.replies = [];
+
+            parent.replies.push({ id: Date.now().toString(), author: currentUser, text: textHTML, time: getCurrentTimeStr() });
+            updateFirestoreComments(input);
+        }
+
+        function promptDeleteComment(commentId, isReply, parentId = null) {
+            showModal("ยืนยันการลบความคิดเห็น?", "ต้องการลบความคิดเห็นนี้ใช่หรือไม่?", '<i class="fa-solid fa-trash text-3xl text-rose-600"></i>', 'bg-rose-100', "ลบทิ้ง", "bg-rose-600 hover:bg-rose-700", 
+                () => {
+                    const post = posts.find(p => p.id === currentPostId);
+                    if(isReply) {
+                        const parent = post.comments.find(c => c.id == parentId);
+                        parent.replies = parent.replies.filter(r => r.id != commentId);
+                    } else {
+                        post.comments = post.comments.filter(c => c.id != commentId);
+                    }
+                    updateFirestoreComments(null);
+                    closeConfirmModal();
+                }
+            );
+        }
+
+        let editingCommentId = null;
+        let originalCommentHtml = "";
+
+        function startEditComment(commentId, isReply, parentId = null) {
+            if(editingCommentId) { alert("กรุณาบันทึกข้อความที่กำลังแก้ไขก่อน"); return; }
+            
+            editingCommentId = commentId;
+            const containerId = isReply ? `reply-text-${commentId}` : `comment-text-${commentId}`;
+            const container = document.getElementById(containerId);
+            originalCommentHtml = container.innerHTML;
+
+            container.innerHTML = `
+                <div class="mt-1 bg-white border border-slate-300 rounded-lg overflow-hidden">
+                    <div class="bg-slate-100 border-b border-slate-200 px-2 py-1 flex items-center space-x-1">
+                        <button onclick="formatDoc('bold')" class="w-6 h-6 hover:bg-slate-200 rounded font-bold"><i class="fa-solid fa-bold text-xs"></i></button>
+                        <button onclick="formatDoc('italic')" class="w-6 h-6 hover:bg-slate-200 rounded italic"><i class="fa-solid fa-italic text-xs"></i></button>
+                    </div>
+                    <div id="edit-input-${commentId}" class="p-2 min-h-[40px] text-xs sm:text-sm outline-none tex2jax_process" contenteditable="true">${originalCommentHtml}</div>
+                </div>
+                <div class="flex justify-end space-x-2 mt-2">
+                    <button onclick="cancelEditComment('${containerId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-slate-200 hover:bg-slate-300 rounded font-medium text-slate-700">ยกเลิก</button>
+                    <button onclick="saveEditComment('${commentId}', ${isReply}, '${parentId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-amber-500 hover:bg-amber-600 rounded font-bold text-white">บันทึก</button>
+                </div>
+            `;
+            document.getElementById(`edit-input-${commentId}`).focus();
+        }
+
+        function cancelEditComment(containerId) {
+            document.getElementById(containerId).innerHTML = originalCommentHtml;
+            editingCommentId = null;
+            originalCommentHtml = "";
+            
+            if(window.MathJax) {
+                MathJax.typesetPromise([document.getElementById(containerId)]).catch(function (err) {
+                    console.log('MathJax error: ', err.message);
+                });
+            }
+        }
+
+        function saveEditComment(commentId, isReply, parentId) {
+            const newHtml = document.getElementById(`edit-input-${commentId}`).innerHTML.trim();
+            if(!newHtml || newHtml === '<br>') { alert("ข้อความว่างเปล่า"); return; }
+
+            const post = posts.find(p => p.id === currentPostId);
+            if(isReply) {
+                const parent = post.comments.find(c => c.id == parentId);
+                const reply = parent.replies.find(r => r.id == commentId);
+                reply.text = newHtml;
+            } else {
+                const comment = post.comments.find(c => c.id == commentId);
+                comment.text = newHtml;
+            }
+
+            editingCommentId = null;
+            originalCommentHtml = "";
+            updateFirestoreComments(null);
+        }
+
+        function toggleReplyBox(id) {
+            const box = document.getElementById(`reply-box-${id}`);
+            box.classList.toggle('hidden');
+            if(!box.classList.contains('hidden')) document.getElementById(`reply-input-${id}`).focus();
+        }
+
+        // --- Core Helpers (Rich text & Uploads) ---
+        function toggleEmojiPicker(pickerId) { document.getElementById(pickerId).classList.toggle('hidden'); }
+
+        function populateEmojiPicker(pickerId, inputId) {
+            const container = document.getElementById(pickerId).querySelector('div');
+            container.innerHTML = emojiList.map(e => `<button type="button" class="w-8 h-8 hover:bg-slate-100 rounded text-xl flex items-center justify-center flex-shrink-0" onclick="insertEmoji('${e}', '${inputId}', '${pickerId}')">${e}</button>`).join('');
+        }
+
+        function insertEmoji(emoji, inputId, pickerId) {
+            document.getElementById(inputId).focus();
+            document.execCommand('insertText', false, emoji);
+            document.getElementById(pickerId).classList.add('hidden');
+        }
+
+        function formatDoc(cmd, value=null) { 
+            document.execCommand(cmd, false, value); 
         }
         
-        // Comments System & Text Editor (ตัดฟังก์ชันทิ้งไปบางส่วนเพื่อความสั้นในการตอบ)
-        function renderComments(post) { /* โค้ดเดิมแสดงผลปกติ */ }
+        function addLink() {
+            const url = prompt('URL ลิงก์:');
+            if (url) document.execCommand('createLink', false, url);
+        }
+
+        function addCommentLink(inputId) {
+            const url = prompt('กรุณาใส่ URL ลิงก์ที่ต้องการ:');
+            if (url) { document.getElementById(inputId).focus(); document.execCommand('createLink', false, url); }
+        }
+
+        function insertPostImage(input) {
+            if (input.files[0]) {
+                processAndCompressImage(input.files[0], (dataUrl) => {
+                    document.getElementById('postContent').focus();
+                    document.execCommand('insertImage', false, dataUrl);
+                });
+            }
+            input.value = ''; 
+        }
+
+        function insertCommentImage(input, targetId) {
+            if (input.files[0]) {
+                processAndCompressImage(input.files[0], (dataUrl) => {
+                    document.getElementById(targetId).focus();
+                    document.execCommand('insertImage', false, dataUrl);
+                });
+            }
+            input.value = '';
+        }
+
+        function changeCover(input) {
+            if (input.files[0]) {
+                processAndCompressImage(input.files[0], (dataUrl) => {
+                    document.getElementById('headerCover').style.backgroundImage = `url(${dataUrl})`;
+                    db.collection("settings").doc("general").set({ blog_cover: dataUrl }, {merge: true});
+                });
+            }
+        }
+
+        function processAndCompressImage(file, callback) {
+            if (file.type === 'image/gif') {
+                const reader = new FileReader();
+                reader.onload = e => callback(e.target.result);
+                reader.readAsDataURL(file); return;
+            }
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    let w = img.width, h = img.height;
+                    const max_size = 1200;
+                    if (w > h) { if (w > max_size) { h *= max_size / w; w = max_size; } } 
+                    else { if (h > max_size) { w *= max_size / h; h = max_size; } }
+                    canvas.width = w; canvas.height = h;
+                    canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+                    callback(canvas.toDataURL('image/jpeg', 0.7));
+                }
+                img.src = e.target.result;
+            }
+            reader.readAsDataURL(file);
+        }
+
+        function getCurrentTimeStr() {
+            const now = new Date();
+            const months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+            return `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()+543} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+        }
 
         window.onload = init;
     </script>
