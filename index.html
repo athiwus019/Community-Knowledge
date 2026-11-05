@@ -184,7 +184,7 @@
     <!-- Main Content Area -->
     <div class="flex flex-1 overflow-hidden relative">
         
-        <!-- Sidebar (Responsive: full width on mobile if no post open, 280px on desktop) -->
+        <!-- Sidebar -->
         <aside id="sidebar" class="w-full md:w-[280px] md:min-w-[280px] bg-white border-r border-slate-200 flex flex-col z-20 md:z-10 flex-shrink-0 shadow-sm absolute md:relative h-full transition-transform duration-300">
             <div class="px-5 py-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
                 <h2 class="text-sm font-bold text-slate-800">ฟีดบทความล่าสุด</h2>
@@ -635,6 +635,9 @@
         </div>
     </div>
 
+    <!-- 🔔 Toast Notification Container 🔔 -->
+    <div id="toast-container"></div>
+
     <script>
         // --- ⚙️ Firebase Setup ⚙️ ---
         const firebaseConfig = {
@@ -830,6 +833,7 @@
         }
 
         function handleImagePaste(e) {
+            // Let the browser handle styled text, only intercept images
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             let hasImage = false;
             for (let index in items) {
@@ -1025,7 +1029,7 @@
             const container = document.getElementById('toast-container');
             
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = htmlContent;
+            tempDiv.innerHTML = htmlContent || ''; // Fix: Ensure it's not undefined
             let previewText = tempDiv.textContent.trim();
             if(tempDiv.getElementsByTagName('img').length > 0 && previewText === '') {
                 previewText = "ส่งรูปภาพ";
@@ -1207,6 +1211,38 @@
             document.getElementById('chatArea').style.display = '';
         }
 
+        function analyzeMessageContent(htmlContent) {
+            if (!htmlContent) return 'text'; // Fix for null/undefined content causing crash
+            
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent.replace(/<br\s*[\/]?>/gi, ''); 
+            
+            const imgs = tempDiv.getElementsByTagName('img');
+            const text = tempDiv.textContent.trim();
+            
+            if (imgs.length === 1 && text === '') return 'image';
+            
+            const emojiRegex = /^[\p{Emoji}\u200d]+$/u;
+            if (imgs.length === 0 && emojiRegex.test(text) && Array.from(text).length <= 3) return 'emoji';
+            
+            return 'text';
+        }
+
+        function getShortPreviewText(htmlContent) {
+            if (!htmlContent) return '';
+            const type = analyzeMessageContent(htmlContent);
+            if(type === 'image') return "📷 ส่งรูปภาพ";
+            if(type === 'emoji') {
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = htmlContent;
+                return tempDiv.textContent.trim();
+            }
+            const tempDiv = document.createElement('div');
+            tempDiv.innerHTML = htmlContent;
+            const text = tempDiv.textContent.trim();
+            return text.substring(0, 40) + (text.length > 40 ? '...' : '');
+        }
+
         function selectChatRoom(roomId, titleName, type = 'private', creator = null) {
             activeChatRoomId = roomId;
             currentChatRoomTitle = titleName;
@@ -1261,97 +1297,106 @@
                     
                     let html = '';
                     snap.forEach(doc => {
-                        const msg = doc.data();
-                        const msgId = doc.id;
-                        const isMe = msg.sender === currentUser;
-                        const canEdit = isMe || checkIsAdmin() || (currentChatRoomType === 'group' && currentUser === currentChatRoomCreator);
-                        const contentType = analyzeMessageContent(msg.text);
+                        try {
+                            const msg = doc.data();
+                            const msgId = doc.id;
+                            const sender = msg.sender || 'Unknown';
+                            const rawText = msg.text || '';
+                            
+                            const isMe = sender === currentUser;
+                            const canEdit = isMe || checkIsAdmin() || (currentChatRoomType === 'group' && currentUser === currentChatRoomCreator);
+                            const contentType = analyzeMessageContent(rawText);
 
-                        const timeStr = new Date(msg.timestamp).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'});
-                        const safeText = msg.text.replace(/'/g, "\\'").replace(/"/g, "&quot;");
-                        
-                        let actionBtns = '';
-                        actionBtns += `<button onclick="openReactionPicker(event, '${msgId}')" class="reaction-trigger-btn text-slate-400 hover:text-sky-500 mx-1 transition" title="React"><i class="fa-regular fa-face-smile"></i></button>`;
-                        actionBtns += `<button onclick="startReplyChatMessage('${msgId}', '${msg.sender.replace(/'/g, "\\'")}', '${safeText}')" class="text-slate-400 hover:text-sky-500 mx-1 transition" title="ตอบกลับ"><i class="fa-solid fa-reply"></i></button>`;
+                            const timeStr = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('th-TH', {hour: '2-digit', minute:'2-digit'}) : '';
+                            const safeText = rawText.replace(/'/g, "\\'").replace(/"/g, "&quot;");
+                            
+                            let actionBtns = '';
+                            actionBtns += `<button onclick="openReactionPicker(event, '${msgId}')" class="reaction-trigger-btn text-slate-400 hover:text-sky-500 mx-1 transition" title="React"><i class="fa-regular fa-face-smile"></i></button>`;
+                            actionBtns += `<button onclick="startReplyChatMessage('${msgId}', '${sender.replace(/'/g, "\\'")}', '${safeText}')" class="text-slate-400 hover:text-sky-500 mx-1 transition" title="ตอบกลับ"><i class="fa-solid fa-reply"></i></button>`;
 
-                        if(canEdit) {
-                            if(contentType === 'text') {
-                                actionBtns += `<button onclick="promptEditChatMessage('${msgId}')" class="text-slate-400 hover:text-amber-500 mx-1 transition" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>`;
+                            if(canEdit) {
+                                if(contentType === 'text') {
+                                    actionBtns += `<button onclick="promptEditChatMessage('${msgId}')" class="text-slate-400 hover:text-amber-500 mx-1 transition" title="แก้ไข"><i class="fa-solid fa-pen"></i></button>`;
+                                }
+                                actionBtns += `<button onclick="promptDeleteChatMessage('${msgId}')" class="text-slate-400 hover:text-rose-500 mx-1 transition" title="ลบ"><i class="fa-solid fa-trash"></i></button>`;
                             }
-                            actionBtns += `<button onclick="promptDeleteChatMessage('${msgId}')" class="text-slate-400 hover:text-rose-500 mx-1 transition" title="ลบ"><i class="fa-solid fa-trash"></i></button>`;
-                        }
 
-                        let bubbleClass = '';
-                        if (contentType === 'image') {
-                            bubbleClass = `rounded-2xl ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} text-sm chat-message-content image-only-bubble`;
-                        } else if (contentType === 'emoji') {
-                            bubbleClass = `rounded-2xl ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} chat-message-content emoji-only-bubble`;
-                        } else {
-                            bubbleClass = isMe 
-                                ? `bg-sky-500 text-white px-4 py-2 rounded-2xl rounded-tr-none shadow-sm text-sm break-words whitespace-pre-wrap chat-message-content`
-                                : `bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-2xl rounded-tl-none shadow-sm text-sm break-words whitespace-pre-wrap chat-message-content`;
-                        }
+                            let bubbleClass = '';
+                            if (contentType === 'image') {
+                                bubbleClass = `rounded-2xl ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} text-sm chat-message-content image-only-bubble`;
+                            } else if (contentType === 'emoji') {
+                                bubbleClass = `rounded-2xl ${isMe ? 'rounded-tr-none' : 'rounded-tl-none'} chat-message-content emoji-only-bubble`;
+                            } else {
+                                bubbleClass = isMe 
+                                    ? `bg-sky-500 text-white px-4 py-2 rounded-2xl rounded-tr-none shadow-sm text-sm break-words whitespace-pre-wrap chat-message-content`
+                                    : `bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-2xl rounded-tl-none shadow-sm text-sm break-words whitespace-pre-wrap chat-message-content`;
+                            }
 
-                        let replyBlockHtml = '';
-                        if (msg.replyTo) {
-                            if (isMe) {
-                                replyBlockHtml = `
-                                    <div class="bg-sky-700/40 border-l-2 border-sky-200 px-2 py-1 rounded text-[10px] mb-1.5 text-sky-100 truncate max-w-[200px] cursor-pointer" onclick="scrollToMessage('${msg.replyTo.id}')" title="คลิกเพื่อไปยังข้อความต้นฉบับ">
-                                        <span class="font-bold">${msg.replyTo.sender}</span><br>${msg.replyTo.text}
+                            let replyBlockHtml = '';
+                            if (msg.replyTo) {
+                                const replySender = msg.replyTo.sender || 'Unknown';
+                                const replyText = msg.replyTo.text || '';
+                                if (isMe) {
+                                    replyBlockHtml = `
+                                        <div class="bg-sky-700/40 border-l-2 border-sky-200 px-2 py-1 rounded text-[10px] mb-1.5 text-sky-100 truncate max-w-[200px] cursor-pointer" onclick="scrollToMessage('${msg.replyTo.id}')" title="คลิกเพื่อไปยังข้อความต้นฉบับ">
+                                            <span class="font-bold">${replySender}</span><br>${replyText}
+                                        </div>
+                                    `;
+                                } else {
+                                    replyBlockHtml = `
+                                        <div class="bg-slate-100 border-l-2 border-slate-400 px-2 py-1 rounded text-[10px] mb-1.5 text-slate-500 truncate max-w-[200px] cursor-pointer" onclick="scrollToMessage('${msg.replyTo.id}')" title="คลิกเพื่อไปยังข้อความต้นฉบับ">
+                                            <span class="font-bold text-slate-700">${replySender}</span><br>${replyText}
+                                        </div>
+                                    `;
+                                }
+                            }
+
+                            let reactionHtml = '';
+                            if(msg.reactions && Object.keys(msg.reactions).length > 0) {
+                                const reactionCounts = {};
+                                Object.values(msg.reactions).forEach(emoji => {
+                                    reactionCounts[emoji] = (reactionCounts[emoji] || 0) + 1;
+                                });
+                                
+                                Object.entries(reactionCounts).forEach(([emoji, count]) => {
+                                    reactionHtml += `<div class="reaction-badge shadow-sm" onclick="addReaction('${emoji}', '${msgId}')">${emoji} ${count > 1 ? `<span class="ml-1 text-[9px] text-slate-500 font-bold">${count}</span>` : ''}</div>`;
+                                });
+                            }
+
+                            if(isMe) {
+                                html += `
+                                    <div class="flex justify-end mb-4 message-row relative" id="msg-${msgId}">
+                                        <div class="flex flex-col items-end max-w-[85%] sm:max-w-[75%]">
+                                            <div class="${bubbleClass} tex2jax_process">${replyBlockHtml}${rawText}</div>
+                                            ${reactionHtml ? `<div class="flex flex-wrap justify-end gap-1 mt-0.5">${reactionHtml}</div>` : ''}
+                                            <div class="flex items-center mt-1">
+                                                <div class="reaction-btn-group flex">${actionBtns}</div>
+                                                <span class="text-[9px] text-slate-400 ml-1">${timeStr}</span>
+                                            </div>
+                                        </div>
                                     </div>
                                 `;
                             } else {
-                                replyBlockHtml = `
-                                    <div class="bg-slate-100 border-l-2 border-slate-400 px-2 py-1 rounded text-[10px] mb-1.5 text-slate-500 truncate max-w-[200px] cursor-pointer" onclick="scrollToMessage('${msg.replyTo.id}')" title="คลิกเพื่อไปยังข้อความต้นฉบับ">
-                                        <span class="font-bold text-slate-700">${msg.replyTo.sender}</span><br>${msg.replyTo.text}
+                                const avatarHtml = getAvatarHtml(sender, "w-8 h-8 mt-1", "text-xs");
+                                html += `
+                                    <div class="flex justify-start mb-4 message-row relative" id="msg-${msgId}">
+                                        <div class="mr-2 flex-shrink-0 mt-1">
+                                            ${avatarHtml}
+                                        </div>
+                                        <div class="flex flex-col items-start max-w-[85%] sm:max-w-[75%]">
+                                            <span class="text-[10px] text-slate-500 ml-1 mb-0.5 font-medium">${sender}</span>
+                                            <div class="${bubbleClass} tex2jax_process">${replyBlockHtml}${rawText}</div>
+                                            ${reactionHtml ? `<div class="flex flex-wrap justify-start gap-1 mt-0.5 ml-2">${reactionHtml}</div>` : ''}
+                                            <div class="flex items-center mt-1">
+                                                <span class="text-[9px] text-slate-400 mr-1 ml-1">${timeStr}</span>
+                                                <div class="reaction-btn-group flex">${actionBtns}</div>
+                                            </div>
+                                        </div>
                                     </div>
                                 `;
                             }
-                        }
-
-                        let reactionHtml = '';
-                        if(msg.reactions && Object.keys(msg.reactions).length > 0) {
-                            const reactionCounts = {};
-                            Object.values(msg.reactions).forEach(emoji => {
-                                reactionCounts[emoji] = (reactionCounts[emoji] || 0) + 1;
-                            });
-                            
-                            Object.entries(reactionCounts).forEach(([emoji, count]) => {
-                                reactionHtml += `<div class="reaction-badge shadow-sm" onclick="addReaction('${emoji}', '${msgId}')">${emoji} ${count > 1 ? `<span class="ml-1 text-[9px] text-slate-500 font-bold">${count}</span>` : ''}</div>`;
-                            });
-                        }
-
-                        if(isMe) {
-                            html += `
-                                <div class="flex justify-end mb-4 message-row relative" id="msg-${msgId}">
-                                    <div class="flex flex-col items-end max-w-[85%] sm:max-w-[75%]">
-                                        <div class="${bubbleClass} tex2jax_process">${replyBlockHtml}${msg.text}</div>
-                                        ${reactionHtml ? `<div class="flex flex-wrap justify-end gap-1 mt-0.5">${reactionHtml}</div>` : ''}
-                                        <div class="flex items-center mt-1">
-                                            <div class="reaction-btn-group flex">${actionBtns}</div>
-                                            <span class="text-[9px] text-slate-400 ml-1">${timeStr}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        } else {
-                            const avatarHtml = getAvatarHtml(msg.sender, "w-8 h-8 mt-1", "text-xs");
-                            html += `
-                                <div class="flex justify-start mb-4 message-row relative" id="msg-${msgId}">
-                                    <div class="mr-2 flex-shrink-0 mt-1">
-                                        ${avatarHtml}
-                                    </div>
-                                    <div class="flex flex-col items-start max-w-[85%] sm:max-w-[75%]">
-                                        <span class="text-[10px] text-slate-500 ml-1 mb-0.5 font-medium">${msg.sender}</span>
-                                        <div class="${bubbleClass} tex2jax_process">${replyBlockHtml}${msg.text}</div>
-                                        ${reactionHtml ? `<div class="flex flex-wrap justify-start gap-1 mt-0.5 ml-2">${reactionHtml}</div>` : ''}
-                                        <div class="flex items-center mt-1">
-                                            <span class="text-[9px] text-slate-400 mr-1 ml-1">${timeStr}</span>
-                                            <div class="reaction-btn-group flex">${actionBtns}</div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
+                        } catch(err) {
+                            console.error("Error rendering message ID:", doc.id, err);
                         }
                     });
                     
@@ -1361,6 +1406,9 @@
                     if(window.MathJax) {
                         MathJax.typesetPromise([document.getElementById('chatMessagesArea')]).catch(err => console.log(err));
                     }
+                }, error => {
+                    console.error("Chat snapshot error:", error);
+                    document.getElementById('chatMessagesArea').innerHTML = `<div class="flex flex-col items-center justify-center h-full text-rose-500 text-sm"><i class="fa-solid fa-triangle-exclamation text-2xl mb-2"></i>เกิดข้อผิดพลาดในการโหลดข้อความ</div>`;
                 });
                 
                 setTimeout(() => {
@@ -2005,7 +2053,7 @@
                 document.getElementById('readScreen').classList.add('hidden');
                 document.getElementById('editorScreen').classList.add('hidden');
                 document.getElementById('welcomeScreen').classList.remove('hidden');
-                document.getElementById('sidebar').classList.remove('hidden'); // แสดง sidebar ในมือถือ
+                document.getElementById('sidebar').classList.remove('hidden');
 
                 if (pushHistory) {
                     const url = new URL(window.location);
@@ -2015,27 +2063,6 @@
                 }
             }
             renderPostList();
-        }
-
-        // --- ปุ่มย้อนกลับจากหน้าอ่านโพสต์บนมือถือ ---
-        function goBackToFeed() {
-            document.getElementById('sidebar').classList.remove('hidden');
-            document.getElementById('readScreen').classList.add('hidden');
-            document.getElementById('editorScreen').classList.add('hidden');
-            document.getElementById('welcomeScreen').classList.remove('hidden');
-            currentPostId = null;
-            renderPostList(); 
-            
-            const url = new URL(window.location);
-            url.searchParams.delete('post');
-            window.history.pushState({}, '', url);
-            document.title = "คลังข่าวสารและคอมมูนิตี้ออนไลน์";
-        }
-
-        function backToChatList() {
-            document.getElementById('chatSidebar').classList.remove('hidden');
-            document.getElementById('chatArea').classList.add('hidden');
-            document.getElementById('chatArea').style.display = '';
         }
 
         function getCategoryIcon(cat) {
@@ -2146,7 +2173,6 @@
             document.getElementById('editorScreen').classList.add('hidden');
             document.getElementById('readScreen').classList.remove('hidden');
             
-            // บนมือถือ เมื่อเปิดโพสต์ ให้ซ่อน Sidebar 
             if(window.innerWidth < 768) {
                 document.getElementById('sidebar').classList.add('hidden');
             }
