@@ -2662,5 +2662,39 @@
 
         window.onload = init;
     </script>
+<!-- 👇 นำโค้ดป้องกันการก็อปปี้มาวางตรงนี้ 👇 -->
+    <script>
+        // 1. ป้องกันการคลิกขวา
+        document.addEventListener('contextmenu', event => event.preventDefault());
+
+        // 2. ป้องกันการลากคลุมดำข้อความ (Text Selection)
+        document.onselectstart = function() { return false; };
+
+        // 3. ป้องกันปุ่มลัดต่างๆ บนคีย์บอร์ด
+        document.onkeydown = function(e) {
+            // ป้องกัน F12 (Developer Tools)
+            if (e.keyCode === 123) {
+                return false;
+            }
+            // ป้องกัน Ctrl+Shift+I (เปิด Inspect)
+            if (e.ctrlKey && e.shiftKey && e.keyCode === 'I'.charCodeAt(0)) {
+                return false;
+            }
+            // ป้องกัน Ctrl+Shift+J (เปิด Console)
+            if (e.ctrlKey && e.shiftKey && e.keyCode === 'J'.charCodeAt(0)) {
+                return false;
+            }
+            // ป้องกัน Ctrl+U (เปิด View Source)
+            if (e.ctrlKey && e.keyCode === 'U'.charCodeAt(0)) {
+                return false;
+            }
+            // ป้องกัน Ctrl+S (Save หน้าเว็บ)
+            if (e.ctrlKey && e.keyCode === 'S'.charCodeAt(0)) {
+                return false;
+            }
+        };
+    </script>
+    <!-- 👆 จบโค้ดป้องกันการก็อปปี้ 👆 -->
+
 </body>
 </html>
