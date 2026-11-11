@@ -2663,15 +2663,31 @@
         window.onload = init;
     </script>
 
+    <!-- 👇 โค้ดป้องกันการก็อปปี้ (ฉบับอัปเดต แก้ไขให้พิมพ์ในกล่องข้อความได้) 👇 -->
     <script>
-        // 1. ป้องกันการคลิกขวา
-        document.addEventListener('contextmenu', event => event.preventDefault());
+        // 1. ป้องกันการคลิกขวา (แต่ยกเว้นช่องพิมพ์ข้อความให้อนุญาตได้)
+        document.addEventListener('contextmenu', function(e) {
+            if (e.target.closest('input, textarea, [contenteditable="true"]')) {
+                return true; 
+            }
+            e.preventDefault();
+        });
 
-        // 2. ป้องกันการลากคลุมดำข้อความ (Text Selection)
-        document.onselectstart = function() { return false; };
+        // 2. ป้องกันการลากคลุมดำข้อความ (แต่ยกเว้นช่องพิมพ์ข้อความให้อนุญาตได้)
+        document.onselectstart = function(e) {
+            if (e.target.closest('input, textarea, [contenteditable="true"]')) {
+                return true; 
+            }
+            return false; 
+        };
 
         // 3. ป้องกันปุ่มลัดต่างๆ บนคีย์บอร์ด
         document.onkeydown = function(e) {
+            // ยกเว้น: ถ้าผู้ใช้กำลังพิมพ์อยู่ในกล่องข้อความ ให้ใช้งานปุ่มลัด (เช่น Ctrl+C, Ctrl+V, Ctrl+A) ได้ตามปกติ
+            if (e.target.closest('input, textarea, [contenteditable="true"]')) {
+                return true;
+            }
+
             // ป้องกัน F12 (Developer Tools)
             if (e.keyCode === 123) {
                 return false;
@@ -2694,6 +2710,7 @@
             }
         };
     </script>
+    <!-- 👆 จบโค้ดป้องกันการก็อปปี้ 👆 -->
 
 </body>
 </html>
