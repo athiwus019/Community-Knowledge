@@ -140,7 +140,7 @@
                 </div>
                 <div class="overflow-hidden">
                     <h1 class="text-sm sm:text-lg md:text-xl font-bold tracking-tight leading-none mb-0.5 sm:mb-1 truncate">คลังข่าวสาร พูดคุยแลกเปลี่ยนความคิดเห็น</h1>
-                    <p class="text-[8px] sm:text-[10px] md:text-[11px] uppercase tracking-widest text-sky-100 truncate">Thai Community & Knowledge Base</p>
+                    <p class="text-[8px] sm:text-[10px] md:text-[11px] uppercase tracking-widest text-sky-100 truncate">Community & Knowledge Base</p>
                 </div>
             </div>
             
@@ -219,7 +219,6 @@
                     </div>
                 </div>
 
-                <!-- แก้ไขตรงนี้ครับ ลบ h-full ออก เปลี่ยนเป็น min-h-full เพื่อให้กล่องยืดตามเนื้อหา -->
                 <div id="readScreen" class="hidden max-w-4xl mx-auto min-h-full flex flex-col bg-white p-5 sm:p-8 rounded-2xl shadow-sm border border-slate-100 mb-10">
                     
                     <!-- Mobile Back Button -->
@@ -242,12 +241,11 @@
                         </div>
                     </div>
                     
-                    <div id="readBody" class="editor-content text-slate-700 mb-10 text-sm sm:text-base"></div>
+                    <div id="readBody" class="editor-content text-slate-700 mb-10 flex-shrink-0 text-sm sm:text-base"></div>
 
                     <div class="mt-8 pt-6 border-t border-slate-200 flex-1 flex flex-col">
                         <h3 class="text-base sm:text-lg font-bold text-slate-800 mb-5"><i class="fa-regular fa-comments mr-2 text-sky-500"></i>ความคิดเห็น (<span id="commentCount">0</span>)</h3>
                         
-                        <!-- เอา overflow-y-auto ตรงส่วนนี้ออก เพื่อให้เลื่อนลงไปได้สุดกล่อง ไม่ต้องมี scroll ซ้อน -->
                         <div id="commentList" class="space-y-6 mb-6 flex-1 pr-2"></div>
 
                         <div id="commentFormArea" class="mt-auto bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 flex-shrink-0 shadow-sm hidden">
@@ -774,7 +772,9 @@
                 posts = snap.docs.map(d => ({ docId: d.id, ...d.data() }));
                 renderPostList();
                 
-                // --- 🔗 URL Setup ---
+                clearTimeout(appWatchdog);
+                markAppReady();
+                
                 const urlParams = new URLSearchParams(window.location.search);
                 const postIdFromUrl = urlParams.get('post');
                 
@@ -783,6 +783,9 @@
                 } else if (currentPostId) {
                     selectPost(currentPostId, false);
                 }
+            }, err => {
+                console.error("Posts loading failed", err);
+                safeReload();
             });
             
             // --- 🔙 History Back Button Setup ---
@@ -849,8 +852,29 @@
             });
         }
 
+        // --- 🔄 Smart Auto-Recovery System 🔄 ---
+        const MAX_RELOAD = 3;
+        let currentReloads = parseInt(sessionStorage.getItem('app_reloads') || '0');
+
+        function markAppReady() {
+            sessionStorage.setItem('app_reloads', '0');
+        }
+
+        function safeReload() {
+            if (currentReloads < MAX_RELOAD) {
+                sessionStorage.setItem('app_reloads', (currentReloads + 1).toString());
+                window.location.reload();
+            } else {
+                console.error("Max auto-reloads reached. Network issue likely.");
+                sessionStorage.setItem('app_reloads', '0'); 
+            }
+        }
+
+        let appWatchdog = setTimeout(() => {
+            safeReload();
+        }, 12000); 
+
         function handleImagePaste(e) {
-            // Let the browser handle styled text, only intercept images
             const items = (e.clipboardData || e.originalEvent.clipboardData).items;
             let hasImage = false;
             for (let index in items) {
@@ -1046,7 +1070,7 @@
             const container = document.getElementById('toast-container');
             
             const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = htmlContent || ''; // Fix: Ensure it's not undefined
+            tempDiv.innerHTML = htmlContent || ''; 
             let previewText = tempDiv.textContent.trim();
             if(tempDiv.getElementsByTagName('img').length > 0 && previewText === '') {
                 previewText = "ส่งรูปภาพ";
@@ -1229,7 +1253,7 @@
         }
 
         function analyzeMessageContent(htmlContent) {
-            if (!htmlContent) return 'text'; // Fix for null/undefined content causing crash
+            if (!htmlContent) return 'text'; 
             
             const tempDiv = document.createElement('div');
             tempDiv.innerHTML = htmlContent.replace(/<br\s*[\/]?>/gi, ''); 
@@ -1461,12 +1485,11 @@
             const el = document.getElementById(`msg-${msgId}`);
             if(el) {
                 el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                // Highlight temporary
                 const bubble = el.querySelector('.chat-message-content');
                 if(bubble) {
                     const oldBg = bubble.style.backgroundColor;
                     bubble.style.transition = "background-color 0.5s ease";
-                    bubble.style.backgroundColor = "#fef08a"; // Yellow highlight
+                    bubble.style.backgroundColor = "#fef08a"; 
                     setTimeout(() => {
                         bubble.style.backgroundColor = oldBg;
                     }, 1500);
@@ -1531,7 +1554,6 @@
             const input = document.getElementById('chatMessageInput');
             let text = input.innerHTML.trim();
             
-            // Cleanup trailing break tags added by enter sometimes
             while(text.endsWith('<br>')) { text = text.slice(0, -4).trim(); }
             
             if(!text || !activeChatRoomId || !currentUser) return;
@@ -1542,13 +1564,12 @@
                 timestamp: Date.now()
             };
 
-            // แนบข้อมูลการตอบกลับ (ถ้ามี)
             if (chatReplyTo) {
                 payload.replyTo = chatReplyTo;
             }
             
             input.innerHTML = ''; 
-            cancelReply(); // เคลียร์กล่องตอบกลับเมื่อส่งเสร็จ
+            cancelReply(); 
             
             db.collection("chats").doc(activeChatRoomId).collection("messages").add(payload).catch(e => {
                 console.error("Error sending message", e);
@@ -2390,8 +2411,8 @@
                                         <div id="emojiPicker-reply-${c.id}" class="emoji-picker hidden absolute bottom-full left-0 mb-2 w-72 bg-white border border-slate-200 rounded-xl shadow-xl p-3 z-50">
                                             <div class="flex flex-wrap gap-2 max-h-60 overflow-y-auto custom-scrollbar" id="emoji-container-reply-${c.id}"></div>
                                         </div>
-                                        <button type="button" onclick="addCommentLink('reply-input-${c.id}')" class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center"><i class="fa-solid fa-link text-xs sm:text-sm"></i></button>
-                                        <label class="w-6 h-6 sm:w-7 sm:h-7 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer">
+                                        <button type="button" onclick="addCommentLink('reply-input-${c.id}')" class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center"><i class="fa-solid fa-link text-xs sm:text-sm"></i></button>
+                                        <label class="w-7 h-7 sm:w-8 sm:h-8 rounded hover:bg-slate-200 text-slate-600 flex justify-center items-center cursor-pointer">
                                             <i class="fa-regular fa-image text-xs sm:text-sm"></i>
                                             <input type="file" accept="image/*" class="hidden" onchange="insertCommentImage(this, 'reply-input-${c.id}')">
                                         </label>
@@ -2530,7 +2551,7 @@
                 </div>
                 <div class="flex justify-end space-x-2 mt-2">
                     <button onclick="cancelEditComment('${containerId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-slate-200 hover:bg-slate-300 rounded font-medium text-slate-700">ยกเลิก</button>
-                    <button onclick="saveEditComment('${commentId}', ${isReply}, '${parentId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-amber-500 hover:bg-amber-600 rounded font-bold text-white">บันทึก</button>
+                    <button onclick="saveEditComment('${commentId}', ${isReply}, '${parentId}')" class="text-[9px] sm:text-[10px] px-3 py-1 bg-amber-500 hover:bg-amber-600 rounded font-bold text-white">บันึก</button>
                 </div>
             `;
             document.getElementById(`edit-input-${commentId}`).focus();
@@ -2660,11 +2681,7 @@
             return `${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()+543} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
         }
 
-        window.onload = init;
-    </script>
-
-    <script>
-        // 1. ป้องกันการคลิกขวา (แต่ยกเว้นช่องพิมพ์ข้อความให้อนุญาตได้)
+        // --- เพิ่มโค้ดป้องกันการคลิกขวาและการคัดลอก (อัปเดตยกเว้นกล่องข้อความ) ---
         document.addEventListener('contextmenu', function(e) {
             if (e.target.closest('input, textarea, [contenteditable="true"]')) {
                 return true; 
@@ -2672,7 +2689,6 @@
             e.preventDefault();
         });
 
-        // 2. ป้องกันการลากคลุมดำข้อความ (แต่ยกเว้นช่องพิมพ์ข้อความให้อนุญาตได้)
         document.onselectstart = function(e) {
             if (e.target.closest('input, textarea, [contenteditable="true"]')) {
                 return true; 
@@ -2680,35 +2696,28 @@
             return false; 
         };
 
-        // 3. ป้องกันปุ่มลัดต่างๆ บนคีย์บอร์ด
         document.onkeydown = function(e) {
-            // ยกเว้น: ถ้าผู้ใช้กำลังพิมพ์อยู่ในกล่องข้อความ ให้ใช้งานปุ่มลัด (เช่น Ctrl+C, Ctrl+V, Ctrl+A) ได้ตามปกติ
             if (e.target.closest('input, textarea, [contenteditable="true"]')) {
                 return true;
             }
-
-            // ป้องกัน F12 (Developer Tools)
             if (e.keyCode === 123) {
                 return false;
             }
-            // ป้องกัน Ctrl+Shift+I (เปิด Inspect)
             if (e.ctrlKey && e.shiftKey && e.keyCode === 'I'.charCodeAt(0)) {
                 return false;
             }
-            // ป้องกัน Ctrl+Shift+J (เปิด Console)
             if (e.ctrlKey && e.shiftKey && e.keyCode === 'J'.charCodeAt(0)) {
                 return false;
             }
-            // ป้องกัน Ctrl+U (เปิด View Source)
             if (e.ctrlKey && e.keyCode === 'U'.charCodeAt(0)) {
                 return false;
             }
-            // ป้องกัน Ctrl+S (Save หน้าเว็บ)
             if (e.ctrlKey && e.keyCode === 'S'.charCodeAt(0)) {
                 return false;
             }
         };
-    </script>
 
+        window.onload = init;
+    </script>
 </body>
 </html>
